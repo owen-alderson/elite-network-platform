@@ -23,12 +23,75 @@
         <a href="events.html">Events</a>
         <a href="spaces.html">Spaces</a>
       </div>
-      <div class="nav-member">
+      <div class="nav-member" onclick="toggleInbox()">
         <div class="nav-avatar">M</div>
         <span class="nav-member-name">Marcus V.</span>
+        <div class="inbox-dot" id="inbox-dot"></div>
       </div>
+      <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </nav>
+
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="dashboard.html">Home</a>
+    <a href="members.html">Members</a>
+    <a href="events.html">Events</a>
+    <a href="spaces.html">Spaces</a>
+    <a href="partners.html">Partners</a>
+  </div>
+
+  <!-- INBOX PANEL -->
+  <div class="inbox-panel" id="inbox-panel">
+    <div class="inbox-header">
+      <h3>Notifications</h3>
+      <button onclick="toggleInbox()" class="inbox-close">✕</button>
+    </div>
+    <div class="inbox-list">
+      <div class="inbox-item unread">
+        <div class="inbox-avatar">E</div>
+        <div class="inbox-content">
+          <p class="inbox-title">Elena Vasquez accepted your introduction</p>
+          <p class="inbox-body">She's in New York next week and suggested meeting at Spring Place on the 24th.</p>
+          <p class="inbox-time">2 hours ago</p>
+        </div>
+      </div>
+      <div class="inbox-item unread">
+        <div class="inbox-avatar">◈</div>
+        <div class="inbox-content">
+          <p class="inbox-title">You're confirmed for Spring Place Evening</p>
+          <p class="inbox-body">Thursday 24 April · 7:00 PM. 8 spots remaining as of now.</p>
+          <p class="inbox-time">5 hours ago</p>
+        </div>
+      </div>
+      <div class="inbox-item">
+        <div class="inbox-avatar">R</div>
+        <div class="inbox-content">
+          <p class="inbox-title">Ravi Mehta joined your pillar</p>
+          <p class="inbox-body">New Finance member in New York. 3 shared connections.</p>
+          <p class="inbox-time">Yesterday</p>
+        </div>
+      </div>
+      <div class="inbox-item">
+        <div class="inbox-avatar">◇</div>
+        <div class="inbox-content">
+          <p class="inbox-title">Your nomination of James Wu was accepted</p>
+          <p class="inbox-body">He has completed his application and is now under review.</p>
+          <p class="inbox-time">2 days ago</p>
+        </div>
+      </div>
+      <div class="inbox-item">
+        <div class="inbox-avatar">I</div>
+        <div class="inbox-content">
+          <p class="inbox-title">Isabelle Moreau is attending your next event</p>
+          <p class="inbox-body">She'll be at the Spring Place Members Evening on the 24th.</p>
+          <p class="inbox-time">3 days ago</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="inbox-backdrop" id="inbox-backdrop" onclick="toggleInbox()"></div>
 
   <div class="dash-layout">
 
@@ -114,7 +177,7 @@
           </div>
         </div>
         <div class="dash-next-event-right">
-          <a href="events.html" class="btn-primary btn-sm">View Event</a>
+          <a href="event.html" class="btn-primary btn-sm">View Event</a>
         </div>
       </div>
 
@@ -322,7 +385,18 @@
     </div>
   </div>
 
+  <script src="nav.js"></script>
   <script>
+    function toggleInbox() {
+      const panel   = document.getElementById('inbox-panel');
+      const backdrop = document.getElementById('inbox-backdrop');
+      const dot     = document.getElementById('inbox-dot');
+      const open    = panel.classList.toggle('open');
+      backdrop.classList.toggle('open', open);
+      document.body.style.overflow = open ? 'hidden' : '';
+      if (open && dot) dot.style.display = 'none';
+    }
+
     function showIntroModal(name) {
       document.getElementById('modal-name').textContent = name;
       document.getElementById('intro-modal').style.display = 'flex';

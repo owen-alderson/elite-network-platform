@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spring Place — Members Evening · Aether</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="event.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="wordmark">AETHER</a>
+      <div class="nav-links">
+        <a href="members.html">Members</a>
+        <a href="events.html" style="color:var(--white)">Events</a>
+        <a href="spaces.html">Spaces</a>
+        <a href="apply.html" class="nav-cta">Request Access</a>
+      </div>
+      <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="members.html">Members</a>
+    <a href="events.html">Events</a>
+    <a href="spaces.html">Spaces</a>
+    <a href="partners.html">Partners</a>
+    <a href="apply.html" class="mobile-cta">Request Access</a>
+  </div>
+
+  <div class="event-hero">
+    <div class="event-hero-inner">
+      <a href="events.html" class="back-link">← All events</a>
+      <div class="event-hero-date">
+        <span class="event-hero-day">24</span>
+        <span class="event-hero-month">April 2026</span>
+      </div>
+      <h1 class="event-hero-title">Spring Place —<br><em>Members Evening</em></h1>
+      <div class="event-hero-meta">
+        <span>📍 Spring Place, Tribeca, New York</span>
+        <span>7:00 PM — Late</span>
+        <span>Finance · Technology · Arts</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="event-body-wrap">
+    <div class="event-body-inner">
+
+      <!-- MAIN -->
+      <main class="event-main">
+        <section class="event-section">
+          <p class="event-section-label">About this event</p>
+          <p class="event-desc">An intimate evening for Aether members in New York — hosted at Spring Place's private dining room in Tribeca. The format is unstructured. No panels, no speakers, no agenda. A room of exceptional people with time to talk.</p>
+          <p class="event-desc">Past evenings have resulted in co-investments, research collaborations, introductions across continents, and at least two ongoing partnerships that began over dinner. None of that was planned.</p>
+        </section>
+
+        <section class="event-section">
+          <p class="event-section-label">What to expect</p>
+          <div class="expect-grid">
+            <div class="expect-item">
+              <span class="expect-icon">◈</span>
+              <div>
+                <h4>Curated room</h4>
+                <p>20 members maximum. Pillars balanced — no more than 6 per field. Attendee list released 48 hours before.</p>
+              </div>
+            </div>
+            <div class="expect-item">
+              <span class="expect-icon">◈</span>
+              <div>
+                <h4>No agenda</h4>
+                <p>Private dining format. Dinner served at the table. Drinks from 7:00 PM. No name badges, no keynotes.</p>
+              </div>
+            </div>
+            <div class="expect-item">
+              <span class="expect-icon">◈</span>
+              <div>
+                <h4>Chatham House</h4>
+                <p>What's discussed stays in the room. Attendees may be identified but their remarks may not be attributed.</p>
+              </div>
+            </div>
+            <div class="expect-item">
+              <span class="expect-icon">◈</span>
+              <div>
+                <h4>Dress</h4>
+                <p>Smart. Not black tie. Spring Place's own dress code applies.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="event-section">
+          <p class="event-section-label">Attending members</p>
+          <p style="font-size:13px; color:var(--muted); margin-bottom: 20px;">12 confirmed · 8 spots remaining. Full list released to attendees 48 hours before the event.</p>
+          <div class="attendees-grid">
+            <div class="attendee-card">
+              <div class="att-avatar-lg">M</div>
+              <p class="att-name">Marcus Veil</p>
+              <p class="att-field">Finance · London</p>
+            </div>
+            <div class="attendee-card">
+              <div class="att-avatar-lg">E</div>
+              <p class="att-name">Elena Vasquez</p>
+              <p class="att-field">Sport · Madrid</p>
+            </div>
+            <div class="attendee-card">
+              <div class="att-avatar-lg">S</div>
+              <p class="att-name">Soren Halvorsen</p>
+              <p class="att-field">Technology · Oslo</p>
+            </div>
+            <div class="attendee-card">
+              <div class="att-avatar-lg">N</div>
+              <p class="att-name">Nadia Al-Rashid</p>
+              <p class="att-field">Technology · Dubai</p>
+            </div>
+            <div class="attendee-card">
+              <div class="att-avatar-lg">C</div>
+              <p class="att-name">Catherine Osei</p>
+              <p class="att-field">Law · Geneva</p>
+            </div>
+            <div class="attendee-card">
+              <div class="att-avatar-lg">R</div>
+              <p class="att-name">Ravi Mehta</p>
+              <p class="att-field">Finance · New York</p>
+            </div>
+            <div class="attendee-card attendee-anon">
+              <div class="att-avatar-lg" style="font-size:18px; color:var(--muted)">+6</div>
+              <p class="att-name" style="color:var(--muted)">More members</p>
+              <p class="att-field">Full list on RSVP</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="event-section">
+          <p class="event-section-label">The venue</p>
+          <div class="venue-card">
+            <div class="venue-img">SPRING PLACE · TRIBECA</div>
+            <div class="venue-info">
+              <h3>Spring Place</h3>
+              <p>6 Saint Johns Lane, Tribeca, New York, NY 10013</p>
+              <p style="margin-top:10px;">A private members club for leaders across art, culture, business, and technology. Founding partner of Aether's physical network.</p>
+              <a href="spaces.html" class="venue-link">View all partner spaces →</a>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- SIDEBAR -->
+      <aside class="event-sidebar">
+        <div class="event-rsvp-card" id="rsvp-card">
+          <div class="rsvp-spots">
+            <span class="rsvp-spots-num">8</span>
+            <span class="rsvp-spots-label">spots remaining</span>
+          </div>
+          <div class="rsvp-detail">
+            <span class="rsvp-detail-label">Date</span>
+            <span class="rsvp-detail-val">Thursday, 24 April 2026</span>
+          </div>
+          <div class="rsvp-detail">
+            <span class="rsvp-detail-label">Time</span>
+            <span class="rsvp-detail-val">7:00 PM — Late</span>
+          </div>
+          <div class="rsvp-detail">
+            <span class="rsvp-detail-label">Location</span>
+            <span class="rsvp-detail-val">Spring Place, Tribeca</span>
+          </div>
+          <div class="rsvp-detail">
+            <span class="rsvp-detail-label">Format</span>
+            <span class="rsvp-detail-val">Private dinner · 20 members max</span>
+          </div>
+          <div class="rsvp-detail">
+            <span class="rsvp-detail-label">Dress</span>
+            <span class="rsvp-detail-val">Smart casual</span>
+          </div>
+          <button class="btn-primary rsvp-btn" id="rsvp-btn" onclick="handleRsvp()">
+            Reserve my place
+          </button>
+          <p class="rsvp-note">Cancellations must be made 48 hours in advance.</p>
+        </div>
+
+        <div class="event-sidebar-tags">
+          <p class="event-section-label">Pillars</p>
+          <div class="card-tags" style="margin-top:10px;">
+            <span class="tag">Finance</span>
+            <span class="tag">Technology</span>
+            <span class="tag">Arts & Culture</span>
+            <span class="tag">Sport</span>
+            <span class="tag">Medicine</span>
+          </div>
+        </div>
+
+        <div class="event-sidebar-tags" style="margin-top:24px;">
+          <p class="event-section-label">More events</p>
+          <div class="mini-next-events" style="margin-top:12px;">
+            <a href="event.html" class="mini-next-event-row">
+              <div>
+                <p style="font-size:13px; color:var(--text);">Private Dinner — Milan</p>
+                <p style="font-size:11px; color:var(--muted);">2 May · Milan</p>
+              </div>
+              <span style="font-size:11px; color:var(--gold)">→</span>
+            </a>
+            <a href="event.html" class="mini-next-event-row">
+              <div>
+                <p style="font-size:13px; color:var(--text);">Founder Roundtable</p>
+                <p style="font-size:11px; color:var(--muted);">10 May · London</p>
+              </div>
+              <span style="font-size:11px; color:var(--gold)">→</span>
+            </a>
+          </div>
+        </div>
+      </aside>
+
+    </div>
+  </div>
+
+  <!-- RSVP CONFIRMED OVERLAY -->
+  <div class="modal-overlay" id="rsvp-confirm" style="display:none;" onclick="closeRsvp()">
+    <div class="modal" onclick="event.stopPropagation()" style="text-align:center; max-width:420px;">
+      <div style="font-size:36px; color:var(--gold); margin-bottom:20px;">◈</div>
+      <p class="flow-eyebrow" style="margin-bottom:10px;">You're confirmed</p>
+      <h3 style="font-family:var(--font-serif); font-size:28px; font-weight:300; color:var(--white); margin-bottom:12px;">See you on the 24th.</h3>
+      <p style="font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:6px;">Spring Place, Tribeca. 7:00 PM.</p>
+      <p style="font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:28px;">The full attendee list will be shared with you 48 hours before. A calendar invite is on its way.</p>
+      <button class="btn-primary btn-sm" onclick="closeRsvp()">Done</button>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <span class="wordmark">AETHER</span>
+      <p>Private membership. By invitation only.</p>
+      <div class="footer-links">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="#">Contact</a>
+        <a href="partners.html" style="color:var(--gold)">Partner with us</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="nav.js"></script>
+  <script>
+    function handleRsvp() {
+      document.getElementById('rsvp-confirm').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      const btn = document.getElementById('rsvp-btn');
+      btn.textContent = 'Reserved ✓';
+      btn.style.opacity = '0.6';
+      btn.disabled = true;
+      document.querySelector('.rsvp-spots-num').textContent = '7';
+    }
+    function closeRsvp() {
+      document.getElementById('rsvp-confirm').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+  </script>
+
+</body>
+</html>

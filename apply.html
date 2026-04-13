@@ -22,7 +22,19 @@
         <a href="spaces.html">Spaces</a>
       </div>
     </div>
+      <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
   </nav>
+
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="members.html">Members</a>
+    <a href="events.html">Events</a>
+    <a href="spaces.html">Spaces</a>
+    <a href="partners.html">Partners</a>
+    <a href="apply.html" class="mobile-cta">Request Access</a>
+  </div>
 
   <div class="flow-wrap">
 
@@ -513,5 +525,7 @@
     function submitNomination() { showScreen('n-confirm'); }
   </script>
 
+
+  <script src="nav.js"></script>
 </body>
 </html>

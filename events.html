@@ -22,7 +22,19 @@
         <a href="apply.html" class="nav-cta">Request Access</a>
       </div>
     </div>
+      <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
   </nav>
+
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="members.html">Members</a>
+    <a href="events.html">Events</a>
+    <a href="spaces.html">Spaces</a>
+    <a href="partners.html">Partners</a>
+    <a href="apply.html" class="mobile-cta">Request Access</a>
+  </div>
 
   <div class="page-header">
     <div class="page-header-inner">
@@ -34,7 +46,7 @@
   <div style="background: var(--black); min-height: 60vh; padding: 48px 0;">
     <div class="events-list">
 
-      <div class="event-row">
+      <div class="event-row" onclick="window.location='event.html'" style="cursor:pointer">
         <div class="event-date-block">
           <div class="event-day">24</div>
           <div class="event-month">Apr</div>
@@ -53,7 +65,7 @@
         </div>
       </div>
 
-      <div class="event-row">
+      <div class="event-row" onclick="window.location='event.html'" style="cursor:pointer">
         <div class="event-date-block">
           <div class="event-day">02</div>
           <div class="event-month">May</div>
@@ -72,7 +84,7 @@
         </div>
       </div>
 
-      <div class="event-row">
+      <div class="event-row" onclick="window.location='event.html'" style="cursor:pointer">
         <div class="event-date-block">
           <div class="event-day">10</div>
           <div class="event-month">May</div>
@@ -91,7 +103,7 @@
         </div>
       </div>
 
-      <div class="event-row">
+      <div class="event-row" onclick="window.location='event.html'" style="cursor:pointer">
         <div class="event-date-block">
           <div class="event-day">18</div>
           <div class="event-month">May</div>
@@ -110,7 +122,7 @@
         </div>
       </div>
 
-      <div class="event-row">
+      <div class="event-row" onclick="window.location='event.html'" style="cursor:pointer">
         <div class="event-date-block">
           <div class="event-day">06</div>
           <div class="event-month">Jun</div>
@@ -145,5 +157,7 @@
     </div>
   </footer>
 
+
+  <script src="nav.js"></script>
 </body>
 </html>
