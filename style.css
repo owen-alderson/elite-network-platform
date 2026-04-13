@@ -50,6 +50,42 @@ body {
 
 a { color: inherit; text-decoration: none; }
 
+/* ── Global form elements ────────────────────────────────── */
+.form-input,
+.form-textarea {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--white);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 1.7;
+  padding: 13px 16px;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+  resize: none;
+  -webkit-appearance: none;
+}
+.form-textarea {
+  min-height: 110px;
+  letter-spacing: 0.01em;
+}
+.form-input::placeholder,
+.form-textarea::placeholder {
+  color: #4a4a4a;
+  font-style: italic;
+  font-weight: 300;
+}
+.form-input:focus,
+.form-textarea:focus {
+  border-color: var(--gold-dim);
+  background: #161616;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.06);
+}
+
 /* ============================================================
    NAV
    ============================================================ */

@@ -464,6 +464,24 @@
 .dash-space-status.open  { color: #6abf7b; }
 .dash-space-status.soon  { color: var(--muted); }
 
+/* ── Intro textarea ────────────────────────────────────────── */
+.intro-textarea {
+  background: #0f0f0f;
+  border-color: #333;
+  border-radius: 4px;
+  padding: 16px 18px;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--text);
+  letter-spacing: 0.01em;
+  min-height: 120px;
+}
+.intro-textarea:focus {
+  border-color: var(--gold-dim);
+  background: #111;
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.07);
+}
+
 /* ── Modal ─────────────────────────────────────────────────── */
 .modal-overlay {
   position: fixed;
