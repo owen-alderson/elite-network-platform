@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Join — Aether</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="apply.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="wordmark">AETHER</a>
+      <div class="nav-links">
+        <a href="members.html">Members</a>
+        <a href="events.html">Events</a>
+        <a href="spaces.html">Spaces</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="flow-wrap">
+
+    <!-- =====================================================
+         ENTRY — Choose path
+         ===================================================== -->
+    <div class="flow-screen active" id="screen-entry">
+      <div class="flow-center">
+        <p class="flow-eyebrow">Membership</p>
+        <h1 class="flow-heading">How would you<br>like to proceed?</h1>
+        <p class="flow-sub">Aether is built on trusted nominations. Every member is vouched for by someone already inside.</p>
+        <div class="entry-cards">
+          <button class="entry-card" onclick="startFlow('apply')">
+            <span class="entry-card-icon">◈</span>
+            <h3>I've been nominated</h3>
+            <p>You received a nomination from an Aether member. Complete your application here.</p>
+            <span class="entry-card-cta">Begin Application →</span>
+          </button>
+          <button class="entry-card" onclick="startFlow('nominate')">
+            <span class="entry-card-icon">◇</span>
+            <h3>I want to nominate someone</h3>
+            <p>You're a current member and want to introduce an exceptional peer to Aether.</p>
+            <span class="entry-card-cta">Submit a Nomination →</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =====================================================
+         APPLICATION FLOW
+         ===================================================== -->
+
+    <!-- A1: Verify nomination -->
+    <div class="flow-screen" id="screen-a1">
+      <div class="flow-inner">
+        <div class="step-track" data-flow="apply" data-step="1"></div>
+        <div class="flow-content">
+          <p class="flow-eyebrow">Application · Step 1 of 5</p>
+          <h2 class="flow-heading-sm">Verify your nomination</h2>
+          <p class="flow-sub-sm">Your nominator should have sent you a code. Enter it below along with the email address they used.</p>
+          <div class="form-group">
+            <label class="form-label">Nomination Code</label>
+            <input class="form-input" type="text" placeholder="e.g. AE-2026-XXXX" id="a-code" />
+            <p class="form-hint">Check the email or message you received from your nominator.</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Your Email Address</label>
+            <input class="form-input" type="email" placeholder="you@example.com" id="a-email" />
+          </div>
+          <div class="flow-actions">
+            <button class="btn-ghost btn-sm" onclick="goEntry()">← Back</button>
+            <button class="btn-primary btn-sm" onclick="nextApply(1)">Continue →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- A2: Personal details -->
+    <div class="flow-screen" id="screen-a2">
+      <div class="flow-inner">
+        <div class="step-track" data-flow="apply" data-step="2"></div>
+        <div class="flow-content">
+          <p class="flow-eyebrow">Application · Step 2 of 5</p>
+          <h2 class="flow-heading-sm">About you</h2>
+          <p class="flow-sub-sm">The basics. Keep your title tight — this appears on your public profile.</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">First Name</label>
+              <input class="form-input" type="text" placeholder="First" id="a-first" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Last Name</label>
+              <input class="form-input" type="text" placeholder="Last" id="a-last" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Current Role & Organisation</label>
+            <input class="form-input" type="text" placeholder="e.g. Managing Partner — Veil Capital" id="a-role" />
+            <p class="form-hint">One line. This is your headline on Aether.</p>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">City</label>
+              <input class="form-input" type="text" placeholder="e.g. London" id="a-city" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Country</label>
+              <input class="form-input" type="text" placeholder="e.g. United Kingdom" id="a-country" />
+            </div>
+          </div>
+          <div class="flow-actions">
+            <button class="btn-ghost btn-sm" onclick="goScreen('a1')">← Back</button>
+            <button class="btn-primary btn-sm" onclick="nextApply(2)">Continue →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- A3: Pillar + headline -->
+    <div class="flow-screen" id="screen-a3">
+      <div class="flow-inner">
+        <div class="step-track" data-flow="apply" data-step="3"></div>
+        <div class="flow-content">
+          <p class="flow-eyebrow">Application · Step 3 of 5</p>
+          <h2 class="flow-heading-sm">Your field</h2>
+          <p class="flow-sub-sm">Select the pillar that best describes your primary domain. You'll be evaluated against the global bar in that field.</p>
+
+          <div class="form-group">
+            <label class="form-label">Pillar</label>
+            <div class="pillar-select" id="pillar-select">
+              <button class="pillar-opt" data-value="finance" onclick="selectPillar(this)">Finance</button>
+              <button class="pillar-opt" data-value="sport" onclick="selectPillar(this)">Sport</button>
+              <button class="pillar-opt" data-value="medicine" onclick="selectPillar(this)">Medicine</button>
+              <button class="pillar-opt" data-value="technology" onclick="selectPillar(this)">Technology</button>
+              <button class="pillar-opt" data-value="arts" onclick="selectPillar(this)">Arts & Culture</button>
+              <button class="pillar-opt" data-value="law" onclick="selectPillar(this)">Law & Policy</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">One-line credential</label>
+            <input class="form-input" type="text" placeholder="e.g. 2x Olympic Gold Medalist · Freestyle Skiing" id="a-credential" />
+            <p class="form-hint">The single strongest signal of your elite status in this field. Not a job title.</p>
+          </div>
+
+          <div class="flow-actions">
+            <button class="btn-ghost btn-sm" onclick="goScreen('a2')">← Back</button>
+            <button class="btn-primary btn-sm" onclick="nextApply(3)">Continue →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- A4: Achievements -->
+    <div class="flow-screen" id="screen-a4">
+      <div class="flow-inner">
+        <div class="step-track" data-flow="apply" data-step="4"></div>
+        <div class="flow-content">
+          <p class="flow-eyebrow">Application · Step 4 of 5</p>
+          <h2 class="flow-heading-sm">Verified achievements</h2>
+          <p class="flow-sub-sm">List your three most significant achievements. Be specific — our team verifies everything. Year, title, and a brief description.</p>
+
+          <div class="achievement-entry" id="ach-1">
+            <div class="ach-num">01</div>
+            <div class="ach-fields">
+              <div class="form-row">
+                <div class="form-group form-group-sm">
+                  <label class="form-label">Year</label>
+                  <input class="form-input" type="text" placeholder="2023" />
+                </div>
+                <div class="form-group form-group-grow">
+                  <label class="form-label">Achievement</label>
+                  <input class="form-input" type="text" placeholder="e.g. Closed €840M Fund IV — Veil Capital" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Details <span class="form-label-opt">(optional)</span></label>
+                <input class="form-input" type="text" placeholder="Brief context — publication, organisation, or scale" />
+              </div>
+            </div>
+          </div>
+
+          <div class="achievement-entry" id="ach-2">
+            <div class="ach-num">02</div>
+            <div class="ach-fields">
+              <div class="form-row">
+                <div class="form-group form-group-sm">
+                  <label class="form-label">Year</label>
+                  <input class="form-input" type="text" placeholder="2021" />
+                </div>
+                <div class="form-group form-group-grow">
+                  <label class="form-label">Achievement</label>
+                  <input class="form-input" type="text" placeholder="e.g. Forbes PE Power List — Ranked #12" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Details <span class="form-label-opt">(optional)</span></label>
+                <input class="form-input" type="text" placeholder="Brief context" />
+              </div>
+            </div>
+          </div>
+
+          <div class="achievement-entry" id="ach-3">
+            <div class="ach-num">03</div>
+            <div class="ach-fields">
+              <div class="form-row">
+                <div class="form-group form-group-sm">
+                  <label class="form-label">Year</label>
+                  <input class="form-input" type="text" placeholder="2019" />
+                </div>
+                <div class="form-group form-group-grow">
+                  <label class="form-label">Achievement</label>
+                  <input class="form-input" type="text" placeholder="e.g. Exit: Meridian Logistics — 4.2x return" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Details <span class="form-label-opt">(optional)</span></label>
+                <input class="form-input" type="text" placeholder="Brief context" />
+              </div>
+            </div>
+          </div>
+
+          <div class="flow-actions">
+            <button class="btn-ghost btn-sm" onclick="goScreen('a3')">← Back</button>
+            <button class="btn-primary btn-sm" onclick="nextApply(4)">Continue →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- A5: Current work + review -->
+    <div class="flow-screen" id="screen-a5">
+      <div class="flow-inner">
+        <div class="step-track" data-flow="apply" data-step="5"></div>
+        <div class="flow-content">
+          <p class="flow-eyebrow">Application · Step 5 of 5</p>
+          <h2 class="flow-heading-sm">What are you working on?</h2>
+          <p class="flow-sub-sm">This appears on your live profile and gets updated by you over time. Write as if you're briefing a peer at a dinner — concise, specific, real.</p>
+
+          <div class="form-group">
+            <label class="form-label">Current focus</label>
+            <textarea class="form-textarea" rows="4" placeholder="e.g. Raising Fund V (target €1.2B). Evaluating three AI-enabled industrial platforms in Germany and the Nordics. Advising two portfolio companies on succession planning." id="a-current"></textarea>
+            <p class="form-hint">2–4 sentences. No buzzwords.</p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">LinkedIn or public profile URL <span class="form-label-opt">(optional — speeds up verification)</span></label>
+            <input class="form-input" type="url" placeholder="https://linkedin.com/in/..." id="a-linkedin" />
+          </div>
+
+          <div class="review-box" id="review-box">
+            <p class="review-label">Review before submitting</p>
+            <div class="review-grid" id="review-content">
+              <!-- populated by JS -->
+            </div>
+          </div>
+
+          <div class="flow-actions">
+            <button class="btn-ghost btn-sm" onclick="goScreen('a4')">← Back</button>
+            <button class="btn-primary btn-sm" onclick="submitApplication()">Submit Application →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- A-CONFIRM -->
+    <div class="flow-screen" id="screen-a-confirm">
+      <div class="flow-center">
+        <div class="confirm-icon">◈</div>
+        <p class="flow-eyebrow">Application Received</p>
+        <h2 class="flow-heading">Under review.</h2>
+        <p class="flow-sub">Our team will verify your credentials against the global bar for your pillar. This typically takes 5–10 business days. You will hear from us by email.</p>
+        <p class="flow-sub" style="margin-top: 12px; font-size: 13px;">In the meantime, your nominator has been notified that you've completed your application.</p>
+        <a href="index.html" class="btn-ghost" style="margin-top: 40px; display: inline-block;">Return to Aether</a>
+      </div>
+    </div>
+
+
+    <!-- =====================================================
+         NOMINATION FLOW
+         ===================================================== -->
+
+    <!-- N1: Nominator details -->
+    <div class="flow-screen" id="screen-n1">
+      <div class="flow-inner">
+        <div class="step-track" data-flow="nominate" data-step="1"></div>
+        <div class="flow-content">
+          <p class="flow-eyebrow">Nomination · Step 1 of 3</p>
+          <h2 class="flow-heading-sm">Your details</h2>
+          <p class="flow-sub-sm">We'll verify your membership before issuing a nomination code to your nominee.</p>
+          <div class="form-group">
+            <label class="form-label">Your Name</label>
+            <input class="form-input" type="text" placeholder="Full name" id="n-name" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Your Member Email</label>
+            <input class="form-input" type="email" placeholder="The email on your Aether account" id="n-email" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Member Since</label>
+            <input class="form-input" type="text" placeholder="e.g. 2024" id="n-since" />
+          </div>
+          <div class="flow-actions">
+            <button class="btn-ghost btn-sm" onclick="goEntry()">← Back</button>
+            <button class="btn-primary btn-sm" onclick="nextNominate(1)">Continue →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- N2: Nominee details -->
+    <div class="flow-screen" id="screen-n2">
+      <div class="flow-inner">
+        <div class="step-track" data-flow="nominate" data-step="2"></div>
+        <div class="flow-content">
+          <p class="flow-eyebrow">Nomination · Step 2 of 3</p>
+          <h2 class="flow-heading-sm">Who are you nominating?</h2>
+          <p class="flow-sub-sm">We'll send them a unique nomination code and invite them to complete their application.</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">First Name</label>
+              <input class="form-input" type="text" placeholder="First" id="n-nom-first" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Last Name</label>
+              <input class="form-input" type="text" placeholder="Last" id="n-nom-last" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Their Email Address</label>
+            <input class="form-input" type="email" placeholder="nominee@example.com" id="n-nom-email" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Their Field / Pillar</label>
+            <div class="pillar-select" id="pillar-select-n">
+              <button class="pillar-opt" data-value="finance" onclick="selectPillarN(this)">Finance</button>
+              <button class="pillar-opt" data-value="sport" onclick="selectPillarN(this)">Sport</button>
+              <button class="pillar-opt" data-value="medicine" onclick="selectPillarN(this)">Medicine</button>
+              <button class="pillar-opt" data-value="technology" onclick="selectPillarN(this)">Technology</button>
+              <button class="pillar-opt" data-value="arts" onclick="selectPillarN(this)">Arts & Culture</button>
+              <button class="pillar-opt" data-value="law" onclick="selectPillarN(this)">Law & Policy</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Their LinkedIn or public profile <span class="form-label-opt">(optional)</span></label>
+            <input class="form-input" type="url" placeholder="https://linkedin.com/in/..." id="n-nom-linkedin" />
+          </div>
+          <div class="flow-actions">
+            <button class="btn-ghost btn-sm" onclick="goScreen('n1')">← Back</button>
+            <button class="btn-primary btn-sm" onclick="nextNominate(2)">Continue →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- N3: Why -->
+    <div class="flow-screen" id="screen-n3">
+      <div class="flow-inner">
+        <div class="step-track" data-flow="nominate" data-step="3"></div>
+        <div class="flow-content">
+          <p class="flow-eyebrow">Nomination · Step 3 of 3</p>
+          <h2 class="flow-heading-sm">Why do they belong?</h2>
+          <p class="flow-sub-sm">This is your personal endorsement. It carries weight. Write what you'd say if someone asked you to vouch for this person in a room.</p>
+          <div class="form-group">
+            <label class="form-label">Your endorsement</label>
+            <textarea class="form-textarea" rows="6" placeholder="Describe why this person is genuinely elite in their field. What have they built, achieved, or led that puts them in the top 0.1% globally?" id="n-why"></textarea>
+            <p class="form-hint">Minimum 3 sentences. Be specific — generic endorsements are not accepted.</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label">How do you know them?</label>
+            <input class="form-input" type="text" placeholder="e.g. Co-investors on two deals over 4 years" id="n-relationship" />
+          </div>
+
+          <div class="nominator-note">
+            <p>By submitting this nomination, you vouch that this individual meets Aether's standard for their pillar. Your name will be visible to our review team as the nominating member.</p>
+          </div>
+
+          <div class="flow-actions">
+            <button class="btn-ghost btn-sm" onclick="goScreen('n2')">← Back</button>
+            <button class="btn-primary btn-sm" onclick="submitNomination()">Submit Nomination →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- N-CONFIRM -->
+    <div class="flow-screen" id="screen-n-confirm">
+      <div class="flow-center">
+        <div class="confirm-icon">◇</div>
+        <p class="flow-eyebrow">Nomination Submitted</p>
+        <h2 class="flow-heading">Nomination received.</h2>
+        <p class="flow-sub">We'll verify your membership and send your nominee a unique invitation code within 24 hours. Once they complete their application, our team will review it against the standard for their pillar.</p>
+        <p class="flow-sub" style="margin-top: 12px; font-size: 13px;">You'll receive a confirmation once a decision has been made. Thank you for keeping the network exceptional.</p>
+        <a href="index.html" class="btn-ghost" style="margin-top: 40px; display: inline-block;">Return to Aether</a>
+      </div>
+    </div>
+
+  </div><!-- /flow-wrap -->
+
+  <script>
+    // ── State ──────────────────────────────────────────────
+    let selectedPillar  = null;
+    let selectedPillarN = null;
+
+    const APPLY_STEPS = [
+      'Verify nomination',
+      'Personal details',
+      'Field & credential',
+      'Achievements',
+      'Review & submit'
+    ];
+    const NOMINATE_STEPS = [
+      'Your details',
+      'Nominee details',
+      'Endorsement'
+    ];
+
+    // ── Step tracker builder ────────────────────────────────
+    function buildStepTrack(trackEl, labels, currentStep) {
+      trackEl.innerHTML = '';
+      labels.forEach((label, i) => {
+        const div = document.createElement('div');
+        div.className = 'step-dot';
+        if (i + 1 < currentStep)  div.classList.add('done');
+        if (i + 1 === currentStep) div.classList.add('active');
+        div.innerHTML = `<span class="step-dot-label">${label}</span>`;
+        trackEl.appendChild(div);
+      });
+    }
+
+    // ── Screen routing ─────────────────────────────────────
+    function showScreen(id) {
+      document.querySelectorAll('.flow-screen').forEach(s => s.classList.remove('active'));
+      const el = document.getElementById('screen-' + id);
+      if (!el) return;
+      el.classList.add('active');
+      window.scrollTo(0, 0);
+
+      // Populate step tracks
+      const track = el.querySelector('.step-track');
+      if (track) {
+        const flow = track.dataset.flow;
+        const step = parseInt(track.dataset.step, 10);
+        if (flow === 'apply')    buildStepTrack(track, APPLY_STEPS, step);
+        if (flow === 'nominate') buildStepTrack(track, NOMINATE_STEPS, step);
+      }
+    }
+
+    function goEntry()    { showScreen('entry'); }
+    function goScreen(id) { showScreen(id); }
+
+    function startFlow(type) {
+      showScreen(type === 'apply' ? 'a1' : 'n1');
+    }
+
+    // ── Pillar selectors ───────────────────────────────────
+    function selectPillar(btn) {
+      document.querySelectorAll('#pillar-select .pillar-opt').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedPillar = btn.dataset.value;
+    }
+    function selectPillarN(btn) {
+      document.querySelectorAll('#pillar-select-n .pillar-opt').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedPillarN = btn.dataset.value;
+    }
+
+    // ── Apply flow ─────────────────────────────────────────
+    function nextApply(step) {
+      if      (step === 1) { showScreen('a2'); }
+      else if (step === 2) { showScreen('a3'); }
+      else if (step === 3) {
+        if (!selectedPillar) { alert('Please select a pillar.'); return; }
+        showScreen('a4');
+      }
+      else if (step === 4) { showScreen('a5'); buildReview(); }
+    }
+
+    function buildReview() {
+      const first  = document.getElementById('a-first')?.value      || '—';
+      const last   = document.getElementById('a-last')?.value       || '—';
+      const role   = document.getElementById('a-role')?.value       || '—';
+      const city   = document.getElementById('a-city')?.value       || '—';
+      const cred   = document.getElementById('a-credential')?.value || '—';
+      const pillar = selectedPillar
+        ? selectedPillar.charAt(0).toUpperCase() + selectedPillar.slice(1)
+        : '—';
+
+      document.getElementById('review-content').innerHTML = `
+        <div class="review-row"><span class="review-key">Name</span><span class="review-val">${first} ${last}</span></div>
+        <div class="review-row"><span class="review-key">Role</span><span class="review-val">${role}</span></div>
+        <div class="review-row"><span class="review-key">Location</span><span class="review-val">${city}</span></div>
+        <div class="review-row"><span class="review-key">Pillar</span><span class="review-val">${pillar}</span></div>
+        <div class="review-row"><span class="review-key">Credential</span><span class="review-val">${cred}</span></div>
+      `;
+    }
+
+    function submitApplication() { showScreen('a-confirm'); }
+
+    // ── Nominate flow ──────────────────────────────────────
+    function nextNominate(step) {
+      if (step === 1) { showScreen('n2'); }
+      else if (step === 2) {
+        if (!selectedPillarN) { alert('Please select a pillar for your nominee.'); return; }
+        showScreen('n3');
+      }
+    }
+    function submitNomination() { showScreen('n-confirm'); }
+  </script>
+
+</body>
+</html>
