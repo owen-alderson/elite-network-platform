@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Home — Aether</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="dashboard.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body class="dash-body">
+
+  <!-- NAV — logged in state -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="wordmark">AETHER</a>
+      <div class="nav-links">
+        <a href="dashboard.html" style="color: var(--white)">Home</a>
+        <a href="members.html">Members</a>
+        <a href="events.html">Events</a>
+        <a href="spaces.html">Spaces</a>
+      </div>
+      <div class="nav-member">
+        <div class="nav-avatar">M</div>
+        <span class="nav-member-name">Marcus V.</span>
+      </div>
+    </div>
+  </nav>
+
+  <div class="dash-layout">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="dash-sidebar">
+      <div class="dash-profile-card">
+        <div class="dash-avatar">M</div>
+        <div class="dash-profile-info">
+          <h3 class="dash-profile-name">Marcus Veil</h3>
+          <p class="dash-profile-role">Managing Partner<br>Veil Capital</p>
+          <span class="dash-pillar-tag">◈ Finance</span>
+        </div>
+      </div>
+
+      <nav class="dash-nav">
+        <a href="dashboard.html" class="dash-nav-item active">
+          <span class="dash-nav-icon">⬡</span> Home
+        </a>
+        <a href="members.html" class="dash-nav-item">
+          <span class="dash-nav-icon">◎</span> Members
+        </a>
+        <a href="events.html" class="dash-nav-item">
+          <span class="dash-nav-icon">◇</span> Events
+        </a>
+        <a href="spaces.html" class="dash-nav-item">
+          <span class="dash-nav-icon">◈</span> Spaces
+        </a>
+        <a href="profile.html" class="dash-nav-item">
+          <span class="dash-nav-icon">○</span> My Profile
+        </a>
+      </nav>
+
+      <div class="dash-sidebar-block">
+        <p class="dash-sidebar-label">My Cities</p>
+        <div class="dash-cities">
+          <span class="dash-city active">London</span>
+          <span class="dash-city">New York</span>
+          <span class="dash-city">Milan</span>
+        </div>
+      </div>
+
+      <div class="dash-sidebar-block">
+        <p class="dash-sidebar-label">Member since</p>
+        <p class="dash-sidebar-val">2024</p>
+      </div>
+
+      <div class="dash-sidebar-block">
+        <p class="dash-sidebar-label">Nominations remaining</p>
+        <p class="dash-sidebar-val">2 <span style="color: var(--muted); font-size:11px;">this year</span></p>
+        <a href="apply.html" class="dash-nominate-btn">Nominate a peer →</a>
+      </div>
+    </aside>
+
+    <!-- MAIN FEED -->
+    <main class="dash-main">
+
+      <!-- Greeting -->
+      <div class="dash-greeting">
+        <div>
+          <h1 class="dash-greeting-head">Good evening, Marcus.</h1>
+          <p class="dash-greeting-sub">3 new members joined your pillar this week. You have an event on Thursday.</p>
+        </div>
+        <div class="dash-greeting-date">
+          <span class="dash-date-num">13</span>
+          <span class="dash-date-month">April</span>
+        </div>
+      </div>
+
+      <!-- NEXT EVENT BANNER -->
+      <div class="dash-next-event">
+        <div class="dash-next-event-left">
+          <p class="dash-next-label">Next event</p>
+          <h2 class="dash-next-title">Spring Place — Members Evening</h2>
+          <p class="dash-next-meta">Thursday 24 April · 7:00 PM · Spring Place, New York</p>
+          <div class="dash-next-attendees">
+            <div class="attendee-stack">
+              <div class="att-chip">E</div>
+              <div class="att-chip">S</div>
+              <div class="att-chip">N</div>
+              <div class="att-chip">+9</div>
+            </div>
+            <span>12 members attending</span>
+          </div>
+        </div>
+        <div class="dash-next-event-right">
+          <a href="events.html" class="btn-primary btn-sm">View Event</a>
+        </div>
+      </div>
+
+      <!-- TWO COL: Suggested + New Members -->
+      <div class="dash-two-col">
+
+        <!-- Suggested connections -->
+        <section class="dash-section">
+          <div class="dash-section-head">
+            <h2 class="dash-section-title">Suggested connections</h2>
+            <a href="members.html" class="dash-see-all">See all →</a>
+          </div>
+          <p class="dash-section-sub">Cross-pillar peers in your cities.</p>
+
+          <div class="suggestion-list">
+
+            <div class="suggestion-row">
+              <div class="sug-avatar">E</div>
+              <div class="sug-info">
+                <p class="sug-name">Elena Vasquez</p>
+                <p class="sug-role">Olympic Fencer · 2x World Champion</p>
+                <span class="sug-tag">Sport · Madrid</span>
+              </div>
+              <button class="sug-intro-btn" onclick="showIntroModal('Elena Vasquez')">
+                Request intro
+              </button>
+            </div>
+
+            <div class="suggestion-row">
+              <div class="sug-avatar">A</div>
+              <div class="sug-info">
+                <p class="sug-name">Dr. Aiko Tanaka</p>
+                <p class="sug-role">Neurosurgeon · Stanford Medical</p>
+                <span class="sug-tag">Medicine · San Francisco</span>
+              </div>
+              <button class="sug-intro-btn" onclick="showIntroModal('Dr. Aiko Tanaka')">
+                Request intro
+              </button>
+            </div>
+
+            <div class="suggestion-row">
+              <div class="sug-avatar">S</div>
+              <div class="sug-info">
+                <p class="sug-name">Soren Halvorsen</p>
+                <p class="sug-role">Co-founder & CTO — Halvorsen Labs</p>
+                <span class="sug-tag">Technology · Oslo</span>
+              </div>
+              <button class="sug-intro-btn" onclick="showIntroModal('Soren Halvorsen')">
+                Request intro
+              </button>
+            </div>
+
+            <div class="suggestion-row">
+              <div class="sug-avatar">C</div>
+              <div class="sug-info">
+                <p class="sug-name">Catherine Osei</p>
+                <p class="sug-role">Partner · Former UN Counsel</p>
+                <span class="sug-tag">Law & Policy · Geneva</span>
+              </div>
+              <button class="sug-intro-btn" onclick="showIntroModal('Catherine Osei')">
+                Request intro
+              </button>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- Right col -->
+        <div class="dash-right-col">
+
+          <!-- Upcoming events -->
+          <section class="dash-section">
+            <div class="dash-section-head">
+              <h2 class="dash-section-title">Upcoming events</h2>
+              <a href="events.html" class="dash-see-all">See all →</a>
+            </div>
+            <div class="mini-events">
+              <div class="mini-event">
+                <div class="mini-event-date">
+                  <span class="mini-day">24</span>
+                  <span class="mini-month">Apr</span>
+                </div>
+                <div class="mini-event-info">
+                  <p class="mini-event-title">Spring Place Evening</p>
+                  <p class="mini-event-loc">New York</p>
+                </div>
+                <span class="mini-spots">12 spots</span>
+              </div>
+              <div class="mini-event">
+                <div class="mini-event-date">
+                  <span class="mini-day">02</span>
+                  <span class="mini-month">May</span>
+                </div>
+                <div class="mini-event-info">
+                  <p class="mini-event-title">Private Dinner</p>
+                  <p class="mini-event-loc">Milan</p>
+                </div>
+                <span class="mini-spots">8 spots</span>
+              </div>
+              <div class="mini-event">
+                <div class="mini-event-date">
+                  <span class="mini-day">10</span>
+                  <span class="mini-month">May</span>
+                </div>
+                <div class="mini-event-info">
+                  <p class="mini-event-title">Founder Roundtable</p>
+                  <p class="mini-event-loc">London</p>
+                </div>
+                <span class="mini-spots">5 spots</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- New members -->
+          <section class="dash-section" style="margin-top: 24px;">
+            <div class="dash-section-head">
+              <h2 class="dash-section-title">New members</h2>
+              <a href="members.html" class="dash-see-all">See all →</a>
+            </div>
+            <div class="new-members-list">
+              <div class="new-member-row">
+                <div class="sug-avatar" style="width:32px;height:32px;font-size:13px;">I</div>
+                <div>
+                  <p class="sug-name" style="font-size:13px;">Isabelle Moreau</p>
+                  <p class="sug-role">Architect · Paris</p>
+                </div>
+                <span class="new-pill">Arts</span>
+              </div>
+              <div class="new-member-row">
+                <div class="sug-avatar" style="width:32px;height:32px;font-size:13px;">R</div>
+                <div>
+                  <p class="sug-name" style="font-size:13px;">Ravi Mehta</p>
+                  <p class="sug-role">Venture Capital · New York</p>
+                </div>
+                <span class="new-pill">Finance</span>
+              </div>
+              <div class="new-member-row">
+                <div class="sug-avatar" style="width:32px;height:32px;font-size:13px;">N</div>
+                <div>
+                  <p class="sug-name" style="font-size:13px;">Nadia Al-Rashid</p>
+                  <p class="sug-role">CEO Meridian AI · Dubai</p>
+                </div>
+                <span class="new-pill">Tech</span>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </div>
+
+      <!-- SPACES STRIP -->
+      <section class="dash-section dash-spaces-strip">
+        <div class="dash-section-head">
+          <h2 class="dash-section-title">Partner spaces</h2>
+          <a href="spaces.html" class="dash-see-all">See all →</a>
+        </div>
+        <div class="dash-spaces-row">
+          <div class="dash-space-chip active-space">
+            <span class="dash-space-city">New York</span>
+            <span class="dash-space-name">Spring Place</span>
+            <span class="dash-space-status open">Open today</span>
+          </div>
+          <div class="dash-space-chip">
+            <span class="dash-space-city">London</span>
+            <span class="dash-space-name">Coming Q3 2026</span>
+            <span class="dash-space-status soon">Soon</span>
+          </div>
+          <div class="dash-space-chip">
+            <span class="dash-space-city">Milan</span>
+            <span class="dash-space-name">Coming Q3 2026</span>
+            <span class="dash-space-status soon">Soon</span>
+          </div>
+          <div class="dash-space-chip">
+            <span class="dash-space-city">Paris</span>
+            <span class="dash-space-name">Coming Q4 2026</span>
+            <span class="dash-space-status soon">Soon</span>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- INTRO REQUEST MODAL -->
+  <div class="modal-overlay" id="intro-modal" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <p class="flow-eyebrow" style="margin-bottom:12px;">Request Introduction</p>
+      <h3 class="modal-title" id="modal-name"></h3>
+      <p class="modal-body">Write a brief note about why you'd like to connect. This will be shared with a mutual member who will make the introduction.</p>
+      <textarea class="form-input form-textarea" rows="4" placeholder="e.g. I'm exploring AI applications in industrial PE — Soren's work at Halvorsen Labs seems directly relevant. Would value 20 minutes."></textarea>
+      <div class="modal-actions">
+        <button class="btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+        <button class="btn-primary btn-sm" onclick="submitIntro()">Send Request</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="intro-confirm" onclick="closeConfirm()" style="display:none;">
+    <div class="modal" onclick="event.stopPropagation()" style="text-align:center;">
+      <div style="font-size:32px; color:var(--gold); margin-bottom:16px;">◈</div>
+      <h3 class="modal-title">Request sent.</h3>
+      <p class="modal-body">A mutual member will reach out to make the introduction. You'll hear back within a few days.</p>
+      <button class="btn-primary btn-sm" style="margin-top:8px;" onclick="closeConfirm()">Done</button>
+    </div>
+  </div>
+
+  <script>
+    function showIntroModal(name) {
+      document.getElementById('modal-name').textContent = name;
+      document.getElementById('intro-modal').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+    function closeModal() {
+      document.getElementById('intro-modal').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+    function submitIntro() {
+      document.getElementById('intro-modal').style.display = 'none';
+      document.getElementById('intro-confirm').style.display = 'flex';
+    }
+    function closeConfirm() {
+      document.getElementById('intro-confirm').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+  </script>
+
+</body>
+</html>
