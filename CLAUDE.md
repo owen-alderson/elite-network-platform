@@ -2,7 +2,22 @@
 
 Behavioral guidelines for working in this repo. Based on Karpathy-inspired coding principles.
 
-**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
+---
+
+## When to apply full rigor
+
+Apply all four principles when:
+- The task touches **more than one file**
+- The task involves **new functionality** (new page, new section, new interaction)
+- The request is **ambiguous** — multiple valid interpretations exist
+- The change could **break existing behaviour** elsewhere in the site
+
+Apply lighter-touch judgment when:
+- The task is a **single, isolated change** with an obvious correct answer (e.g. fix a typo, change a colour value, update a string)
+- The request is **fully self-contained** and the expected output is unambiguous
+- Owen has **explicitly said to just do it** ("quickly", "just", "go ahead")
+
+When in doubt, default to full rigor. The cost of a clarifying question is low. The cost of building the wrong thing is high.
 
 ---
 
