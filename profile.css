@@ -1,0 +1,59 @@
+/* profile.css — edit-mode + action-button visibility for profile.html */
+
+#profile-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+#profile-actions [data-mode] {
+  display: none;
+  text-align: center;
+}
+
+#profile-actions[data-state="other"] [data-mode="other"] { display: inline-block; }
+#profile-actions[data-state="self"]    [data-mode="self"]    { display: inline-block; }
+#profile-actions[data-state="editing"] [data-mode="editing"] { display: inline-block; }
+
+.profile-name {
+  white-space: pre-line;
+}
+
+.profile-edit-input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  padding: 10px 12px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.profile-edit-input:focus {
+  outline: none;
+  border-color: var(--gold-dim);
+}
+
+.profile-edit-input-sm {
+  font-size: 13px;
+  padding: 8px 10px;
+}
+
+textarea.profile-edit-input {
+  min-height: 64px;
+}
+
+.profile-edit-row {
+  margin-top: 16px;
+}
+
+.profile-edit-label {
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 6px;
+}

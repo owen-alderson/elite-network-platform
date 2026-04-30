@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign in — Aether</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="login.css">
+</head>
+<body class="login-body">
+  <main class="login-shell">
+    <div class="login-card">
+      <a class="login-wordmark" href="index.html">AETHER</a>
+
+      <p class="login-eyebrow">MEMBER SIGN-IN</p>
+      <h1 class="login-title">Enter your registered email</h1>
+      <p class="login-subtitle">We'll send you a one-time link. Aether is invite-only.</p>
+
+      <form id="login-form" novalidate>
+        <label for="login-email" class="login-label">Email</label>
+        <input
+          id="login-email"
+          name="email"
+          type="email"
+          autocomplete="email"
+          required
+          placeholder="you@domain.com">
+        <button type="submit" class="btn-primary login-submit" id="login-submit">Send link</button>
+      </form>
+
+      <p id="login-status" class="login-status" role="status" aria-live="polite"></p>
+
+      <p class="login-footer">
+        Not a member yet? <a href="apply.html">Apply or nominate someone</a>.
+      </p>
+    </div>
+  </main>
+
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+  <script src="login.js"></script>
+</body>
+</html>

@@ -45,155 +45,21 @@
 
   <div class="members-toolbar">
     <div class="toolbar-inner">
-      <button class="filter-btn active" onclick="filterMembers('all', this)">All</button>
-      <button class="filter-btn" onclick="filterMembers('finance', this)">Finance</button>
-      <button class="filter-btn" onclick="filterMembers('sport', this)">Sport</button>
-      <button class="filter-btn" onclick="filterMembers('medicine', this)">Medicine</button>
-      <button class="filter-btn" onclick="filterMembers('technology', this)">Technology</button>
-      <button class="filter-btn" onclick="filterMembers('arts', this)">Arts & Culture</button>
-      <button class="filter-btn" onclick="filterMembers('law', this)">Law & Policy</button>
+      <button class="filter-btn active" data-pillar="all">All</button>
+      <button class="filter-btn" data-pillar="finance">Finance</button>
+      <button class="filter-btn" data-pillar="real_estate">Real Estate</button>
+      <button class="filter-btn" data-pillar="technology">Technology</button>
+      <button class="filter-btn" data-pillar="media">Media</button>
+      <button class="filter-btn" data-pillar="hospitality">Hospitality</button>
+      <button class="filter-btn" data-pillar="arts">Arts & Culture</button>
+      <button class="filter-btn" data-pillar="sport">Sport</button>
+      <button class="filter-btn" data-pillar="medicine">Medicine</button>
+      <button class="filter-btn" data-pillar="law">Law & Policy</button>
     </div>
   </div>
 
   <div class="members-grid-wrap">
-    <div class="members-grid" id="members-grid">
-
-      <div class="member-card" data-pillar="finance">
-        <a href="profile.html">
-          <div class="card-avatar">M</div>
-          <div class="card-body">
-            <p class="card-pillar">Finance</p>
-            <h3 class="card-name">Marcus Veil</h3>
-            <p class="card-title">Managing Partner — Veil Capital, London</p>
-            <div class="card-tags">
-              <span class="tag">Private Equity</span>
-              <span class="tag">London</span>
-            </div>
-          </div>
-        </a>
-      </div>
-
-      <div class="member-card" data-pillar="sport">
-        <a href="profile.html">
-          <div class="card-avatar">E</div>
-          <div class="card-body">
-            <p class="card-pillar">Sport</p>
-            <h3 class="card-name">Elena Vasquez</h3>
-            <p class="card-title">Olympic Fencer · 2x World Champion</p>
-            <div class="card-tags">
-              <span class="tag">Fencing</span>
-              <span class="tag">Madrid</span>
-            </div>
-          </div>
-        </a>
-      </div>
-
-      <div class="member-card" data-pillar="technology">
-        <a href="profile.html">
-          <div class="card-avatar">S</div>
-          <div class="card-body">
-            <p class="card-pillar">Technology</p>
-            <h3 class="card-name">Soren Halvorsen</h3>
-            <p class="card-title">Co-founder & CTO — Halvorsen Labs</p>
-            <div class="card-tags">
-              <span class="tag">AI</span>
-              <span class="tag">Oslo</span>
-            </div>
-          </div>
-        </a>
-      </div>
-
-      <div class="member-card" data-pillar="medicine">
-        <a href="profile.html">
-          <div class="card-avatar">A</div>
-          <div class="card-body">
-            <p class="card-pillar">Medicine</p>
-            <h3 class="card-name">Dr. Aiko Tanaka</h3>
-            <p class="card-title">Neurosurgeon · Stanford Medical</p>
-            <div class="card-tags">
-              <span class="tag">Neuroscience</span>
-              <span class="tag">San Francisco</span>
-            </div>
-          </div>
-        </a>
-      </div>
-
-      <div class="member-card" data-pillar="arts">
-        <a href="profile.html">
-          <div class="card-avatar">I</div>
-          <div class="card-body">
-            <p class="card-pillar">Arts & Culture</p>
-            <h3 class="card-name">Isabelle Moreau</h3>
-            <p class="card-title">Architect · Principal, Moreau Atelier</p>
-            <div class="card-tags">
-              <span class="tag">Architecture</span>
-              <span class="tag">Paris</span>
-            </div>
-          </div>
-        </a>
-      </div>
-
-      <div class="member-card" data-pillar="finance">
-        <a href="profile.html">
-          <div class="card-avatar">R</div>
-          <div class="card-body">
-            <p class="card-pillar">Finance</p>
-            <h3 class="card-name">Ravi Mehta</h3>
-            <p class="card-title">Founder — Mehta Ventures · Ex-Goldman</p>
-            <div class="card-tags">
-              <span class="tag">Venture Capital</span>
-              <span class="tag">New York</span>
-            </div>
-          </div>
-        </a>
-      </div>
-
-      <div class="member-card" data-pillar="sport">
-        <a href="profile.html">
-          <div class="card-avatar">L</div>
-          <div class="card-body">
-            <p class="card-pillar">Sport</p>
-            <h3 class="card-name">Luca Bianchi</h3>
-            <p class="card-title">Professional Cyclist · Tour de France Podium</p>
-            <div class="card-tags">
-              <span class="tag">Cycling</span>
-              <span class="tag">Milan</span>
-            </div>
-          </div>
-        </a>
-      </div>
-
-      <div class="member-card" data-pillar="law">
-        <a href="profile.html">
-          <div class="card-avatar">C</div>
-          <div class="card-body">
-            <p class="card-pillar">Law & Policy</p>
-            <h3 class="card-name">Catherine Osei</h3>
-            <p class="card-title">Partner — Osei & Partners · Former UN Counsel</p>
-            <div class="card-tags">
-              <span class="tag">International Law</span>
-              <span class="tag">Geneva</span>
-            </div>
-          </div>
-        </a>
-      </div>
-
-      <div class="member-card" data-pillar="technology">
-        <a href="profile.html">
-          <div class="card-avatar">N</div>
-          <div class="card-body">
-            <p class="card-pillar">Technology</p>
-            <h3 class="card-name">Nadia Al-Rashid</h3>
-            <p class="card-title">CEO — Meridian AI · Forbes 30u30</p>
-            <div class="card-tags">
-              <span class="tag">Deep Tech</span>
-              <span class="tag">Dubai</span>
-            </div>
-          </div>
-        </a>
-      </div>
-
-    </div>
+    <div class="members-grid" id="members-grid"></div>
   </div>
 
   <footer class="footer">
@@ -209,20 +75,10 @@
     </div>
   </footer>
 
-  <script>
-    function filterMembers(pillar, btn) {
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      document.querySelectorAll('.member-card').forEach(card => {
-        if (pillar === 'all' || card.dataset.pillar === pillar) {
-          card.style.display = '';
-        } else {
-          card.style.display = 'none';
-        }
-      });
-    }
-  </script>
-
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+  <script src="auth.js"></script>
+  <script src="members.js"></script>
 
   <script src="nav.js"></script>
 </body>

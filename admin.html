@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Application Review — Aether</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="wordmark">AETHER</a>
+      <div class="nav-links">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="members.html">Members</a>
+        <a href="events.html">Events</a>
+        <a href="admin.html" class="active">Admin</a>
+      </div>
+      <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="members.html">Members</a>
+    <a href="events.html">Events</a>
+    <a href="admin.html">Admin</a>
+  </div>
+
+  <main class="admin-shell">
+    <header class="admin-header">
+      <p class="admin-eyebrow">REVIEW QUEUE</p>
+      <h1 class="admin-title">Applications</h1>
+      <p class="admin-subtitle">Approve, reject, or request more information. Member rows are created manually after approval (see ARCHITECTURE.md).</p>
+
+      <div class="admin-stats">
+        <div class="admin-stat"><strong id="stat-pending">—</strong><span>Pending</span></div>
+        <div class="admin-stat"><strong id="stat-approved">—</strong><span>Approved</span></div>
+        <div class="admin-stat"><strong id="stat-rejected">—</strong><span>Rejected</span></div>
+        <div class="admin-stat"><strong id="stat-needsinfo">—</strong><span>Needs info</span></div>
+      </div>
+
+      <div class="admin-tabs">
+        <button class="admin-tab is-active" data-status="pending">Pending</button>
+        <button class="admin-tab" data-status="needs_more_info">Needs info</button>
+        <button class="admin-tab" data-status="approved">Approved</button>
+        <button class="admin-tab" data-status="rejected">Rejected</button>
+        <button class="admin-tab" data-status="all">All</button>
+      </div>
+    </header>
+
+    <section id="admin-list" class="admin-list" aria-live="polite">
+      <p class="admin-loading">Loading…</p>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+  <script src="auth.js"></script>
+  <script src="admin.js"></script>
+  <script src="nav.js"></script>
+</body>
+</html>

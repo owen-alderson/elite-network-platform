@@ -1,0 +1,141 @@
+.login-body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--black);
+  padding: 24px;
+}
+
+.login-shell {
+  width: 100%;
+  max-width: 440px;
+}
+
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 48px 40px;
+  text-align: center;
+}
+
+.login-wordmark {
+  display: inline-block;
+  font-family: var(--font-serif);
+  font-size: 32px;
+  letter-spacing: 0.4em;
+  color: var(--gold);
+  text-decoration: none;
+  margin-bottom: 32px;
+}
+
+.login-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 16px;
+}
+
+.login-title {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 24px;
+  line-height: 1.3;
+  margin: 0 0 8px;
+  color: var(--white);
+}
+
+.login-subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0 0 32px;
+  line-height: 1.5;
+}
+
+#login-form {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.login-label {
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+
+#login-email {
+  background: transparent;
+  border: 1px solid var(--border);
+  padding: 14px 16px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 24px;
+  transition: border-color 0.15s ease;
+}
+
+#login-email:focus {
+  outline: none;
+  border-color: var(--gold-dim);
+}
+
+#login-email::placeholder {
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+.login-submit {
+  width: 100%;
+}
+
+.login-submit[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.login-status {
+  margin: 24px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+  min-height: 1.5em;
+  line-height: 1.4;
+}
+
+.login-status.is-error {
+  color: #d97a7a;
+}
+
+.login-status.is-success {
+  color: var(--gold);
+}
+
+.login-footer {
+  margin: 32px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.login-footer a {
+  color: var(--gold);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s ease;
+}
+
+.login-footer a:hover {
+  border-bottom-color: var(--gold-dim);
+}
+
+@media (max-width: 480px) {
+  .login-card {
+    padding: 36px 24px;
+  }
+  .login-wordmark {
+    font-size: 26px;
+    margin-bottom: 24px;
+  }
+}

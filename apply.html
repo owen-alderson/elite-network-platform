@@ -146,10 +146,13 @@
             <label class="form-label">Pillar</label>
             <div class="pillar-select" id="pillar-select">
               <button class="pillar-opt" data-value="finance" onclick="selectPillar(this)">Finance</button>
+              <button class="pillar-opt" data-value="real_estate" onclick="selectPillar(this)">Real Estate</button>
+              <button class="pillar-opt" data-value="technology" onclick="selectPillar(this)">Technology</button>
+              <button class="pillar-opt" data-value="media" onclick="selectPillar(this)">Media</button>
+              <button class="pillar-opt" data-value="hospitality" onclick="selectPillar(this)">Hospitality</button>
+              <button class="pillar-opt" data-value="arts" onclick="selectPillar(this)">Arts & Culture</button>
               <button class="pillar-opt" data-value="sport" onclick="selectPillar(this)">Sport</button>
               <button class="pillar-opt" data-value="medicine" onclick="selectPillar(this)">Medicine</button>
-              <button class="pillar-opt" data-value="technology" onclick="selectPillar(this)">Technology</button>
-              <button class="pillar-opt" data-value="arts" onclick="selectPillar(this)">Arts & Culture</button>
               <button class="pillar-opt" data-value="law" onclick="selectPillar(this)">Law & Policy</button>
             </div>
           </div>
@@ -351,10 +354,13 @@
             <label class="form-label">Their Field / Pillar</label>
             <div class="pillar-select" id="pillar-select-n">
               <button class="pillar-opt" data-value="finance" onclick="selectPillarN(this)">Finance</button>
+              <button class="pillar-opt" data-value="real_estate" onclick="selectPillarN(this)">Real Estate</button>
+              <button class="pillar-opt" data-value="technology" onclick="selectPillarN(this)">Technology</button>
+              <button class="pillar-opt" data-value="media" onclick="selectPillarN(this)">Media</button>
+              <button class="pillar-opt" data-value="hospitality" onclick="selectPillarN(this)">Hospitality</button>
+              <button class="pillar-opt" data-value="arts" onclick="selectPillarN(this)">Arts & Culture</button>
               <button class="pillar-opt" data-value="sport" onclick="selectPillarN(this)">Sport</button>
               <button class="pillar-opt" data-value="medicine" onclick="selectPillarN(this)">Medicine</button>
-              <button class="pillar-opt" data-value="technology" onclick="selectPillarN(this)">Technology</button>
-              <button class="pillar-opt" data-value="arts" onclick="selectPillarN(this)">Arts & Culture</button>
               <button class="pillar-opt" data-value="law" onclick="selectPillarN(this)">Law & Policy</button>
             </div>
           </div>
@@ -512,6 +518,8 @@
       `;
     }
 
+    // submitApplication() and submitNomination() are overridden in apply.js
+    // (loaded below). The fallbacks below run only if Supabase fails to load.
     function submitApplication() { showScreen('a-confirm'); }
 
     // ── Nominate flow ──────────────────────────────────────
@@ -525,6 +533,9 @@
     function submitNomination() { showScreen('n-confirm'); }
   </script>
 
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+  <script src="apply.js"></script>
 
   <script src="nav.js"></script>
 </body>

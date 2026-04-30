@@ -6,6 +6,7 @@
   <title>Marcus Veil — Aether</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="profile.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
@@ -40,99 +41,78 @@
 
     <!-- SIDEBAR -->
     <aside class="profile-sidebar">
-      <div class="profile-photo">M</div>
+      <div class="profile-photo" id="profile-photo">—</div>
 
       <div class="profile-meta">
         <div class="meta-item">
           <p class="meta-label">Location</p>
-          <p class="meta-value">London, United Kingdom</p>
+          <p class="meta-value" data-field="location">—</p>
         </div>
         <div class="meta-item">
           <p class="meta-label">Member since</p>
-          <p class="meta-value">2024</p>
+          <p class="meta-value" data-field="member_since">—</p>
         </div>
         <div class="meta-item">
           <p class="meta-label">Pillar</p>
-          <p class="meta-value">Finance</p>
+          <p class="meta-value" data-field="pillar">—</p>
         </div>
         <div class="meta-item">
           <p class="meta-label">Nominated by</p>
-          <p class="meta-value">Private</p>
+          <p class="meta-value" data-field="nominated_by">—</p>
         </div>
       </div>
 
-      <div class="profile-actions">
-        <a href="#" class="btn-primary" style="text-align:center">Request Introduction</a>
-        <a href="#" class="btn-ghost" style="text-align:center">Save to Network</a>
+      <div class="profile-actions" id="profile-actions" data-state="other">
+        <button class="btn-primary" id="profile-intro-btn" data-mode="other">Request Introduction</button>
+        <button class="btn-primary" id="profile-edit-btn" data-mode="self">Edit Profile</button>
+        <button class="btn-primary" id="profile-save-btn" data-mode="editing">Save</button>
+        <button class="btn-ghost" id="profile-cancel-btn" data-mode="editing">Cancel</button>
       </div>
     </aside>
 
     <!-- MAIN -->
     <main class="profile-main">
-      <div class="profile-pillar-badge">◈ Finance</div>
-      <h1 class="profile-name">Marcus<br>Veil</h1>
-      <p class="profile-tagline">Managing Partner at Veil Capital. 20 years deploying capital across European buyouts and growth equity. Currently focused on AI-enabled industrials.</p>
+      <div class="profile-pillar-badge" id="profile-pillar-badge">—</div>
+      <h1 class="profile-name" id="profile-name">—</h1>
+      <p class="profile-tagline" id="profile-tagline"></p>
 
       <hr class="profile-divider">
 
       <p class="profile-section-label">Verified Achievements</p>
-      <ul class="achievements-list">
-        <li>
-          <span class="ach-year">2023</span>
-          <span class="ach-text"><strong>Closed €840M Fund IV</strong> — Veil Capital's largest vehicle to date, focused on European mid-market buyouts</span>
-        </li>
-        <li>
-          <span class="ach-year">2021</span>
-          <span class="ach-text"><strong>Forbes European PE Power List</strong> — Ranked #12 among Europe's most influential private equity managers</span>
-        </li>
-        <li>
-          <span class="ach-year">2019</span>
-          <span class="ach-text"><strong>Exit: Meridian Logistics</strong> — 4.2x return on €120M investment over 5-year hold period</span>
-        </li>
-        <li>
-          <span class="ach-year">2015</span>
-          <span class="ach-text"><strong>Founded Veil Capital</strong> — Spun out from Goldman Sachs Principal Investments after 12 years</span>
-        </li>
-        <li>
-          <span class="ach-year">2003</span>
-          <span class="ach-text"><strong>Joined Goldman Sachs</strong> — Principal Investments, London</span>
-        </li>
-      </ul>
+      <ul class="achievements-list" id="profile-achievements"></ul>
 
       <hr class="profile-divider">
 
       <p class="profile-section-label">Currently Working On</p>
-      <p style="font-size: 14px; color: var(--text); line-height: 1.7; max-width: 520px;">
-        Raising Fund V (target €1.2B). Evaluating three AI-enabled industrial platforms in Germany and the Nordics. Advising two portfolio companies on succession planning.
-      </p>
-
-      <hr class="profile-divider">
-
-      <p class="profile-section-label">Connections</p>
-      <div class="connections-grid">
-        <div class="connection-chip">
-          <div class="conn-avatar">E</div>
-          <span class="conn-name">Elena Vasquez</span>
-          <span class="conn-field">Sport</span>
-        </div>
-        <div class="connection-chip">
-          <div class="conn-avatar">S</div>
-          <span class="conn-name">Soren Halvorsen</span>
-          <span class="conn-field">Technology</span>
-        </div>
-        <div class="connection-chip">
-          <div class="conn-avatar">C</div>
-          <span class="conn-name">Catherine Osei</span>
-          <span class="conn-field">Law & Policy</span>
-        </div>
-        <div class="connection-chip">
-          <div class="conn-avatar">R</div>
-          <span class="conn-name">Ravi Mehta</span>
-          <span class="conn-field">Finance</span>
-        </div>
-      </div>
+      <p id="profile-current-work" style="font-size: 14px; color: var(--text); line-height: 1.7; max-width: 520px;">—</p>
     </main>
 
+  </div>
+
+  <!-- INTRO REQUEST MODAL -->
+  <div class="modal-overlay" id="intro-modal" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <p class="flow-eyebrow" style="margin-bottom:12px;">Request Introduction</p>
+      <h3 class="modal-title" id="modal-name"></h3>
+      <p class="modal-body">Write a brief note about why you'd like to connect. A mutual member will make the introduction — keep it genuine and specific.</p>
+      <p style="font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:8px;">Your note</p>
+      <textarea class="form-input form-textarea intro-textarea" rows="5" placeholder="Why this person, and what you'd want from a 20-minute conversation."></textarea>
+      <p style="font-size:11px; color:#444; margin-top:6px; line-height:1.5;">2–4 sentences. Specific beats flattering.</p>
+      <div class="modal-actions">
+        <button class="btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+        <button class="btn-primary btn-sm" onclick="submitIntro()">Send Request</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="intro-confirm" onclick="closeConfirm()" style="display:none;">
+    <div class="modal" onclick="event.stopPropagation()" style="text-align:center;">
+      <div style="font-size:32px; color:var(--gold); margin-bottom:16px;">◈</div>
+      <h3 class="modal-title">Request sent.</h3>
+      <p class="modal-body">A mutual member will reach out to make the introduction. You'll hear back within a few days.</p>
+      <button class="btn-primary btn-sm" style="margin-top:8px;" onclick="closeConfirm()">Done</button>
+    </div>
   </div>
 
   <footer class="footer">
@@ -150,5 +130,10 @@
 
 
   <script src="nav.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+  <script src="auth.js"></script>
+  <script src="intro.js"></script>
+  <script src="profile.js"></script>
 </body>
 </html>
