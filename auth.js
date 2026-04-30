@@ -55,14 +55,17 @@
   // Exported in case a page needs to validate a redirect param itself.
   window.aether.sameOriginUrl = sameOriginUrl;
 
-  // Hide the "Request Access" CTA on any page that loads auth.js once we
-  // confirm the visitor has a session. The CTA is only meaningful pre-login;
-  // showing it to a member is jarring and clickable into the apply form.
+  // Hide the "Request Access" CTA and route the AETHER wordmark to the
+  // dashboard for logged-in members on any page that loads auth.js. The
+  // public landing page (index.html) is jarring to land on once you're in.
   document.addEventListener('DOMContentLoaded', function () {
     window.aether.getSession().then(function (session) {
       if (!session) return;
       document.querySelectorAll('.nav-cta, .mobile-cta').forEach(function (el) {
         el.style.display = 'none';
+      });
+      document.querySelectorAll('a.wordmark').forEach(function (el) {
+        el.setAttribute('href', 'dashboard.html');
       });
     });
   });
