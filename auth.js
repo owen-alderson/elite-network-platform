@@ -65,7 +65,7 @@
     window.aether.getSession().then(async function (session) {
       if (!session) return;
 
-      document.querySelectorAll('.nav-cta, .mobile-cta').forEach(function (el) {
+      document.querySelectorAll('.nav-cta, .mobile-cta, .nav-signin, .mobile-signin').forEach(function (el) {
         el.style.display = 'none';
       });
 
@@ -82,8 +82,25 @@
       });
 
       await injectNavSession(session);
+      injectMobileSignout();
     });
   });
+
+  function injectMobileSignout() {
+    document.querySelectorAll('.mobile-menu').forEach(function (menu) {
+      if (menu.querySelector('.mobile-signout')) return;
+      var a = document.createElement('a');
+      a.href = '#';
+      a.className = 'mobile-signout';
+      a.textContent = 'Sign out';
+      a.addEventListener('click', async function (e) {
+        e.preventDefault();
+        try { await window.aether.signOut(); } catch (err) { /* fall through */ }
+        window.location.replace('login.html');
+      });
+      menu.appendChild(a);
+    });
+  }
 
   async function injectNavSession(session) {
     var navInner = document.querySelector('.nav .nav-inner');

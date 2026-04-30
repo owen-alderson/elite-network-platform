@@ -20,6 +20,7 @@
         <a href="members.html">Members</a>
         <a href="events.html">Events</a>
         <a href="spaces.html">Spaces</a>
+        <a href="login.html" class="nav-signin">Sign in</a>
       </div>
     </div>
       <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
@@ -33,6 +34,7 @@
     <a href="events.html">Events</a>
     <a href="spaces.html">Spaces</a>
     <a href="partners.html">Partners</a>
+    <a href="login.html" class="mobile-signin">Sign in</a>
     <a href="apply.html" class="mobile-cta">Request Access</a>
   </div>
 
@@ -67,22 +69,18 @@
          APPLICATION FLOW
          ===================================================== -->
 
-    <!-- A1: Verify nomination -->
+    <!-- A1: Confirm email -->
     <div class="flow-screen" id="screen-a1">
       <div class="flow-inner">
         <div class="step-track" data-flow="apply" data-step="1"></div>
         <div class="flow-content">
           <p class="flow-eyebrow">Application · Step 1 of 5</p>
-          <h2 class="flow-heading-sm">Verify your nomination</h2>
-          <p class="flow-sub-sm">Your nominator should have sent you a code. Enter it below along with the email address they used.</p>
-          <div class="form-group">
-            <label class="form-label">Nomination Code</label>
-            <input class="form-input" type="text" placeholder="e.g. AE-2026-XXXX" id="a-code" />
-            <p class="form-hint">Check the email or message you received from your nominator.</p>
-          </div>
+          <h2 class="flow-heading-sm">Confirm your email</h2>
+          <p class="flow-sub-sm">Use the same address your nominator submitted with you. Our reviewers match applications to nominations by email.</p>
           <div class="form-group">
             <label class="form-label">Your Email Address</label>
             <input class="form-input" type="email" placeholder="you@example.com" id="a-email" />
+            <p class="form-hint">If you weren't nominated, you'll need a nomination from a current member before you can apply.</p>
           </div>
           <div class="flow-actions">
             <button class="btn-ghost btn-sm" onclick="goEntry()">← Back</button>

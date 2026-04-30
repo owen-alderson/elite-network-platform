@@ -86,22 +86,11 @@
       </nav>
 
       <div class="dash-sidebar-block">
-        <p class="dash-sidebar-label">My Cities</p>
-        <div class="dash-cities">
-          <span class="dash-city active">London</span>
-          <span class="dash-city">New York</span>
-          <span class="dash-city">Milan</span>
-        </div>
-      </div>
-
-      <div class="dash-sidebar-block">
         <p class="dash-sidebar-label">Member since</p>
-        <p class="dash-sidebar-val">2024</p>
+        <p class="dash-sidebar-val" id="dash-member-since">—</p>
       </div>
 
       <div class="dash-sidebar-block">
-        <p class="dash-sidebar-label">Nominations remaining</p>
-        <p class="dash-sidebar-val">2 <span style="color: var(--muted); font-size:11px;">this year</span></p>
         <a href="apply.html" class="dash-nominate-btn">Nominate a peer →</a>
       </div>
     </aside>
@@ -149,123 +138,16 @@
         <div class="connections-grid" id="connections-list"></div>
       </section>
 
-      <!-- NEXT EVENT BANNER -->
-      <div class="dash-next-event">
-        <div class="dash-next-event-left">
-          <p class="dash-next-label">Next event</p>
-          <h2 class="dash-next-title">Spring Place — Members Evening</h2>
-          <p class="dash-next-meta">Thursday 24 April · 7:00 PM · Spring Place, New York</p>
-          <div class="dash-next-attendees">
-            <div class="attendee-stack">
-              <div class="att-chip">E</div>
-              <div class="att-chip">S</div>
-              <div class="att-chip">N</div>
-              <div class="att-chip">+9</div>
-            </div>
-            <span>12 members attending</span>
-          </div>
+      <!-- Suggested connections -->
+      <section class="dash-section">
+        <div class="dash-section-head">
+          <h2 class="dash-section-title">Suggested connections</h2>
+          <a href="members.html" class="dash-see-all">See all →</a>
         </div>
-        <div class="dash-next-event-right">
-          <a href="event.html" class="btn-primary btn-sm">View Event</a>
-        </div>
-      </div>
+        <p class="dash-section-sub">Members you haven't met yet.</p>
 
-      <!-- TWO COL: Suggested + New Members -->
-      <div class="dash-two-col">
-
-        <!-- Suggested connections -->
-        <section class="dash-section">
-          <div class="dash-section-head">
-            <h2 class="dash-section-title">Suggested connections</h2>
-            <a href="members.html" class="dash-see-all">See all →</a>
-          </div>
-          <p class="dash-section-sub">Cross-pillar peers in your cities.</p>
-
-          <div class="suggestion-list"></div>
-        </section>
-
-        <!-- Right col -->
-        <div class="dash-right-col">
-
-          <!-- Upcoming events -->
-          <section class="dash-section">
-            <div class="dash-section-head">
-              <h2 class="dash-section-title">Upcoming events</h2>
-              <a href="events.html" class="dash-see-all">See all →</a>
-            </div>
-            <div class="mini-events">
-              <div class="mini-event">
-                <div class="mini-event-date">
-                  <span class="mini-day">24</span>
-                  <span class="mini-month">Apr</span>
-                </div>
-                <div class="mini-event-info">
-                  <p class="mini-event-title">Spring Place Evening</p>
-                  <p class="mini-event-loc">New York</p>
-                </div>
-                <span class="mini-spots">12 spots</span>
-              </div>
-              <div class="mini-event">
-                <div class="mini-event-date">
-                  <span class="mini-day">02</span>
-                  <span class="mini-month">May</span>
-                </div>
-                <div class="mini-event-info">
-                  <p class="mini-event-title">Private Dinner</p>
-                  <p class="mini-event-loc">Milan</p>
-                </div>
-                <span class="mini-spots">8 spots</span>
-              </div>
-              <div class="mini-event">
-                <div class="mini-event-date">
-                  <span class="mini-day">10</span>
-                  <span class="mini-month">May</span>
-                </div>
-                <div class="mini-event-info">
-                  <p class="mini-event-title">Founder Roundtable</p>
-                  <p class="mini-event-loc">London</p>
-                </div>
-                <span class="mini-spots">5 spots</span>
-              </div>
-            </div>
-          </section>
-
-          <!-- New members -->
-          <section class="dash-section" style="margin-top: 24px;">
-            <div class="dash-section-head">
-              <h2 class="dash-section-title">New members</h2>
-              <a href="members.html" class="dash-see-all">See all →</a>
-            </div>
-            <div class="new-members-list">
-              <div class="new-member-row">
-                <div class="sug-avatar" style="width:32px;height:32px;font-size:13px;">I</div>
-                <div>
-                  <p class="sug-name" style="font-size:13px;">Isabelle Moreau</p>
-                  <p class="sug-role">Architect · Paris</p>
-                </div>
-                <span class="new-pill">Arts</span>
-              </div>
-              <div class="new-member-row">
-                <div class="sug-avatar" style="width:32px;height:32px;font-size:13px;">R</div>
-                <div>
-                  <p class="sug-name" style="font-size:13px;">Ravi Mehta</p>
-                  <p class="sug-role">Venture Capital · New York</p>
-                </div>
-                <span class="new-pill">Finance</span>
-              </div>
-              <div class="new-member-row">
-                <div class="sug-avatar" style="width:32px;height:32px;font-size:13px;">N</div>
-                <div>
-                  <p class="sug-name" style="font-size:13px;">Nadia Al-Rashid</p>
-                  <p class="sug-role">CEO Meridian AI · Dubai</p>
-                </div>
-                <span class="new-pill">Tech</span>
-              </div>
-            </div>
-          </section>
-
-        </div>
-      </div>
+        <div class="suggestion-list"></div>
+      </section>
 
       <!-- SPACES STRIP -->
       <section class="dash-section dash-spaces-strip">

@@ -24,7 +24,7 @@
   async function loadMyProfile(userId, fallbackEmail) {
     var res = await supabase
       .from('members')
-      .select('full_name,headline,primary_pillar')
+      .select('full_name,headline,primary_pillar,joined_at')
       .eq('id', userId)
       .maybeSingle();
 
@@ -45,6 +45,10 @@
     setHTML('.dash-profile-role', escapeText(headline) || '<span style="color:var(--muted);font-style:italic;">Headline not set</span>');
     var pillarTag = document.querySelector('.dash-pillar-tag');
     if (pillarTag) pillarTag.textContent = pillar ? '◈ ' + capitalize(pillar) : '◈ —';
+
+    if (member && member.joined_at) {
+      setText('#dash-member-since', String(new Date(member.joined_at).getFullYear()));
+    }
 
     setText('.dash-greeting-head', greeting() + ', ' + firstName + '.');
     setText('.dash-greeting-sub', 'Welcome back. Browse the directory or explore what\'s on at Spring Place.');

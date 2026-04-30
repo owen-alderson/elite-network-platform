@@ -1074,3 +1074,25 @@ a { color: inherit; text-decoration: none; }
 @media (max-width: 700px) {
   .nav-session-name { display: none; }
 }
+
+/* Member sign-in link on public-page navs (hidden by auth.js when logged in). */
+.nav-signin {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s ease;
+}
+.nav-signin:hover { border-bottom-color: var(--gold-dim); }
+
+.mobile-signin {
+  color: var(--gold);
+}
+
+.mobile-signout {
+  color: var(--gold) !important;
+  border-top: 1px solid var(--border);
+  margin-top: 12px;
+  padding-top: 16px;
+}
