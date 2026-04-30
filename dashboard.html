@@ -48,47 +48,8 @@
       <h3>Notifications</h3>
       <button onclick="toggleInbox()" class="inbox-close">✕</button>
     </div>
-    <div class="inbox-list">
-      <div class="inbox-item unread">
-        <div class="inbox-avatar">E</div>
-        <div class="inbox-content">
-          <p class="inbox-title">Elena Vasquez accepted your introduction</p>
-          <p class="inbox-body">She's in New York next week and suggested meeting at Spring Place on the 24th.</p>
-          <p class="inbox-time">2 hours ago</p>
-        </div>
-      </div>
-      <div class="inbox-item unread">
-        <div class="inbox-avatar">◈</div>
-        <div class="inbox-content">
-          <p class="inbox-title">You're confirmed for Spring Place Evening</p>
-          <p class="inbox-body">Thursday 24 April · 7:00 PM. 8 spots remaining as of now.</p>
-          <p class="inbox-time">5 hours ago</p>
-        </div>
-      </div>
-      <div class="inbox-item">
-        <div class="inbox-avatar">R</div>
-        <div class="inbox-content">
-          <p class="inbox-title">Ravi Mehta joined your pillar</p>
-          <p class="inbox-body">New Finance member in New York. 3 shared connections.</p>
-          <p class="inbox-time">Yesterday</p>
-        </div>
-      </div>
-      <div class="inbox-item">
-        <div class="inbox-avatar">◇</div>
-        <div class="inbox-content">
-          <p class="inbox-title">Your nomination of James Wu was accepted</p>
-          <p class="inbox-body">He has completed his application and is now under review.</p>
-          <p class="inbox-time">2 days ago</p>
-        </div>
-      </div>
-      <div class="inbox-item">
-        <div class="inbox-avatar">I</div>
-        <div class="inbox-content">
-          <p class="inbox-title">Isabelle Moreau is attending your next event</p>
-          <p class="inbox-body">She'll be at the Spring Place Members Evening on the 24th.</p>
-          <p class="inbox-time">3 days ago</p>
-        </div>
-      </div>
+    <div class="inbox-list" id="inbox-list">
+      <p class="inbox-empty">Loading…</p>
     </div>
   </div>
   <div class="inbox-backdrop" id="inbox-backdrop" onclick="toggleInbox()"></div>
@@ -98,11 +59,11 @@
     <!-- LEFT SIDEBAR -->
     <aside class="dash-sidebar">
       <div class="dash-profile-card">
-        <div class="dash-avatar">M</div>
+        <div class="dash-avatar">—</div>
         <div class="dash-profile-info">
-          <h3 class="dash-profile-name">Marcus Veil</h3>
-          <p class="dash-profile-role">Managing Partner<br>Veil Capital</p>
-          <span class="dash-pillar-tag">◈ Finance</span>
+          <h3 class="dash-profile-name">—</h3>
+          <p class="dash-profile-role">Loading…</p>
+          <span class="dash-pillar-tag">◈ —</span>
         </div>
       </div>
 
@@ -151,14 +112,32 @@
       <!-- Greeting -->
       <div class="dash-greeting">
         <div>
-          <h1 class="dash-greeting-head">Good evening, Marcus.</h1>
-          <p class="dash-greeting-sub">3 new members joined your pillar this week. You have an event on Thursday.</p>
+          <h1 class="dash-greeting-head">Welcome back.</h1>
+          <p class="dash-greeting-sub">Loading…</p>
         </div>
         <div class="dash-greeting-date">
-          <span class="dash-date-num">13</span>
-          <span class="dash-date-month">April</span>
+          <span class="dash-date-num" id="dash-date-num">—</span>
+          <span class="dash-date-month" id="dash-date-month">—</span>
         </div>
       </div>
+
+      <!-- Intros for you to make (broker queue) -->
+      <section class="dash-section dash-intro-section" id="broker-section" hidden>
+        <div class="dash-section-head">
+          <h2 class="dash-section-title">Intros for you to make</h2>
+          <span class="dash-intro-count" id="broker-count">0</span>
+        </div>
+        <p class="dash-section-sub">A peer asked you to broker a connection. Make the introduction off-platform, then mark it forwarded.</p>
+        <div class="intro-broker-list" id="broker-list"></div>
+      </section>
+
+      <!-- Your intro requests -->
+      <section class="dash-section dash-intro-section" id="my-requests-section" hidden>
+        <div class="dash-section-head">
+          <h2 class="dash-section-title">Your intro requests</h2>
+        </div>
+        <div class="intro-request-list" id="my-requests-list"></div>
+      </section>
 
       <!-- NEXT EVENT BANNER -->
       <div class="dash-next-event">
@@ -192,57 +171,7 @@
           </div>
           <p class="dash-section-sub">Cross-pillar peers in your cities.</p>
 
-          <div class="suggestion-list">
-
-            <div class="suggestion-row">
-              <div class="sug-avatar">E</div>
-              <div class="sug-info">
-                <p class="sug-name">Elena Vasquez</p>
-                <p class="sug-role">Olympic Fencer · 2x World Champion</p>
-                <span class="sug-tag">Sport · Madrid</span>
-              </div>
-              <button class="sug-intro-btn" onclick="showIntroModal('Elena Vasquez')">
-                Request intro
-              </button>
-            </div>
-
-            <div class="suggestion-row">
-              <div class="sug-avatar">A</div>
-              <div class="sug-info">
-                <p class="sug-name">Dr. Aiko Tanaka</p>
-                <p class="sug-role">Neurosurgeon · Stanford Medical</p>
-                <span class="sug-tag">Medicine · San Francisco</span>
-              </div>
-              <button class="sug-intro-btn" onclick="showIntroModal('Dr. Aiko Tanaka')">
-                Request intro
-              </button>
-            </div>
-
-            <div class="suggestion-row">
-              <div class="sug-avatar">S</div>
-              <div class="sug-info">
-                <p class="sug-name">Soren Halvorsen</p>
-                <p class="sug-role">Co-founder & CTO — Halvorsen Labs</p>
-                <span class="sug-tag">Technology · Oslo</span>
-              </div>
-              <button class="sug-intro-btn" onclick="showIntroModal('Soren Halvorsen')">
-                Request intro
-              </button>
-            </div>
-
-            <div class="suggestion-row">
-              <div class="sug-avatar">C</div>
-              <div class="sug-info">
-                <p class="sug-name">Catherine Osei</p>
-                <p class="sug-role">Partner · Former UN Counsel</p>
-                <span class="sug-tag">Law & Policy · Geneva</span>
-              </div>
-              <button class="sug-intro-btn" onclick="showIntroModal('Catherine Osei')">
-                Request intro
-              </button>
-            </div>
-
-          </div>
+          <div class="suggestion-list"></div>
         </section>
 
         <!-- Right col -->
@@ -401,25 +330,6 @@
       const open    = panel.classList.toggle('open');
       backdrop.classList.toggle('open', open);
       document.body.style.overflow = open ? 'hidden' : '';
-      if (open && dot) dot.style.display = 'none';
-    }
-
-    function showIntroModal(name) {
-      document.getElementById('modal-name').textContent = name;
-      document.getElementById('intro-modal').style.display = 'flex';
-      document.body.style.overflow = 'hidden';
-    }
-    function closeModal() {
-      document.getElementById('intro-modal').style.display = 'none';
-      document.body.style.overflow = '';
-    }
-    function submitIntro() {
-      document.getElementById('intro-modal').style.display = 'none';
-      document.getElementById('intro-confirm').style.display = 'flex';
-    }
-    function closeConfirm() {
-      document.getElementById('intro-confirm').style.display = 'none';
-      document.body.style.overflow = '';
     }
   </script>
 

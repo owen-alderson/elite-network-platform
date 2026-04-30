@@ -652,3 +652,172 @@
   color: var(--border);
   letter-spacing: 0.05em;
 }
+
+/* ─────────────────────────────────────────────────
+   Intro request surfaces (broker queue + my requests)
+   ───────────────────────────────────────────────── */
+
+.dash-intro-section {
+  margin-bottom: 32px;
+}
+
+.dash-intro-count {
+  font-family: var(--font-serif);
+  font-size: 14px;
+  color: var(--gold);
+  background: rgba(180, 142, 71, 0.08);
+  border: 1px solid var(--gold-dim);
+  padding: 2px 10px;
+  margin-left: 12px;
+}
+
+.intro-broker-list,
+.intro-request-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.intro-card-mini {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.15s ease;
+}
+
+.intro-card-mini:hover { border-color: var(--gold-dim); }
+
+.intro-mini-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.intro-mini-people {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.intro-mini-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-size: 14px;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.intro-arrow {
+  color: var(--gold);
+  font-size: 14px;
+}
+
+.intro-mini-date {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.intro-mini-line {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.intro-mini-link,
+.intro-mini-link-strong {
+  color: var(--white);
+  text-decoration: none;
+  border-bottom: 1px solid var(--gold-dim);
+}
+
+.intro-mini-link-strong {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  border-bottom: none;
+}
+
+.intro-mini-link:hover { color: var(--gold); }
+
+.intro-mini-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.intro-mini-note {
+  background: var(--black);
+  border-left: 2px solid var(--gold-dim);
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.55;
+  margin: 4px 0 0;
+  white-space: pre-wrap;
+  font-style: italic;
+}
+
+.intro-mini-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.intro-mini-meta {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  margin: 4px 0 0;
+}
+
+.inbox-empty {
+  color: var(--muted);
+  font-size: 13px;
+  padding: 24px 24px;
+  text-align: center;
+}
+
+/* Status badges (mirrors admin.css so dashboard can use them) */
+.app-status {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.intro-status-awaiting   { color: var(--gold);  border-color: var(--gold-dim); }
+.intro-status-assigned   { color: #d9b87a;       border-color: #d9b87a; }
+.intro-status-forwarded  { color: #6fbf73;       border-color: #6fbf73; }
+.intro-status-accepted   { color: #6fbf73;       border-color: #6fbf73; }
+.intro-status-declined   { color: #d97a7a;       border-color: #d97a7a; }
+.intro-status-expired    { color: var(--muted);  border-color: var(--border); }
+
+@media (max-width: 700px) {
+  .intro-card-mini { padding: 16px; }
+  .intro-mini-head { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .intro-mini-actions { justify-content: stretch; }
+  .intro-mini-actions button { flex: 1; }
+}
+
+.app-btn-reject:hover {
+  border-color: #d97a7a !important;
+  color: #d97a7a !important;
+}

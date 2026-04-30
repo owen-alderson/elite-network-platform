@@ -1,4 +1,4 @@
-// admin.js — application review queue.
+// admin.js — application + intro review queues for the sole admin.
 // Requires supabase.js + auth.js loaded first.
 
 (function () {
@@ -8,98 +8,139 @@
   }
   var supabase = window.aether.client;
 
-  var listEl = document.getElementById('admin-list');
-  var tabsEl = document.querySelector('.admin-tabs');
-  var statEls = {
-    pending: document.getElementById('stat-pending'),
-    approved: document.getElementById('stat-approved'),
-    rejected: document.getElementById('stat-rejected'),
-    needs_more_info: document.getElementById('stat-needsinfo')
-  };
-  var currentFilter = 'pending';
+  // ── State ───────────────────────────────────────────────────
+  var currentAppFilter = 'pending';
+  var currentIntroFilter = 'awaiting';
+  var activeMembers = [];   // cached for the broker picker
+
+  // ── DOM refs ────────────────────────────────────────────────
+  var appListEl, appTabsEl, appStatEls;
+  var introListEl, introTabsEl, introStatEls;
 
   // ── Boot ────────────────────────────────────────────────────
   (async function init() {
     var session = await window.aether.requireAdmin();
     if (!session) return;
 
-    tabsEl.addEventListener('click', function (e) {
-      var btn = e.target.closest('.admin-tab');
-      if (!btn) return;
-      currentFilter = btn.dataset.status;
-      tabsEl.querySelectorAll('.admin-tab').forEach(function (b) {
-        b.classList.toggle('is-active', b === btn);
-      });
-      render();
-    });
+    appListEl = document.getElementById('admin-list');
+    appTabsEl = document.getElementById('admin-app-tabs');
+    appStatEls = {
+      pending: document.getElementById('stat-pending'),
+      approved: document.getElementById('stat-approved'),
+      rejected: document.getElementById('stat-rejected'),
+      needs_more_info: document.getElementById('stat-needsinfo')
+    };
 
-    await refresh();
+    introListEl = document.getElementById('admin-intro-list');
+    introTabsEl = document.getElementById('admin-intro-tabs');
+    introStatEls = {
+      pending: document.getElementById('intro-stat-pending'),
+      assigned: document.getElementById('intro-stat-assigned'),
+      forwarded: document.getElementById('intro-stat-forwarded'),
+      declined: document.getElementById('intro-stat-declined')
+    };
+
+    bindViewSwitcher();
+    bindAppTabs();
+    bindIntroTabs();
+
+    await Promise.all([
+      refreshApps(),
+      loadActiveMembers().then(refreshIntros)
+    ]);
   })();
 
-  async function refresh() {
-    await Promise.all([loadStats(), render()]);
+  // ── View switcher ───────────────────────────────────────────
+  function bindViewSwitcher() {
+    var btns = document.querySelectorAll('.admin-view-btn');
+    var sections = document.querySelectorAll('.admin-view-section');
+    btns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var view = btn.dataset.view;
+        btns.forEach(function (b) { b.classList.toggle('is-active', b === btn); });
+        sections.forEach(function (s) { s.hidden = (s.dataset.view !== view); });
+        if (view === 'intros') refreshIntros();
+        if (view === 'applications') refreshApps();
+      });
+    });
   }
 
-  async function loadStats() {
-    var keys = Object.keys(statEls);
+  function bindAppTabs() {
+    appTabsEl.addEventListener('click', function (e) {
+      var btn = e.target.closest('.admin-tab');
+      if (!btn) return;
+      currentAppFilter = btn.dataset.status;
+      appTabsEl.querySelectorAll('.admin-tab').forEach(function (b) {
+        b.classList.toggle('is-active', b === btn);
+      });
+      renderApps();
+    });
+  }
+
+  function bindIntroTabs() {
+    introTabsEl.addEventListener('click', function (e) {
+      var btn = e.target.closest('.admin-tab');
+      if (!btn) return;
+      currentIntroFilter = btn.dataset.introFilter;
+      introTabsEl.querySelectorAll('.admin-tab').forEach(function (b) {
+        b.classList.toggle('is-active', b === btn);
+      });
+      renderIntros();
+    });
+  }
+
+  // ── Applications: load + render ─────────────────────────────
+  async function refreshApps() {
+    await Promise.all([loadAppStats(), renderApps()]);
+  }
+
+  async function loadAppStats() {
+    var keys = Object.keys(appStatEls);
     await Promise.all(keys.map(async function (status) {
       var res = await supabase
         .from('applications')
         .select('id', { count: 'exact', head: true })
         .eq('status', status);
-      var el = statEls[status];
+      var el = appStatEls[status];
       if (!el) return;
       el.textContent = res.error ? '?' : (res.count != null ? res.count : '0');
     }));
   }
 
-  async function render() {
-    listEl.innerHTML = '<p class="admin-loading">Loading…</p>';
+  async function renderApps() {
+    appListEl.innerHTML = '<p class="admin-loading">Loading…</p>';
 
     var query = supabase
       .from('applications')
       .select('*')
       .order('submitted_at', { ascending: false });
-    if (currentFilter !== 'all') query = query.eq('status', currentFilter);
+    if (currentAppFilter !== 'all') query = query.eq('status', currentAppFilter);
 
     var res = await query;
-    listEl.innerHTML = '';
+    appListEl.innerHTML = '';
 
     if (res.error) {
-      var err = document.createElement('p');
-      err.className = 'admin-empty';
-      err.textContent = 'Could not load applications: ' + res.error.message;
-      listEl.appendChild(err);
+      appListEl.appendChild(emptyMsg('Could not load applications: ' + res.error.message));
       return;
     }
     if (!res.data || !res.data.length) {
-      var empty = document.createElement('p');
-      empty.className = 'admin-empty';
-      empty.textContent = 'No applications in this view.';
-      listEl.appendChild(empty);
+      appListEl.appendChild(emptyMsg('No applications in this view.'));
       return;
     }
-
-    res.data.forEach(function (app) {
-      listEl.appendChild(buildCard(app));
-    });
+    res.data.forEach(function (app) { appListEl.appendChild(buildAppCard(app)); });
   }
 
-  // ── Card builder (createElement + textContent everywhere — XSS-safe) ──
-  function buildCard(app) {
+  function buildAppCard(app) {
     var article = el('article', 'app-card');
     article.dataset.id = app.id;
-
-    article.appendChild(buildCardHead(app));
-    article.appendChild(buildCardBody(app));
-    article.appendChild(buildCardFoot(app));
-
+    article.appendChild(buildAppHead(app));
+    article.appendChild(buildAppBody(app));
+    article.appendChild(buildAppFoot(app));
     return article;
   }
 
-  function buildCardHead(app) {
+  function buildAppHead(app) {
     var head = el('header', 'app-card-head');
-
     var left = el('div', 'app-card-head-left');
     left.appendChild(text('p', 'app-card-eyebrow',
       (app.submission_type === 'nominator' ? 'NOMINATION' : 'APPLICATION') +
@@ -110,17 +151,14 @@
     head.appendChild(left);
 
     var right = el('div', 'app-card-meta');
-    var statusEl = text('span', 'app-status app-status-' + app.status, prettyStatus(app.status));
-    right.appendChild(statusEl);
+    right.appendChild(text('span', 'app-status app-status-' + app.status, prettyStatus(app.status)));
     right.appendChild(text('p', 'app-card-date', formatDate(app.submitted_at)));
     head.appendChild(right);
-
     return head;
   }
 
-  function buildCardBody(app) {
+  function buildAppBody(app) {
     var body = el('div', 'app-card-body');
-
     addField(body, 'Headline', app.applicant_headline);
     addField(body, 'Credential', app.applicant_credential);
     addField(body, 'Current focus', app.applicant_current_work);
@@ -158,19 +196,17 @@
       if (app.nominator_full_name) who.push(app.nominator_full_name);
       if (app.nominator_email) who.push('<' + app.nominator_email + '>');
       body.appendChild(text('p', 'app-card-line', who.join(' ') || 'Not provided'));
-
       if (app.nominator_note) {
         body.appendChild(text('p', 'app-section-label', 'Endorsement'));
         body.appendChild(text('p', 'app-endorsement', app.nominator_note));
       }
     }
-
     return body;
   }
 
-  function buildCardFoot(app) {
+  function buildAppFoot(app) {
     if (app.status === 'pending' || app.status === 'needs_more_info') {
-      return buildActionFoot(app);
+      return buildAppActionFoot(app);
     }
     var foot = el('footer', 'app-card-review-meta');
     var line = 'Reviewed ' + formatDate(app.reviewed_at);
@@ -179,9 +215,8 @@
     return foot;
   }
 
-  function buildActionFoot(app) {
+  function buildAppActionFoot(app) {
     var foot = el('footer', 'app-card-actions');
-
     var notes = document.createElement('textarea');
     notes.className = 'app-notes';
     notes.placeholder = 'Reviewer notes (optional, visible only to admins)…';
@@ -189,15 +224,14 @@
     foot.appendChild(notes);
 
     var btnRow = el('div', 'app-action-buttons');
-    btnRow.appendChild(actionBtn('Needs info', 'needs_more_info', 'btn-ghost btn-sm', app.id, notes));
-    btnRow.appendChild(actionBtn('Reject', 'rejected', 'btn-ghost btn-sm app-btn-reject', app.id, notes));
-    btnRow.appendChild(actionBtn('Approve', 'approved', 'btn-primary btn-sm', app.id, notes));
+    btnRow.appendChild(appActionBtn('Needs info', 'needs_more_info', 'btn-ghost btn-sm', app.id, notes));
+    btnRow.appendChild(appActionBtn('Reject', 'rejected', 'btn-ghost btn-sm app-btn-reject', app.id, notes));
+    btnRow.appendChild(appActionBtn('Approve', 'approved', 'btn-primary btn-sm', app.id, notes));
     foot.appendChild(btnRow);
-
     return foot;
   }
 
-  function actionBtn(label, status, classes, appId, notesEl) {
+  function appActionBtn(label, status, classes, appId, notesEl) {
     var btn = document.createElement('button');
     btn.className = classes;
     btn.textContent = label;
@@ -214,7 +248,7 @@
         btn.textContent = original;
         return;
       }
-      await refresh();
+      await refreshApps();
     });
     return btn;
   }
@@ -229,6 +263,230 @@
       reviewer_notes: notes || null
     }).eq('id', id);
     return res.error;
+  }
+
+  // ── Intros: load + render ───────────────────────────────────
+  async function loadActiveMembers() {
+    var res = await supabase
+      .from('members')
+      .select('id, full_name, primary_pillar')
+      .eq('status', 'active')
+      .order('full_name');
+    if (res.error) {
+      console.error('loadActiveMembers error:', res.error);
+      activeMembers = [];
+      return;
+    }
+    activeMembers = res.data || [];
+  }
+
+  async function refreshIntros() {
+    await Promise.all([loadIntroStats(), renderIntros()]);
+  }
+
+  // Stat queries map filter names → DB predicates.
+  async function loadIntroStats() {
+    var queries = {
+      pending: function (q) { return q.eq('status', 'pending').is('broker_id', null); },
+      assigned: function (q) { return q.eq('status', 'pending').not('broker_id', 'is', null); },
+      forwarded: function (q) { return q.eq('status', 'forwarded'); },
+      declined: function (q) { return q.in('status', ['declined', 'expired']); }
+    };
+    await Promise.all(Object.keys(queries).map(async function (key) {
+      var q = supabase.from('intro_requests').select('id', { count: 'exact', head: true });
+      q = queries[key](q);
+      var res = await q;
+      var elNode = introStatEls[key];
+      if (!elNode) return;
+      elNode.textContent = res.error ? '?' : (res.count != null ? res.count : '0');
+    }));
+  }
+
+  async function renderIntros() {
+    introListEl.innerHTML = '<p class="admin-loading">Loading…</p>';
+
+    var q = supabase
+      .from('intro_requests')
+      .select(
+        'id, created_at, status, note, broker_id, forwarded_at, responded_at,' +
+        'requester:members!requester_id(id,full_name,headline,primary_pillar,location_city),' +
+        'target:members!target_id(id,full_name,headline,primary_pillar,location_city),' +
+        'broker:members!broker_id(id,full_name)'
+      )
+      .order('created_at', { ascending: false });
+
+    if (currentIntroFilter === 'awaiting') {
+      q = q.eq('status', 'pending').is('broker_id', null);
+    } else if (currentIntroFilter === 'assigned') {
+      q = q.eq('status', 'pending').not('broker_id', 'is', null);
+    } else if (currentIntroFilter === 'forwarded') {
+      q = q.eq('status', 'forwarded');
+    } else if (currentIntroFilter === 'declined') {
+      q = q.in('status', ['declined', 'expired']);
+    }
+
+    var res = await q;
+    introListEl.innerHTML = '';
+
+    if (res.error) {
+      introListEl.appendChild(emptyMsg('Could not load intros: ' + res.error.message));
+      return;
+    }
+    if (!res.data || !res.data.length) {
+      introListEl.appendChild(emptyMsg('No intros in this view.'));
+      return;
+    }
+    res.data.forEach(function (intro) { introListEl.appendChild(buildIntroCard(intro)); });
+  }
+
+  function buildIntroCard(intro) {
+    var article = el('article', 'app-card intro-card');
+    article.dataset.id = intro.id;
+
+    // Head
+    var head = el('header', 'app-card-head');
+    var left = el('div', 'app-card-head-left');
+    left.appendChild(text('p', 'app-card-eyebrow', 'INTRO REQUEST'));
+    var heading = el('h2', 'app-card-name');
+    heading.textContent = (intro.requester && intro.requester.full_name ? intro.requester.full_name : '—') +
+      ' → ' + (intro.target && intro.target.full_name ? intro.target.full_name : '—');
+    left.appendChild(heading);
+
+    var sub = [];
+    if (intro.requester && intro.requester.headline) sub.push(intro.requester.headline);
+    if (intro.target && intro.target.headline) sub.push('seeks ' + intro.target.headline);
+    if (sub.length) left.appendChild(text('p', 'app-card-email', sub.join(' · ')));
+    head.appendChild(left);
+
+    var right = el('div', 'app-card-meta');
+    right.appendChild(text('span', 'app-status intro-status-' + statusClassFor(intro), introStatusLabel(intro)));
+    right.appendChild(text('p', 'app-card-date', formatDate(intro.created_at)));
+    head.appendChild(right);
+
+    article.appendChild(head);
+
+    // Body — the note
+    var body = el('div', 'app-card-body');
+    body.appendChild(text('p', 'app-section-label', 'Requester’s note'));
+    var noteEl = el('p', 'app-endorsement');
+    noteEl.textContent = intro.note || '';
+    body.appendChild(noteEl);
+
+    if (intro.broker && intro.broker.full_name) {
+      body.appendChild(text('p', 'app-section-label', 'Assigned broker'));
+      body.appendChild(text('p', 'app-card-line', intro.broker.full_name));
+    }
+    if (intro.forwarded_at) {
+      body.appendChild(text('p', 'app-section-label', 'Forwarded'));
+      body.appendChild(text('p', 'app-card-line', formatDate(intro.forwarded_at)));
+    }
+    article.appendChild(body);
+
+    // Foot — actions for actionable statuses
+    if (intro.status === 'pending') {
+      article.appendChild(buildIntroActionFoot(intro));
+    } else {
+      var foot = el('footer', 'app-card-review-meta');
+      foot.textContent = 'Status: ' + introStatusLabel(intro) +
+        (intro.responded_at ? ' · ' + formatDate(intro.responded_at) : '');
+      article.appendChild(foot);
+    }
+    return article;
+  }
+
+  function buildIntroActionFoot(intro) {
+    var foot = el('footer', 'app-card-actions');
+
+    // Broker picker
+    var pickerWrap = el('div', 'intro-picker-wrap');
+    var label = text('label', 'app-section-label', intro.broker_id ? 'Reassign broker' : 'Assign broker');
+    pickerWrap.appendChild(label);
+
+    var select = document.createElement('select');
+    select.className = 'app-notes intro-broker-select';
+    var blank = document.createElement('option');
+    blank.value = '';
+    blank.textContent = '— select a mutual member —';
+    select.appendChild(blank);
+
+    var requesterId = intro.requester ? intro.requester.id : null;
+    var targetId = intro.target ? intro.target.id : null;
+    activeMembers.forEach(function (m) {
+      if (m.id === requesterId || m.id === targetId) return;
+      var opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = m.full_name + (m.primary_pillar ? ' · ' + m.primary_pillar.replace(/_/g, ' ') : '');
+      if (intro.broker_id === m.id) opt.selected = true;
+      select.appendChild(opt);
+    });
+    pickerWrap.appendChild(select);
+    foot.appendChild(pickerWrap);
+
+    var btnRow = el('div', 'app-action-buttons');
+    btnRow.appendChild(introActionBtn('Decline', 'declined', 'btn-ghost btn-sm app-btn-reject', intro.id, select));
+    btnRow.appendChild(introActionBtn(intro.broker_id ? 'Update broker' : 'Assign broker', 'assign', 'btn-primary btn-sm', intro.id, select));
+    foot.appendChild(btnRow);
+    return foot;
+  }
+
+  function introActionBtn(label, action, classes, introId, selectEl) {
+    var btn = document.createElement('button');
+    btn.className = classes;
+    btn.textContent = label;
+    btn.addEventListener('click', async function () {
+      if (action === 'declined' && !confirm('Decline this intro request? The requester will see the status change.')) return;
+
+      var brokerId = selectEl ? selectEl.value : '';
+      if (action === 'assign' && !brokerId) {
+        alert('Pick a broker from the dropdown first.');
+        return;
+      }
+      btn.disabled = true;
+      var original = btn.textContent;
+      btn.textContent = 'Saving…';
+
+      var err;
+      if (action === 'assign') {
+        err = await assignBroker(introId, brokerId);
+      } else {
+        err = await declineIntro(introId);
+      }
+
+      if (err) {
+        console.error('Intro action failed:', err);
+        alert('Could not save: ' + (err.message || 'unknown error'));
+        btn.disabled = false;
+        btn.textContent = original;
+        return;
+      }
+      await refreshIntros();
+    });
+    return btn;
+  }
+
+  async function assignBroker(introId, brokerId) {
+    var res = await supabase.from('intro_requests').update({
+      broker_id: brokerId
+    }).eq('id', introId);
+    return res.error;
+  }
+
+  async function declineIntro(introId) {
+    var res = await supabase.from('intro_requests').update({
+      status: 'declined',
+      responded_at: new Date().toISOString()
+    }).eq('id', introId);
+    return res.error;
+  }
+
+  function statusClassFor(intro) {
+    if (intro.status === 'pending') return intro.broker_id ? 'assigned' : 'awaiting';
+    return intro.status;
+  }
+
+  function introStatusLabel(intro) {
+    if (intro.status === 'pending') return intro.broker_id ? 'WITH BROKER' : 'AWAITING BROKER';
+    return intro.status.toUpperCase();
   }
 
   // ── Tiny DOM helpers ────────────────────────────────────────
@@ -250,8 +508,12 @@
     container.appendChild(text('p', 'app-card-line', value));
   }
 
-  function divider() {
-    return el('hr', 'app-divider');
+  function divider() { return el('hr', 'app-divider'); }
+
+  function emptyMsg(msg) {
+    var p = el('p', 'admin-empty');
+    p.textContent = msg;
+    return p;
   }
 
   function prettyStatus(s) {

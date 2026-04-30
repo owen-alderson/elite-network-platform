@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Application Review — Aether</title>
+  <title>Admin — Aether</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,29 +36,65 @@
   </div>
 
   <main class="admin-shell">
-    <header class="admin-header">
-      <p class="admin-eyebrow">REVIEW QUEUE</p>
-      <h1 class="admin-title">Applications</h1>
-      <p class="admin-subtitle">Approve, reject, or request more information. Member rows are created manually after approval (see ARCHITECTURE.md).</p>
+    <div class="admin-views">
+      <button class="admin-view-btn is-active" data-view="applications">Applications</button>
+      <button class="admin-view-btn" data-view="intros">Intros</button>
+    </div>
 
-      <div class="admin-stats">
-        <div class="admin-stat"><strong id="stat-pending">—</strong><span>Pending</span></div>
-        <div class="admin-stat"><strong id="stat-approved">—</strong><span>Approved</span></div>
-        <div class="admin-stat"><strong id="stat-rejected">—</strong><span>Rejected</span></div>
-        <div class="admin-stat"><strong id="stat-needsinfo">—</strong><span>Needs info</span></div>
-      </div>
+    <!-- ================== Applications view ================== -->
+    <section class="admin-view-section" data-view="applications">
+      <header class="admin-header">
+        <p class="admin-eyebrow">REVIEW QUEUE</p>
+        <h1 class="admin-title">Applications</h1>
+        <p class="admin-subtitle">Approve, reject, or request more information. Member rows are created manually after approval (see ARCHITECTURE.md).</p>
 
-      <div class="admin-tabs">
-        <button class="admin-tab is-active" data-status="pending">Pending</button>
-        <button class="admin-tab" data-status="needs_more_info">Needs info</button>
-        <button class="admin-tab" data-status="approved">Approved</button>
-        <button class="admin-tab" data-status="rejected">Rejected</button>
-        <button class="admin-tab" data-status="all">All</button>
-      </div>
-    </header>
+        <div class="admin-stats">
+          <div class="admin-stat"><strong id="stat-pending">—</strong><span>Pending</span></div>
+          <div class="admin-stat"><strong id="stat-approved">—</strong><span>Approved</span></div>
+          <div class="admin-stat"><strong id="stat-rejected">—</strong><span>Rejected</span></div>
+          <div class="admin-stat"><strong id="stat-needsinfo">—</strong><span>Needs info</span></div>
+        </div>
 
-    <section id="admin-list" class="admin-list" aria-live="polite">
-      <p class="admin-loading">Loading…</p>
+        <div class="admin-tabs" id="admin-app-tabs">
+          <button class="admin-tab is-active" data-status="pending">Pending</button>
+          <button class="admin-tab" data-status="needs_more_info">Needs info</button>
+          <button class="admin-tab" data-status="approved">Approved</button>
+          <button class="admin-tab" data-status="rejected">Rejected</button>
+          <button class="admin-tab" data-status="all">All</button>
+        </div>
+      </header>
+
+      <section id="admin-list" class="admin-list" aria-live="polite">
+        <p class="admin-loading">Loading…</p>
+      </section>
+    </section>
+
+    <!-- ================== Intros view ================== -->
+    <section class="admin-view-section" data-view="intros" hidden>
+      <header class="admin-header">
+        <p class="admin-eyebrow">INTRO QUEUE</p>
+        <h1 class="admin-title">Intros</h1>
+        <p class="admin-subtitle">Assign a broker — a member who knows both parties — or decline. The broker makes the introduction off-platform and marks the request forwarded.</p>
+
+        <div class="admin-stats">
+          <div class="admin-stat"><strong id="intro-stat-pending">—</strong><span>Awaiting broker</span></div>
+          <div class="admin-stat"><strong id="intro-stat-assigned">—</strong><span>With broker</span></div>
+          <div class="admin-stat"><strong id="intro-stat-forwarded">—</strong><span>Forwarded</span></div>
+          <div class="admin-stat"><strong id="intro-stat-declined">—</strong><span>Declined</span></div>
+        </div>
+
+        <div class="admin-tabs" id="admin-intro-tabs">
+          <button class="admin-tab is-active" data-intro-filter="awaiting">Awaiting broker</button>
+          <button class="admin-tab" data-intro-filter="assigned">With broker</button>
+          <button class="admin-tab" data-intro-filter="forwarded">Forwarded</button>
+          <button class="admin-tab" data-intro-filter="declined">Declined</button>
+          <button class="admin-tab" data-intro-filter="all">All</button>
+        </div>
+      </header>
+
+      <section id="admin-intro-list" class="admin-list" aria-live="polite">
+        <p class="admin-loading">Loading…</p>
+      </section>
     </section>
   </main>
 
