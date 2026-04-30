@@ -64,6 +64,16 @@
       document.querySelectorAll('.nav-cta, .mobile-cta').forEach(function (el) {
         el.style.display = 'none';
       });
+      // Public pages render the wordmark as <span> so it isn't clickable
+      // pre-login. For signed-in members, swap each <span class="wordmark">
+      // for a real anchor pointing at the dashboard.
+      document.querySelectorAll('span.wordmark').forEach(function (span) {
+        var a = document.createElement('a');
+        a.className = span.className;
+        a.href = 'dashboard.html';
+        a.textContent = span.textContent;
+        span.parentNode.replaceChild(a, span);
+      });
       document.querySelectorAll('a.wordmark').forEach(function (el) {
         el.setAttribute('href', 'dashboard.html');
       });
