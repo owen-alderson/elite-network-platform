@@ -15,6 +15,7 @@
       loadSuggestedConnections(session.user.id),
       loadBrokerQueue(session.user.id),
       loadMyRequests(session.user.id),
+      loadConnections(session.user.id),
       loadInbox(session.user.id)
     ]);
   })();
@@ -276,6 +277,76 @@
   function requestStatusLabel(intro) {
     if (intro.status === 'pending') return intro.broker_id ? 'WITH BROKER' : 'AWAITING BROKER';
     return intro.status.toUpperCase();
+  }
+
+  // ── Connections (other party of each forwarded intro) ───────
+  async function loadConnections(userId) {
+    var section = document.getElementById('connections-section');
+    var listEl = document.getElementById('connections-list');
+    var countEl = document.getElementById('connections-count');
+    if (!section || !listEl) return;
+
+    var res = await supabase
+      .from('intro_requests')
+      .select(
+        'id, forwarded_at, requester_id, target_id,' +
+        'requester:members!requester_id(id,full_name,headline,primary_pillar,location_city),' +
+        'target:members!target_id(id,full_name,headline,primary_pillar,location_city)'
+      )
+      .eq('status', 'forwarded')
+      .or('requester_id.eq.' + userId + ',target_id.eq.' + userId)
+      .order('forwarded_at', { ascending: false });
+
+    if (res.error) {
+      console.error('loadConnections error:', res.error);
+      section.hidden = true;
+      return;
+    }
+
+    var seen = {};
+    var connections = [];
+    (res.data || []).forEach(function (intro) {
+      var other = intro.requester_id === userId ? intro.target : intro.requester;
+      if (!other || !other.id || seen[other.id]) return;
+      seen[other.id] = true;
+      connections.push({ member: other, forwarded_at: intro.forwarded_at });
+    });
+
+    if (!connections.length) {
+      section.hidden = true;
+      return;
+    }
+    section.hidden = false;
+    if (countEl) countEl.textContent = String(connections.length);
+    listEl.innerHTML = '';
+    connections.forEach(function (c) { listEl.appendChild(buildConnectionCard(c)); });
+  }
+
+  function buildConnectionCard(c) {
+    var m = c.member;
+    var card = document.createElement('a');
+    card.className = 'connection-card';
+    card.href = 'profile.html?id=' + encodeURIComponent(m.id);
+
+    var avatar = el('div', 'connection-avatar');
+    avatar.textContent = (m.full_name || '?').charAt(0).toUpperCase();
+    card.appendChild(avatar);
+
+    var info = el('div', 'connection-info');
+    info.appendChild(text('p', 'connection-name', m.full_name || '—'));
+    if (m.headline) info.appendChild(text('p', 'connection-headline', m.headline));
+
+    var tags = [];
+    if (m.primary_pillar) tags.push(capitalize(m.primary_pillar));
+    if (m.location_city) tags.push(m.location_city);
+    if (tags.length) info.appendChild(text('span', 'connection-tag', tags.join(' · ')));
+
+    card.appendChild(info);
+
+    if (c.forwarded_at) {
+      card.appendChild(text('span', 'connection-when', 'Met ' + relativeTime(c.forwarded_at)));
+    }
+    return card;
   }
 
   // ── Inbox feed ──────────────────────────────────────────────

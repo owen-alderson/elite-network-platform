@@ -139,6 +139,16 @@
         <div class="intro-request-list" id="my-requests-list"></div>
       </section>
 
+      <!-- Your connections (people you've met through Aether) -->
+      <section class="dash-section dash-intro-section" id="connections-section" hidden>
+        <div class="dash-section-head">
+          <h2 class="dash-section-title">Your connections</h2>
+          <span class="dash-intro-count" id="connections-count">0</span>
+        </div>
+        <p class="dash-section-sub">Members you've been introduced to. Each connection is a forwarded intro on either side.</p>
+        <div class="connections-grid" id="connections-list"></div>
+      </section>
+
       <!-- NEXT EVENT BANNER -->
       <div class="dash-next-event">
         <div class="dash-next-event-left">
@@ -291,7 +301,7 @@
   </div>
 
   <!-- INTRO REQUEST MODAL -->
-  <div class="modal-overlay" id="intro-modal" onclick="closeModal()">
+  <div class="modal-overlay" id="intro-modal" onclick="closeModal()" style="display:none;">
     <div class="modal" onclick="event.stopPropagation()">
       <button class="modal-close" onclick="closeModal()">✕</button>
       <p class="flow-eyebrow" style="margin-bottom:12px;">Request Introduction</p>
