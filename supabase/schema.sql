@@ -22,7 +22,7 @@ stable
 set search_path = ''
 as $$
   select coalesce(lower(auth.jwt() ->> 'email'), '') = any(array[
-    'thealdersonfam@gmail.com'
+    'owen.alderson@gmail.com'
   ]);
 $$;
 

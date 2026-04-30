@@ -35,7 +35,7 @@ window.aether = (function () {
   // this client copy only controls UI visibility. Always assume the client is hostile.
   // Phase 1: Owen is the sole admin.
   var ADMIN_EMAILS = [
-    'thealdersonfam@gmail.com'
+    'owen.alderson@gmail.com'
   ];
 
   async function getSession() {
