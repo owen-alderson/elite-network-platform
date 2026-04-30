@@ -12,6 +12,27 @@
 
   var supabase = window.aether.client;
 
+  // Gate the entry-screen cards by session state. Visitors see only the
+  // applicant flow; signed-in members see only the nominate flow.
+  document.addEventListener('DOMContentLoaded', function () {
+    window.aether.getSession().then(function (session) {
+      var applyCard = document.querySelector('.entry-card[data-flow="apply"]');
+      var nominateCard = document.querySelector('.entry-card[data-flow="nominate"]');
+      var heading = document.getElementById('entry-heading');
+      var sub = document.getElementById('entry-sub');
+
+      if (session) {
+        if (applyCard) applyCard.style.display = 'none';
+        if (heading) heading.innerHTML = 'Nominate<br>a peer';
+        if (sub) sub.textContent = 'Introduce someone exceptional. Aether grows through members vouching for the next cohort.';
+      } else {
+        if (nominateCard) nominateCard.style.display = 'none';
+        if (heading) heading.innerHTML = 'Begin your<br>application';
+        if (sub) sub.textContent = 'You should have received a nomination from an existing Aether member. If you haven\'t, you\'ll need one before you can apply.';
+      }
+    });
+  });
+
   function val(id) {
     var el = document.getElementById(id);
     return el ? (el.value || '').trim() : '';

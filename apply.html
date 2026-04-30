@@ -43,17 +43,17 @@
          ===================================================== -->
     <div class="flow-screen active" id="screen-entry">
       <div class="flow-center">
-        <p class="flow-eyebrow">Membership</p>
-        <h1 class="flow-heading">How would you<br>like to proceed?</h1>
-        <p class="flow-sub">Aether is built on trusted nominations. Every member is vouched for by someone already inside.</p>
+        <p class="flow-eyebrow" id="entry-eyebrow">Membership</p>
+        <h1 class="flow-heading" id="entry-heading">How would you<br>like to proceed?</h1>
+        <p class="flow-sub" id="entry-sub">Aether is built on trusted nominations. Every member is vouched for by someone already inside.</p>
         <div class="entry-cards">
-          <button class="entry-card" onclick="startFlow('apply')">
+          <button class="entry-card" data-flow="apply" onclick="startFlow('apply')">
             <span class="entry-card-icon">◈</span>
             <h3>I've been nominated</h3>
             <p>You received a nomination from an Aether member. Complete your application here.</p>
             <span class="entry-card-cta">Begin Application →</span>
           </button>
-          <button class="entry-card" onclick="startFlow('nominate')">
+          <button class="entry-card" data-flow="nominate" onclick="startFlow('nominate')">
             <span class="entry-card-icon">◇</span>
             <h3>I want to nominate someone</h3>
             <p>You're a current member and want to introduce an exceptional peer to Aether.</p>
