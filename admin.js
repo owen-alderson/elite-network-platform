@@ -799,7 +799,7 @@
 
     var q = supabase
       .from('members')
-      .select('id, full_name, email, headline, primary_pillar, location_city, location_country, status, joined_at, nominated_by')
+      .select('id, full_name, email, headline, primary_pillar, location_city, location_country, status, joined_at, nominated_by, last_seen_at, avatar_url, bio, current_work, linkedin_url, instagram_handle, website_url, achievements')
       .order('joined_at', { ascending: false });
     if (currentMemberFilter !== 'all') q = q.eq('status', currentMemberFilter);
 
@@ -840,6 +840,20 @@
     var right = el('div', 'app-card-meta');
     right.appendChild(text('span', 'app-status member-status-' + m.status, (m.status || '').toUpperCase()));
     right.appendChild(text('p', 'app-card-date', m.joined_at ? 'Joined ' + new Date(m.joined_at).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : ''));
+
+    // Tester-engagement signal: completeness score + last activity. Lets
+    // Owen scan who's actually using the platform vs sitting cold.
+    var checks = window.aether.profileChecks ? window.aether.profileChecks(m) : null;
+    if (checks) {
+      var compClass = 'admin-engagement-pill ' + (checks.ready ? 'is-ready' : 'is-thin');
+      right.appendChild(text('span', compClass, 'Profile ' + checks.score + '/' + checks.total));
+    }
+    var seenLabel = adminLastSeenLabel(m);
+    if (seenLabel) {
+      var seenClass = 'admin-engagement-pill ' + (seenLabel.fresh ? 'is-active' : 'is-cold');
+      right.appendChild(text('span', seenClass, seenLabel.text));
+    }
+
     head.appendChild(right);
     article.appendChild(head);
 
@@ -1151,6 +1165,21 @@
     var p = el('p', 'admin-empty');
     p.textContent = msg;
     return p;
+  }
+
+  // Bucket last_seen_at into a tester-engagement label. Suppress when the
+  // member has never had a real session (last_seen ~ joined within 5 min).
+  function adminLastSeenLabel(m) {
+    if (!m.last_seen_at || !m.joined_at) return null;
+    var seen = new Date(m.last_seen_at).getTime();
+    var joined = new Date(m.joined_at).getTime();
+    if (seen - joined < 5 * 60 * 1000) return { text: 'Never signed in', fresh: false };
+    var ageMs = Date.now() - seen;
+    var day = 86400000;
+    if (ageMs < day) return { text: 'Active today', fresh: true };
+    if (ageMs < 7 * day) return { text: 'Active this week', fresh: true };
+    if (ageMs < 30 * day) return { text: 'Active this month', fresh: false };
+    return { text: 'Cold ' + Math.floor(ageMs / day) + 'd', fresh: false };
   }
 
   function prettyStatus(s) {

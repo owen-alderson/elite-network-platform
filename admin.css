@@ -198,6 +198,19 @@
   margin: 0;
 }
 
+.admin-engagement-pill {
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  color: var(--muted);
+}
+.admin-engagement-pill.is-ready  { color: #6fbf73; border-color: #6fbf73; }
+.admin-engagement-pill.is-thin   { color: #d9b87a; border-color: #d9b87a; }
+.admin-engagement-pill.is-active { color: var(--gold); border-color: var(--gold-dim); }
+.admin-engagement-pill.is-cold   { color: var(--muted); }
+
 .app-status {
   font-size: 10px;
   letter-spacing: 0.2em;
