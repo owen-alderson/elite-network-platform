@@ -89,8 +89,60 @@
     renderAchievements(m.achievements);
     setText('#profile-current-work', m.current_work || '—');
     renderLinks(m);
+    if (isOwn) renderCompleteness(m);
 
     setActionsMode(isOwn ? 'self' : 'other');
+  }
+
+  function renderCompleteness(m) {
+    var prev = document.getElementById('profile-completeness');
+    if (prev) prev.remove();
+
+    var checks = [
+      { key: 'avatar',     met: !!m.avatar_url },
+      { key: 'bio',        met: !!(m.bio && m.bio.trim()) },
+      { key: 'headline',   met: !!(m.headline && m.headline.trim()) },
+      { key: 'location',   met: !!(m.location_city || m.location_country) },
+      { key: 'work',       met: !!(m.current_work && m.current_work.trim()) },
+      { key: 'links',      met: !!(m.linkedin_url || m.instagram_handle || m.website_url) },
+      { key: 'achievements', met: Array.isArray(m.achievements) && m.achievements.length > 0 }
+    ];
+    var done = checks.filter(function (c) { return c.met; }).length;
+    if (done === checks.length) return;
+
+    var main = document.querySelector('.profile-main');
+    if (!main) return;
+
+    var banner = document.createElement('div');
+    banner.id = 'profile-completeness';
+    banner.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-left:2px solid var(--gold);padding:14px 18px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;';
+
+    var left = document.createElement('div');
+    var label = document.createElement('p');
+    label.style.cssText = 'font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin:0 0 4px;';
+    label.textContent = 'Profile · ' + done + '/' + checks.length;
+    left.appendChild(label);
+
+    var missing = checks.filter(function (c) { return !c.met; }).map(function (c) {
+      return ({
+        avatar: 'photo', bio: 'bio', headline: 'headline', location: 'location',
+        work: 'what you\'re working on', links: 'a link', achievements: 'achievements'
+      })[c.key];
+    });
+    var note = document.createElement('p');
+    note.style.cssText = 'font-size:13px;color:var(--text);margin:0;line-height:1.5;';
+    note.textContent = 'Add ' + missing.slice(0, 3).join(', ') +
+      (missing.length > 3 ? ' and ' + (missing.length - 3) + ' more' : '') + '.';
+    left.appendChild(note);
+
+    var btn = document.createElement('button');
+    btn.className = 'btn-ghost btn-sm';
+    btn.textContent = 'Complete profile';
+    btn.addEventListener('click', enterEditMode);
+
+    banner.appendChild(left);
+    banner.appendChild(btn);
+    main.insertBefore(banner, main.firstChild);
   }
 
   function renderLinks(m) {

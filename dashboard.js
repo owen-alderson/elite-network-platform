@@ -81,24 +81,37 @@
     var listEl = document.querySelector('.suggestion-list');
     if (!listEl) return;
 
+    // Pull every member we already have any intro_request with so the
+    // suggestion list doesn't surface people we're already engaged with.
+    var introRes = await supabase
+      .from('intro_requests')
+      .select('requester_id, target_id')
+      .or('requester_id.eq.' + currentUserId + ',target_id.eq.' + currentUserId);
+    var excludeIds = { };
+    excludeIds[currentUserId] = true;
+    (introRes.data || []).forEach(function (r) {
+      excludeIds[r.requester_id] = true;
+      excludeIds[r.target_id] = true;
+    });
+
     var res = await supabase
       .from('members')
       .select('id,full_name,headline,primary_pillar,location_city,avatar_url')
       .eq('status', 'active')
-      .neq('id', currentUserId)
       .order('joined_at', { ascending: false })
-      .limit(4);
+      .limit(20);
 
     listEl.innerHTML = '';
     if (res.error) {
       listEl.innerHTML = '<p style="color:var(--muted);font-size:13px;">Could not load suggestions.</p>';
       return;
     }
-    if (!res.data || !res.data.length) {
-      listEl.innerHTML = '<p style="color:var(--muted);font-size:13px;">No other members yet — once your cohort joins, they\'ll appear here.</p>';
+    var rows = (res.data || []).filter(function (m) { return !excludeIds[m.id]; }).slice(0, 4);
+    if (!rows.length) {
+      listEl.innerHTML = '<p style="color:var(--muted);font-size:13px;">No new members to suggest right now. Browse the directory directly.</p>';
       return;
     }
-    res.data.forEach(function (m) { listEl.appendChild(buildSuggestionRow(m)); });
+    rows.forEach(function (m) { listEl.appendChild(buildSuggestionRow(m)); });
   }
 
   function buildSuggestionRow(m) {

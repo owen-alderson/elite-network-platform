@@ -15,7 +15,7 @@
     document.body.style.overflow = locked ? 'hidden' : '';
   }
 
-  function open(targetName, targetId) {
+  async function open(targetName, targetId) {
     var modal = el('intro-modal');
     var nameEl = el('modal-name');
     if (!modal || !nameEl) return;
@@ -26,8 +26,41 @@
     var textarea = modal.querySelector('.intro-textarea');
     if (textarea) textarea.value = '';
 
+    // Inject the routing hint so the requester knows whether their note
+    // will reach a broker or go directly to the target.
+    setRoutingHint(modal, null);
     modal.style.display = 'flex';
     setBodyLocked(true);
+
+    if (targetId) {
+      var session = await window.aether.getSession();
+      if (!session) return;
+      var rpc = await supabase.rpc('has_mutual_connection', { a: session.user.id, b: targetId });
+      if (!rpc.error) {
+        setRoutingHint(modal, rpc.data === true ? 'broker' : 'direct');
+      }
+    }
+  }
+
+  function setRoutingHint(modal, route) {
+    var hint = modal.querySelector('.intro-routing-hint');
+    if (!hint) {
+      hint = document.createElement('p');
+      hint.className = 'intro-routing-hint';
+      hint.style.cssText = 'font-size:11px;color:var(--muted);background:var(--surface);border:1px solid var(--border);padding:8px 12px;margin:0 0 14px;line-height:1.5;';
+      var body = modal.querySelector('.modal-body');
+      if (body && body.parentNode) body.parentNode.insertBefore(hint, body.nextSibling);
+    }
+    if (route === 'broker') {
+      hint.textContent = 'You share a mutual connection with this member. A peer will broker the introduction off-platform.';
+      hint.style.display = '';
+    } else if (route === 'direct') {
+      hint.textContent = 'No mutual connection on Aether yet. This request will go directly to the member; they\'ll see your note and decide whether to accept.';
+      hint.style.display = '';
+    } else {
+      hint.textContent = '';
+      hint.style.display = 'none';
+    }
   }
 
   function close() {
