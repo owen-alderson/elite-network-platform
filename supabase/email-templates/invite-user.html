@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>You've been invited to Aether</title>
+<style>
+  body {
+    background: #0a0a0a;
+    color: #d8d0c0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    margin: 0;
+    padding: 48px 24px;
+  }
+  .card {
+    max-width: 520px;
+    margin: 0 auto;
+    background: #111111;
+    border: 1px solid #2a2a2a;
+    padding: 40px 36px;
+  }
+  .wordmark {
+    color: #c9a84c;
+    font-weight: 500;
+    letter-spacing: 0.3em;
+    font-size: 13px;
+    margin-bottom: 32px;
+  }
+  h1 {
+    color: #f5f0e8;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 300;
+    font-size: 34px;
+    line-height: 1.15;
+    margin: 0 0 18px;
+  }
+  p {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #d8d0c0;
+    margin: 0 0 14px;
+  }
+  blockquote {
+    border-left: 2px solid #c9a84c;
+    padding: 4px 0 4px 18px;
+    margin: 22px 0;
+    color: #b8b0a0;
+    font-style: italic;
+    font-size: 13px;
+  }
+  .cta-wrap { margin: 28px 0 24px; }
+  .cta {
+    display: inline-block;
+    background: #c9a84c;
+    color: #0a0a0a !important;
+    text-decoration: none;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    padding: 14px 30px;
+    border-radius: 2px;
+    font-size: 13px;
+  }
+  .fallback {
+    word-break: break-all;
+    font-size: 11px;
+    color: #888888;
+    margin-top: 6px;
+    line-height: 1.6;
+  }
+  .muted {
+    color: #888888;
+    font-size: 12px;
+    margin-top: 36px;
+  }
+  a { color: #c9a84c; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="wordmark">AETHER</div>
+    <h1>You're in.</h1>
+    <p>Welcome to Aether — an invite-only network for the top of every field. Your application has been approved.</p>
+    <blockquote>
+      What you'll find here is small, deliberate, and built around real introductions. There's no follower count, no feed to feed. Just members worth meeting and the spaces that hold them.
+    </blockquote>
+    <p>Click below to sign in for the first time. Your link is personal to {{ .Email }} — anyone you forward it to gets nothing.</p>
+    <div class="cta-wrap">
+      <a class="cta" href="{{ .ConfirmationURL }}">Enter Aether</a>
+    </div>
+    <p class="fallback">Or paste this into your browser:<br />{{ .ConfirmationURL }}</p>
+    <p class="muted">Once you're in, take two minutes to set up your profile. Members who fill in who they are and what they're working on get the most out of the network — and so does everyone else.</p>
+  </div>
+</body>
+</html>
