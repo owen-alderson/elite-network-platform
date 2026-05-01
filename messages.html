@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Messages — Aether</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="messages.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="dashboard.html" class="wordmark">AETHER</a>
+      <div class="nav-links">
+        <a href="members.html">Members</a>
+        <a href="events.html">Events</a>
+        <a href="spaces.html">Spaces</a>
+      </div>
+      <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="dashboard.html">Home</a>
+    <a href="members.html">Members</a>
+    <a href="events.html">Events</a>
+    <a href="spaces.html">Spaces</a>
+    <a href="messages.html">Messages</a>
+  </div>
+
+  <main class="msg-layout" id="msg-layout">
+    <aside class="msg-list-pane" id="msg-list-pane">
+      <header class="msg-list-head">
+        <p class="section-label">Direct</p>
+        <h1>Messages</h1>
+      </header>
+      <div class="msg-list" id="msg-list">
+        <p class="msg-empty">Loading…</p>
+      </div>
+    </aside>
+
+    <section class="msg-thread-pane" id="msg-thread-pane">
+      <div class="msg-thread-empty" id="msg-thread-empty">
+        <p>Select a conversation to read.</p>
+        <p class="muted">Conversations open when an introduction is accepted.</p>
+      </div>
+
+      <div class="msg-thread" id="msg-thread" hidden>
+        <header class="msg-thread-head">
+          <a href="#" class="msg-back" id="msg-back">← All messages</a>
+          <div class="msg-thread-who">
+            <div class="msg-thread-avatar" id="msg-thread-avatar"></div>
+            <div>
+              <a href="#" class="msg-thread-name" id="msg-thread-name">—</a>
+              <p class="msg-thread-sub" id="msg-thread-sub"></p>
+            </div>
+          </div>
+        </header>
+
+        <div class="msg-thread-body" id="msg-thread-body"></div>
+
+        <form class="msg-compose" id="msg-compose">
+          <textarea id="msg-input" rows="2" placeholder="Write a message" maxlength="5000"></textarea>
+          <button type="submit" class="btn-primary btn-sm" id="msg-send">Send</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <script src="nav.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+  <script src="auth.js"></script>
+  <script src="messages.js"></script>
+</body>
+</html>

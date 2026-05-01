@@ -33,7 +33,7 @@ function json(body: unknown, status = 200) {
   });
 }
 
-type Event = "broker_assigned" | "forwarded";
+type Event = "broker_assigned" | "forwarded" | "direct_received" | "direct_accepted";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
@@ -84,6 +84,14 @@ Deno.serve(async (req) => {
     to = intro.requester?.email;
     subject = `Your intro to ${targetName} was forwarded — Aether`;
     html = forwardedEmailHtml(targetName, brokerName);
+  } else if (event === "direct_received") {
+    to = intro.target?.email;
+    subject = `${requesterName} would like to be introduced — Aether`;
+    html = directReceivedEmailHtml(requesterName, intro.note);
+  } else if (event === "direct_accepted") {
+    to = intro.requester?.email;
+    subject = `${targetName} accepted your introduction — Aether`;
+    html = directAcceptedEmailHtml(targetName);
   } else {
     return json({ error: "unknown event" }, 400);
   }
@@ -151,6 +159,25 @@ function forwardedEmailHtml(targetName: string, brokerName: string): string {
     <h1>Your introduction is on its way.</h1>
     <p><strong style="color:#f5f0e8;">${escapeHtml(brokerName)}</strong> has made the introduction to <strong style="color:#f5f0e8;">${escapeHtml(targetName)}</strong>. Watch for an email or message — the conversation continues off-platform.</p>
     <p>Once you've connected, mark the intro as accepted on your dashboard so it shows up in your network.</p>
+    <a class="btn" href="${SITE_URL}/dashboard.html">Open Aether</a>
+  `);
+}
+
+function directReceivedEmailHtml(requesterName: string, note: string | null): string {
+  const safeNote = (note || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return shellHtml(`
+    <h1>${escapeHtml(requesterName)} would like to meet you.</h1>
+    <p>You don't have a mutual connection on Aether yet, so this request is coming straight to you. They wrote:</p>
+    <div class="quote">${safeNote}</div>
+    <p>Open Aether to see their profile and accept or decline. If you accept, a private conversation opens between the two of you.</p>
+    <a class="btn" href="${SITE_URL}/dashboard.html">Open Aether</a>
+  `);
+}
+
+function directAcceptedEmailHtml(targetName: string): string {
+  return shellHtml(`
+    <h1>${escapeHtml(targetName)} accepted your introduction.</h1>
+    <p>A private conversation has opened between the two of you. Pick up where the request left off — your note is already there as the first message.</p>
     <a class="btn" href="${SITE_URL}/dashboard.html">Open Aether</a>
   `);
 }

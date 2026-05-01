@@ -83,9 +83,31 @@
 
       await injectNavSession(session);
       injectMobileSignout();
+      injectMessagesLink();
       await injectAdminLink();
     });
   });
+
+  function injectMessagesLink() {
+    document.querySelectorAll('.nav-links').forEach(function (group) {
+      if (group.querySelector('a[data-messages-link]')) return;
+      var a = document.createElement('a');
+      a.href = 'messages.html';
+      a.dataset.messagesLink = 'true';
+      a.textContent = 'Messages';
+      group.appendChild(a);
+    });
+    document.querySelectorAll('.mobile-menu').forEach(function (menu) {
+      if (menu.querySelector('a[data-messages-link]')) return;
+      var a = document.createElement('a');
+      a.href = 'messages.html';
+      a.dataset.messagesLink = 'true';
+      a.textContent = 'Messages';
+      var signout = menu.querySelector('.mobile-signout');
+      if (signout) menu.insertBefore(a, signout);
+      else menu.appendChild(a);
+    });
+  }
 
   async function injectAdminLink() {
     var ok = await window.aether.isAdmin();

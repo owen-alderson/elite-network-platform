@@ -13,6 +13,7 @@
     await Promise.all([
       loadMyProfile(session.user.id, session.user.email),
       loadSuggestedConnections(session.user.id),
+      loadReceivedRequests(session.user.id),
       loadBrokerQueue(session.user.id),
       loadMyRequests(session.user.id),
       loadConnections(session.user.id),
@@ -122,6 +123,75 @@
     row.appendChild(btn);
 
     return row;
+  }
+
+  // ── Received intro requests (direct route, I'm the target) ──
+  async function loadReceivedRequests(userId) {
+    var section = document.getElementById('received-section');
+    var listEl = document.getElementById('received-list');
+    var countEl = document.getElementById('received-count');
+    if (!section || !listEl) return;
+
+    var res = await supabase
+      .from('intro_requests')
+      .select(
+        'id, created_at, status, note, route,' +
+        'requester:members!requester_id(id,full_name,headline,primary_pillar,location_city,avatar_url)'
+      )
+      .eq('target_id', userId)
+      .eq('route', 'direct')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+
+    if (res.error) {
+      console.error('loadReceivedRequests error:', res.error);
+      section.hidden = true;
+      return;
+    }
+    var rows = res.data || [];
+    if (!rows.length) {
+      section.hidden = true;
+      return;
+    }
+    section.hidden = false;
+    if (countEl) countEl.textContent = String(rows.length);
+    listEl.innerHTML = '';
+    rows.forEach(function (intro) { listEl.appendChild(buildReceivedCard(intro)); });
+  }
+
+  function buildReceivedCard(intro) {
+    var card = el('article', 'intro-card-mini');
+    var requester = intro.requester || {};
+
+    var head = el('div', 'intro-mini-head');
+    var people = el('div', 'intro-mini-people');
+    people.appendChild(buildAvatar(requester));
+    var nameLink = document.createElement('a');
+    nameLink.href = 'profile.html?id=' + encodeURIComponent(requester.id || '');
+    nameLink.className = 'intro-mini-link intro-mini-link-strong';
+    nameLink.textContent = requester.full_name || '—';
+    people.appendChild(nameLink);
+    head.appendChild(people);
+    head.appendChild(text('span', 'intro-mini-date', relativeTime(intro.created_at)));
+    card.appendChild(head);
+
+    if (requester.headline) {
+      card.appendChild(text('p', 'intro-mini-sub', requester.headline));
+    }
+
+    var note = el('blockquote', 'intro-mini-note');
+    note.textContent = intro.note || '';
+    card.appendChild(note);
+
+    var actions = el('div', 'intro-mini-actions');
+    actions.appendChild(introActionBtn('Decline', 'btn-ghost btn-sm app-btn-reject', function () {
+      return updateIntro(intro.id, { status: 'declined', responded_at: new Date().toISOString() });
+    }, 'Decline this introduction request? They\'ll see it as declined and won\'t be able to message you.'));
+    actions.appendChild(introActionBtn('Accept', 'btn-primary btn-sm', function () {
+      return updateIntro(intro.id, { status: 'accepted', responded_at: new Date().toISOString() });
+    }));
+    card.appendChild(actions);
+    return card;
   }
 
   // ── Broker queue (intros assigned to me, still pending) ─────
@@ -436,12 +506,12 @@
     var res = await supabase
       .from('intro_requests')
       .select(
-        'id, created_at, status, broker_id, forwarded_at, responded_at, note, requester_id, target_id,' +
+        'id, created_at, status, route, broker_id, forwarded_at, responded_at, note, requester_id, target_id,' +
         'requester:members!requester_id(id,full_name,avatar_url),' +
         'target:members!target_id(id,full_name,avatar_url),' +
         'broker:members!broker_id(id,full_name,avatar_url)'
       )
-      .or('requester_id.eq.' + userId + ',broker_id.eq.' + userId)
+      .or('requester_id.eq.' + userId + ',broker_id.eq.' + userId + ',and(target_id.eq.' + userId + ',route.eq.direct)')
       .order('created_at', { ascending: false })
       .limit(20);
 
@@ -471,7 +541,8 @@
   function buildInboxItem(intro, userId) {
     var iAmBroker = intro.broker_id === userId;
     var iAmRequester = intro.requester_id === userId;
-    if (!iAmBroker && !iAmRequester) return null;
+    var iAmDirectTarget = (intro.route === 'direct' && intro.target_id === userId);
+    if (!iAmBroker && !iAmRequester && !iAmDirectTarget) return null;
 
     var item = el('div', 'inbox-item');
     var unread = false;
@@ -480,7 +551,24 @@
     var when = intro.created_at;
     var avatarMember;
 
-    if (iAmBroker) {
+    if (iAmDirectTarget) {
+      avatarMember = intro.requester || null;
+      if (intro.status === 'pending') {
+        title = (intro.requester ? intro.requester.full_name : 'Someone') +
+          ' would like to be introduced to you';
+        unread = true;
+      } else if (intro.status === 'accepted') {
+        title = 'You met ' + (intro.requester ? intro.requester.full_name : '?') + ' through Aether';
+        body = '';
+        when = intro.responded_at || intro.created_at;
+      } else if (intro.status === 'declined') {
+        title = 'You declined ' + (intro.requester ? intro.requester.full_name : '?') + "'s request";
+        body = '';
+        when = intro.responded_at || intro.created_at;
+      } else {
+        return null;
+      }
+    } else if (iAmBroker) {
       avatarMember = intro.requester || null;
       if (intro.status === 'pending') {
         title = (intro.requester ? intro.requester.full_name : 'Someone') +
@@ -572,8 +660,10 @@
       var session = await window.aether.getSession();
       if (!session) { window.location.reload(); return; }
       await Promise.all([
+        loadReceivedRequests(session.user.id),
         loadBrokerQueue(session.user.id),
         loadMyRequests(session.user.id),
+        loadConnections(session.user.id),
         loadInbox(session.user.id)
       ]);
     });
