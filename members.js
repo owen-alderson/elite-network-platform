@@ -6,7 +6,7 @@
   var supabase = window.aether.client;
 
   var gridEl = document.getElementById('members-grid');
-  var toolbarEl = document.querySelector('.members-toolbar .toolbar-inner');
+  var toolbarEl = document.querySelector('.filter-list');
   var allMembers = [];
   var activeFilter = 'all';
 
