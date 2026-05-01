@@ -43,7 +43,7 @@
 
     var res = await supabase
       .from('members')
-      .select('id,full_name,headline,primary_pillar,location_city,location_country,secondary_pillars')
+      .select('id,full_name,headline,bio,primary_pillar,secondary_pillars,location_city,location_country,current_work')
       .eq('status', 'active')
       .order('joined_at', { ascending: false });
 
@@ -66,8 +66,7 @@
         (m.primary_pillar || '').toLowerCase() === activeFilter;
       if (!pillarMatch) return false;
       if (!searchTerm) return true;
-      return (m.full_name || '').toLowerCase().indexOf(searchTerm) !== -1 ||
-             (m.headline || '').toLowerCase().indexOf(searchTerm) !== -1;
+      return matchesSearch(m, searchTerm);
     });
 
     if (!filtered.length) {
@@ -144,5 +143,24 @@
     return s.split('_').map(function (w) {
       return w.charAt(0).toUpperCase() + w.slice(1);
     }).join(' ');
+  }
+
+  // Search across every field that's either visible on the card or
+  // useful in finding a member: name, headline (role/company), bio,
+  // city, country, current focus, and pillars (primary + secondary).
+  function matchesSearch(m, term) {
+    var parts = [
+      m.full_name,
+      m.headline,
+      m.bio,
+      m.location_city,
+      m.location_country,
+      m.current_work,
+      m.primary_pillar ? m.primary_pillar.replace(/_/g, ' ') : '',
+      Array.isArray(m.secondary_pillars)
+        ? m.secondary_pillars.map(function (p) { return p.replace(/_/g, ' '); }).join(' ')
+        : ''
+    ];
+    return parts.filter(Boolean).join(' ').toLowerCase().indexOf(term) !== -1;
   }
 })();
