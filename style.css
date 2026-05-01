@@ -424,6 +424,48 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ============================================================
+   WHY AETHER
+   ============================================================ */
+.why-aether {
+  background: var(--black);
+  border-top: 1px solid var(--border);
+}
+.why-lead {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--text);
+  max-width: 680px;
+  margin-bottom: 56px;
+}
+.why-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 60px;
+}
+.why-num {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--gold);
+  margin-bottom: 16px;
+}
+.why-card h3 {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--white);
+  margin-bottom: 10px;
+  line-height: 1.2;
+}
+.why-card p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+@media (max-width: 800px) {
+  .why-grid { grid-template-columns: 1fr; gap: 36px; }
+}
+
+/* ============================================================
    HOW IT WORKS
    ============================================================ */
 .how {
