@@ -349,6 +349,12 @@ create index intro_requests_target_idx    on public.intro_requests (target_id);
 create index intro_requests_status_idx    on public.intro_requests (status);
 create index intro_requests_route_idx     on public.intro_requests (route);
 
+-- Block duplicate pending requests from the same requester to the same
+-- target. Resolves once the previous one closes.
+create unique index if not exists intro_requests_unique_pending_pair
+  on public.intro_requests (requester_id, target_id)
+  where status = 'pending';
+
 alter table public.intro_requests enable row level security;
 
 create policy "intro_requests_insert_self" on public.intro_requests

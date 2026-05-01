@@ -83,6 +83,9 @@
     setMeta('pillar', m.primary_pillar ? capitalize(m.primary_pillar) : '—');
     setMeta('nominated_by', m.nominated_by ? 'Member' : 'Private');
 
+    // Connection count is async — fire and forget.
+    loadConnectionCount(m.id);
+
     renderAchievements(m.achievements);
     setText('#profile-current-work', m.current_work || '—');
     renderLinks(m);
@@ -181,8 +184,11 @@
     if (cancelBtn) cancelBtn.addEventListener('click', exitEditMode);
     if (saveBtn) saveBtn.addEventListener('click', saveEdits);
 
-    // For other members' profiles: if I'm already connected to them,
-    // swap the Request Introduction button for a Send message link.
+    // For other members' profiles, the action button takes one of three
+    // forms depending on relationship:
+    //   already connected            → "Send message" (links to thread)
+    //   request already pending      → disabled "Request pending"
+    //   neither                      → "Request Introduction" (modal)
     if (!isOwn && current && introBtn) {
       var connected = await checkConnection(current.id);
       if (connected) {
@@ -193,9 +199,17 @@
         msgBtn.dataset.mode = 'other';
         introBtn.parentNode.replaceChild(msgBtn, introBtn);
       } else {
-        introBtn.addEventListener('click', function () {
-          window.aetherIntro.open(current.full_name || 'Member', current.id);
-        });
+        var pending = await checkPendingIntro(current.id);
+        if (pending) {
+          introBtn.textContent = 'Request pending';
+          introBtn.disabled = true;
+          introBtn.style.opacity = '0.55';
+          introBtn.style.cursor = 'default';
+        } else {
+          introBtn.addEventListener('click', function () {
+            window.aetherIntro.open(current.full_name || 'Member', current.id);
+          });
+        }
       }
     } else if (introBtn) {
       introBtn.addEventListener('click', function () {
@@ -213,6 +227,64 @@
       return false;
     }
     return res.data === true;
+  }
+
+  async function checkPendingIntro(otherId) {
+    if (!otherId || otherId === sessionUserId) return null;
+    var res = await supabase
+      .from('intro_requests')
+      .select('id, status, route, broker_id')
+      .eq('requester_id', sessionUserId)
+      .eq('target_id', otherId)
+      .eq('status', 'pending')
+      .maybeSingle();
+    if (res.error) {
+      console.warn('checkPendingIntro failed:', res.error);
+      return null;
+    }
+    return res.data;
+  }
+
+  async function loadConnectionCount(memberId) {
+    // Count distinct accepted intros where this member is on either side.
+    var res = await supabase
+      .from('intro_requests')
+      .select('requester_id, target_id', { count: 'exact', head: false })
+      .eq('status', 'accepted')
+      .or('requester_id.eq.' + memberId + ',target_id.eq.' + memberId);
+    if (res.error) {
+      console.warn('connection count failed:', res.error);
+      return;
+    }
+    // Dedupe: each accepted intro is a single connection, but a member
+    // could be requester and broker etc. Use distinct other-party.
+    var others = {};
+    (res.data || []).forEach(function (r) {
+      var other = r.requester_id === memberId ? r.target_id : r.requester_id;
+      if (other) others[other] = true;
+    });
+    var count = Object.keys(others).length;
+
+    // Inject a "Connections" meta row into the sidebar if not already there.
+    var existing = document.querySelector('[data-field="connections"]');
+    if (existing) {
+      existing.textContent = String(count);
+      return;
+    }
+    var profileMeta = document.querySelector('.profile-meta');
+    if (!profileMeta) return;
+    var item = document.createElement('div');
+    item.className = 'meta-item';
+    var label = document.createElement('p');
+    label.className = 'meta-label';
+    label.textContent = 'Connections';
+    var val = document.createElement('p');
+    val.className = 'meta-value';
+    val.dataset.field = 'connections';
+    val.textContent = String(count);
+    item.appendChild(label);
+    item.appendChild(val);
+    profileMeta.appendChild(item);
   }
 
   // ── Edit mode ───────────────────────────────────────────────

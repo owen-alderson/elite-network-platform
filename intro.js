@@ -82,7 +82,14 @@
 
     if (res.error) {
       console.error('Intro request failed:', res.error);
-      alert('Could not send the intro request: ' + (res.error.message || 'unknown error'));
+      var msg = res.error.message || 'unknown error';
+      if (res.error.code === '23505' || msg.indexOf('intro_requests_unique_pending_pair') !== -1) {
+        alert('You already have a pending request to this member. Wait for a response or cancel the existing one from your dashboard.');
+      } else if (msg.indexOf('5 pending direct') !== -1) {
+        alert('You have 5 pending direct intro requests already. Wait for responses or cancel some from your dashboard.');
+      } else {
+        alert('Could not send the intro request: ' + msg);
+      }
       return;
     }
 
