@@ -20,6 +20,20 @@
     var nameEl = el('modal-name');
     if (!modal || !nameEl) return;
 
+    // Profile-completeness gate: members with thin profiles shouldn't be
+    // reaching out — there's nothing for the target to evaluate. Surface a
+    // dedicated panel inside the same modal frame instead of opening the form.
+    if (window.aether.canIntroNow) {
+      var status = await window.aether.canIntroNow();
+      if (!status.ready) {
+        showCompletenessGate(modal, status);
+        modal.style.display = 'flex';
+        setBodyLocked(true);
+        return;
+      }
+    }
+    clearCompletenessGate(modal);
+
     modal.dataset.targetId = targetId || '';
     nameEl.textContent = targetName || 'Member';
 
@@ -40,6 +54,42 @@
         setRoutingHint(modal, rpc.data === true ? 'broker' : 'direct');
       }
     }
+  }
+
+  function showCompletenessGate(modal, status) {
+    clearCompletenessGate(modal);
+    var inner = modal.querySelector('.modal');
+    if (!inner) return;
+    var gate = document.createElement('div');
+    gate.className = 'intro-gate';
+    gate.style.cssText = 'text-align:center;padding:8px 4px 4px;';
+    gate.innerHTML =
+      '<p class="flow-eyebrow" style="margin-bottom:12px;">Complete your profile</p>' +
+      '<h3 class="modal-title">Add a few details first.</h3>' +
+      '<p class="modal-body">Members are more likely to accept an intro from someone with a complete profile. ' +
+      'You\'ve filled <strong style="color:var(--gold);">' + status.score + ' of ' + status.total + '</strong> sections — finish a couple more and intro requests will open up.</p>' +
+      '<div class="modal-actions" style="justify-content:center;">' +
+      '  <button type="button" class="btn-ghost btn-sm" data-gate-cancel>Not now</button>' +
+      '  <a class="btn-primary btn-sm" href="profile.html">Go to profile</a>' +
+      '</div>';
+    // Hide the form siblings while the gate is active.
+    Array.prototype.forEach.call(inner.children, function (c) {
+      if (c.classList && (c.classList.contains('modal-close'))) return;
+      c.style.display = 'none';
+    });
+    inner.appendChild(gate);
+    var cancel = gate.querySelector('[data-gate-cancel]');
+    if (cancel) cancel.addEventListener('click', close);
+  }
+
+  function clearCompletenessGate(modal) {
+    var inner = modal.querySelector('.modal');
+    if (!inner) return;
+    var gate = inner.querySelector('.intro-gate');
+    if (gate) gate.remove();
+    Array.prototype.forEach.call(inner.children, function (c) {
+      if (c.style) c.style.display = '';
+    });
   }
 
   function setRoutingHint(modal, route) {

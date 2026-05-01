@@ -125,6 +125,43 @@ window.aether = (function () {
     return url;
   }
 
+  // Profile-completeness check. Used to gate intro-request actions: testers
+  // with empty profiles shouldn't be reaching out to other members because
+  // there's nothing for the target to evaluate. Threshold is the same scoring
+  // surface used by the on-profile completeness banner (profile.js); keep
+  // these in sync if you change one.
+  var PROFILE_INTRO_THRESHOLD = 4; // out of 7
+  function profileChecks(m) {
+    if (!m) return { score: 0, total: 7, ready: false };
+    var checks = [
+      !!m.avatar_url,
+      !!(m.bio && String(m.bio).trim()),
+      !!(m.headline && String(m.headline).trim()),
+      !!(m.location_city || m.location_country),
+      !!(m.current_work && String(m.current_work).trim()),
+      !!(m.linkedin_url || m.instagram_handle || m.website_url),
+      Array.isArray(m.achievements) && m.achievements.length > 0
+    ];
+    var score = checks.filter(Boolean).length;
+    return { score: score, total: 7, ready: score >= PROFILE_INTRO_THRESHOLD };
+  }
+
+  // Cached "can I make intros?" check for the current user. Pages that gate
+  // intro CTAs call this once and reuse the result.
+  var canIntroCache = null;
+  async function canIntroNow() {
+    if (canIntroCache !== null) return canIntroCache;
+    var user = await getUser();
+    if (!user) return (canIntroCache = { ready: false, score: 0, total: 7 });
+    var res = await client.from('members')
+      .select('avatar_url,bio,headline,location_city,location_country,current_work,linkedin_url,instagram_handle,website_url,achievements')
+      .eq('id', user.id)
+      .maybeSingle();
+    if (res.error || !res.data) return (canIntroCache = { ready: false, score: 0, total: 7 });
+    canIntroCache = profileChecks(res.data);
+    return canIntroCache;
+  }
+
   return {
     client: client,
     ADMIN_EMAILS: ADMIN_EMAILS,
@@ -135,6 +172,8 @@ window.aether = (function () {
     isAdmin: isAdmin,
     onAuthStateChange: onAuthStateChange,
     fillAvatar: fillAvatar,
-    uploadAvatar: uploadAvatar
+    uploadAvatar: uploadAvatar,
+    profileChecks: profileChecks,
+    canIntroNow: canIntroNow
   };
 })();
