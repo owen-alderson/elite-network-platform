@@ -12,7 +12,9 @@
     'location_city',
     'location_country',
     'current_work',
-    'linkedin_url'
+    'linkedin_url',
+    'instagram_handle',
+    'website_url'
   ];
 
   // Pillar list mirrors the directory + apply form. Owen is the source of truth.
@@ -83,8 +85,54 @@
 
     renderAchievements(m.achievements);
     setText('#profile-current-work', m.current_work || '—');
+    renderLinks(m);
 
     setActionsMode(isOwn ? 'self' : 'other');
+  }
+
+  function renderLinks(m) {
+    var main = document.querySelector('.profile-main');
+    if (!main) return;
+    var prev = document.getElementById('profile-links');
+    if (prev) prev.remove();
+    var links = [];
+    if (m.linkedin_url) links.push({ href: m.linkedin_url, label: 'LinkedIn' });
+    if (m.instagram_handle) {
+      var handle = m.instagram_handle.replace(/^@/, '');
+      links.push({ href: 'https://instagram.com/' + handle, label: '@' + handle });
+    }
+    if (m.website_url) {
+      var label = m.website_url.replace(/^https?:\/\//, '').replace(/\/$/, '');
+      links.push({ href: m.website_url, label: label });
+    }
+    if (!links.length) return;
+
+    var wrap = document.createElement('div');
+    wrap.id = 'profile-links';
+    wrap.style.marginTop = '24px';
+
+    var hr = document.createElement('hr');
+    hr.className = 'profile-divider';
+    wrap.appendChild(hr);
+
+    var label = document.createElement('p');
+    label.className = 'profile-section-label';
+    label.textContent = 'Links';
+    wrap.appendChild(label);
+
+    var list = document.createElement('div');
+    list.style.cssText = 'display:flex; flex-wrap:wrap; gap:14px; margin-top:8px;';
+    links.forEach(function (l) {
+      var a = document.createElement('a');
+      a.href = l.href;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.style.cssText = 'color:var(--gold); border-bottom:1px solid var(--gold-dim); font-size:13px;';
+      a.textContent = l.label;
+      list.appendChild(a);
+    });
+    wrap.appendChild(list);
+    main.appendChild(wrap);
   }
 
   function renderAchievements(list) {
@@ -156,6 +204,8 @@
     insertEditRow('headline', 'Headline', current.headline || '', 'input');
     insertEditRow('current_work', 'Currently working on', current.current_work || '', 'textarea');
     insertEditRow('linkedin_url', 'LinkedIn URL', current.linkedin_url || '', 'input');
+    insertEditRow('instagram_handle', 'Instagram handle', current.instagram_handle || '', 'input');
+    insertEditRow('website_url', 'Website', current.website_url || '', 'input');
 
     insertSecondaryPillarsEditor(current.secondary_pillars || []);
     insertAchievementsEditor(current.achievements || []);

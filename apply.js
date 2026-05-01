@@ -151,6 +151,12 @@
     var note = why;
     if (relationship) note += '\n\nHow they know them: ' + relationship;
 
+    // If a logged-in member is submitting the nomination, link the
+    // application to their member id so invite-member can stamp the new
+    // member's nominated_by field correctly.
+    var session = await window.aether.getSession();
+    var nominatorMemberId = session ? session.user.id : null;
+
     var payload = {
       submission_type: 'nominator',
       applicant_full_name: nomFirst + ' ' + nomLast,
@@ -159,6 +165,7 @@
       applicant_linkedin_url: nomLinkedin || null,
       nominator_full_name: nominatorName,
       nominator_email: nominatorEmail,
+      nominator_member_id: nominatorMemberId,
       nominator_note: note
     };
 

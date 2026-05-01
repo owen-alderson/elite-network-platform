@@ -1,18 +1,20 @@
--- Aether — Phase 1 schema
--- Apply once to a fresh Supabase project via the SQL editor.
--- This file is NOT idempotent — re-running on an existing schema will error
--- (intentional: we want loud failures, not silent skips).
+-- Aether — Phase 1 schema (canonical)
+-- Reflects every migration applied through 2026-05-01. This file is
+-- non-idempotent on a fresh project — run as a single shot via the
+-- Supabase SQL editor or apply piece-by-piece via mcp__supabase__apply_migration.
 --
 -- Contracts upheld here:
 --   * RLS is enabled on every public table.
---   * The anon key is safe to ship to the client because access is enforced
---     at the database level by these policies.
+--   * The publishable (anon) key is safe to ship to the client because
+--     access is enforced at the database level by these policies.
 --   * Defensive triggers protect sensitive columns even if a policy is wrong.
 
 create extension if not exists pgcrypto;
+create extension if not exists pg_net   with schema extensions;
+create extension if not exists pg_cron  with schema extensions;
 
 ------------------------------------------------------------------------
--- Admin allowlist (phase 1 — hardcoded, single admin)
+-- Admin allowlist (phase 1 — sole admin: Owen)
 -- Mirrored in supabase.js (ADMIN_EMAILS). The DB copy is the real one.
 ------------------------------------------------------------------------
 create or replace function public.is_admin()
@@ -21,13 +23,13 @@ language sql
 stable
 set search_path = ''
 as $$
-  -- Accepts three classes of caller as admin:
+  -- Three classes of admin caller:
   --   1. The postgres / service_role / supabase_admin db users (raw DB
   --      pathways like MCP execute_sql or direct connections).
   --   2. Service-role JWTs (edge functions using SUPABASE_SERVICE_ROLE_KEY).
-  --   3. The hard-coded admin email allowlist (a member signed in as Owen).
-  -- Without (1) and (2), defensive triggers silently revert legitimate
-  -- privileged writes from the invite-member function and from MCP.
+  --   3. The hard-coded admin email allowlist.
+  -- (1) and (2) are critical — without them, defensive triggers below
+  -- silently revert legitimate privileged writes from edge functions.
   select
     current_user in ('postgres', 'service_role', 'supabase_admin')
     or coalesce(auth.jwt() ->> 'role', '') = 'service_role'
@@ -97,7 +99,7 @@ for each row execute function public.touch_updated_at();
 ------------------------------------------------------------------------
 -- members
 -- Each row is keyed to an auth.users row (one-to-one, same id).
--- Created by an admin after an application is approved.
+-- Created post-approval via the invite-member edge function.
 ------------------------------------------------------------------------
 create table public.members (
   id                 uuid primary key references auth.users(id) on delete cascade,
@@ -128,28 +130,22 @@ create index members_status_idx on public.members (status);
 
 alter table public.members enable row level security;
 
--- Read: any authenticated member sees other 'active' members; sees self regardless;
---       admins see everyone.
 create policy "members_select_active_or_self_or_admin" on public.members
   for select to authenticated
   using (status = 'active' or id = auth.uid() or public.is_admin());
 
--- Insert: admin only (members are created post-approval).
 create policy "members_insert_admin" on public.members
   for insert to authenticated with check (public.is_admin());
 
--- Update: members edit their own row; admins edit any.
 create policy "members_update_self_or_admin" on public.members
   for update to authenticated
   using (id = auth.uid() or public.is_admin())
   with check (id = auth.uid() or public.is_admin());
 
--- Delete: admin only.
 create policy "members_delete_admin" on public.members
   for delete to authenticated using (public.is_admin());
 
--- Defence in depth: lock down columns that members must not be able to
--- self-mutate (status, nominated_by, primary key, immutable timestamps).
+-- Defence in depth: lock down columns members must not self-mutate.
 create or replace function public.members_protect_columns()
 returns trigger
 language plpgsql
@@ -198,12 +194,15 @@ create table public.applications (
   nominator_note           text,
   status                   text not null default 'pending'
                              check (status in ('pending','approved','rejected','needs_more_info')),
-  -- reviewed_by references auth.users (not members) so admins who do not
-  -- yet have member rows can still review.
   reviewed_by              uuid references auth.users(id),
   reviewed_at              timestamptz,
   reviewer_notes           text,
-  created_member_id        uuid references public.members(id)
+  created_member_id        uuid references public.members(id),
+  -- Stamps for the two transactional emails associated with this row:
+  --   confirmation_sent_at:  send-application-confirmation (after submit)
+  --   status_email_sent_at:  send-application-status (after rejected / needs_more_info)
+  confirmation_sent_at     timestamptz,
+  status_email_sent_at     timestamptz
 );
 
 create index applications_status_idx on public.applications (status);
@@ -211,11 +210,9 @@ create index applications_submitted_at_idx on public.applications (submitted_at 
 
 alter table public.applications enable row level security;
 
--- Insert: anyone (anon or authed) can submit.
 create policy "applications_insert_any" on public.applications
   for insert to anon, authenticated with check (true);
 
--- Read / update / delete: admin only.
 create policy "applications_select_admin" on public.applications
   for select to authenticated using (public.is_admin());
 
@@ -226,8 +223,7 @@ create policy "applications_update_admin" on public.applications
 create policy "applications_delete_admin" on public.applications
   for delete to authenticated using (public.is_admin());
 
--- Defence in depth: force review fields to defaults on non-admin INSERT.
--- Prevents a malicious anon client from POSTing { status: 'approved' }.
+-- Force review fields to defaults on non-admin INSERT/UPDATE.
 create or replace function public.applications_force_defaults()
 returns trigger
 language plpgsql
@@ -243,14 +239,16 @@ begin
     new.reviewed_at := null;
     new.reviewer_notes := null;
     new.created_member_id := null;
+    new.confirmation_sent_at := null;
+    new.status_email_sent_at := null;
   else
-    -- non-admin UPDATE shouldn't pass RLS, but if a policy is ever loosened
-    -- by mistake, this still preserves the protected columns.
     new.status := old.status;
     new.reviewed_by := old.reviewed_by;
     new.reviewed_at := old.reviewed_at;
     new.reviewer_notes := old.reviewer_notes;
     new.created_member_id := old.created_member_id;
+    new.confirmation_sent_at := old.confirmation_sent_at;
+    new.status_email_sent_at := old.status_email_sent_at;
   end if;
   return new;
 end;
@@ -260,10 +258,62 @@ create trigger applications_force_defaults
 before insert or update on public.applications
 for each row execute function public.applications_force_defaults();
 
+-- Email triggers (call edge functions via pg_net):
+--   on INSERT  → send-application-confirmation
+--   on UPDATE  → send-application-status when status flips to
+--                rejected / needs_more_info (approve uses invite-member instead)
+create or replace function public.applications_send_confirmation()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform net.http_post(
+    url := 'https://emlresxklixzcsammste.supabase.co/functions/v1/send-application-confirmation',
+    headers := jsonb_build_object('Content-Type', 'application/json'),
+    body := jsonb_build_object('application_id', new.id)
+  );
+  return new;
+end;
+$$;
+
+create trigger applications_send_confirmation
+after insert on public.applications
+for each row execute function public.applications_send_confirmation();
+
+create or replace function public.applications_send_status_change()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if old.status is distinct from new.status
+     and new.status in ('rejected', 'needs_more_info') then
+    perform net.http_post(
+      url := 'https://emlresxklixzcsammste.supabase.co/functions/v1/send-application-status',
+      headers := jsonb_build_object('Content-Type', 'application/json'),
+      body := jsonb_build_object('application_id', new.id)
+    );
+  end if;
+  return new;
+end;
+$$;
+
+create trigger applications_send_status_change
+after update on public.applications
+for each row execute function public.applications_send_status_change();
+
 ------------------------------------------------------------------------
 -- intro_requests
--- Visibility (by design): requester, broker, admins. NOT the target —
--- targets find out via whatever notification channel the broker uses.
+-- The core mechanic. Two route variants:
+--   route='broker' — requested when a mutual connection exists; admin
+--                    assigns a broker; broker forwards off-platform.
+--   route='direct' — no mutual connection; goes straight to target,
+--                    target accepts/declines themselves. Capped at 5
+--                    pending per requester.
+-- A connection forms (and unlocks DM) when status = 'accepted'.
 ------------------------------------------------------------------------
 create table public.intro_requests (
   id            uuid primary key default gen_random_uuid(),
@@ -274,43 +324,57 @@ create table public.intro_requests (
   note          text not null check (length(note) between 1 and 2000),
   status        text not null default 'pending'
                   check (status in ('pending','forwarded','accepted','declined','expired')),
+  route         text not null default 'broker'
+                  check (route in ('broker','direct')),
   forwarded_at  timestamptz,
   responded_at  timestamptz,
   check (requester_id <> target_id)
 );
 
 create index intro_requests_requester_idx on public.intro_requests (requester_id);
-create index intro_requests_broker_idx on public.intro_requests (broker_id);
-create index intro_requests_status_idx on public.intro_requests (status);
+create index intro_requests_broker_idx    on public.intro_requests (broker_id);
+create index intro_requests_target_idx    on public.intro_requests (target_id);
+create index intro_requests_status_idx    on public.intro_requests (status);
+create index intro_requests_route_idx     on public.intro_requests (route);
 
 alter table public.intro_requests enable row level security;
 
--- Insert: only as yourself.
 create policy "intro_requests_insert_self" on public.intro_requests
   for insert to authenticated
   with check (requester_id = auth.uid());
 
--- Read: requester, broker, or admin.
+-- SELECT: requester always; broker if assigned; target only on direct route; admin always.
 create policy "intro_requests_select_party" on public.intro_requests
   for select to authenticated
   using (
     requester_id = auth.uid()
     or broker_id = auth.uid()
+    or (target_id = auth.uid() and route = 'direct')
     or public.is_admin()
   );
 
--- Update: broker can change status; admins can do anything.
-create policy "intro_requests_update_broker_or_admin" on public.intro_requests
+-- UPDATE: same visibility set; protect_columns trigger locks immutables.
+create policy "intro_requests_update_party_or_admin" on public.intro_requests
   for update to authenticated
-  using (broker_id = auth.uid() or public.is_admin())
-  with check (broker_id = auth.uid() or public.is_admin());
+  using (
+    broker_id = auth.uid()
+    or requester_id = auth.uid()
+    or (target_id = auth.uid() and route = 'direct')
+    or public.is_admin()
+  )
+  with check (
+    broker_id = auth.uid()
+    or requester_id = auth.uid()
+    or (target_id = auth.uid() and route = 'direct')
+    or public.is_admin()
+  );
 
--- Delete: admin only.
 create policy "intro_requests_delete_admin" on public.intro_requests
   for delete to authenticated using (public.is_admin());
 
--- Defence in depth: a broker should change status only — not requester,
--- target, broker assignment, or note.
+-- Defence in depth: a non-admin can only change status / forwarded_at /
+-- responded_at. All other columns (parties, note, route, created_at)
+-- are immutable post-insert.
 create or replace function public.intro_requests_protect_columns()
 returns trigger
 language plpgsql
@@ -324,6 +388,7 @@ begin
     new.broker_id := old.broker_id;
     new.note := old.note;
     new.created_at := old.created_at;
+    new.route := old.route;
   end if;
   return new;
 end;
@@ -332,6 +397,197 @@ $$;
 create trigger intro_requests_protect_columns
 before update on public.intro_requests
 for each row execute function public.intro_requests_protect_columns();
+
+-- Connection helpers (used by routing trigger + conversations RLS).
+create or replace function public.are_connected(a uuid, b uuid)
+returns boolean
+language sql
+stable
+set search_path = ''
+as $$
+  select exists (
+    select 1 from public.intro_requests
+    where status = 'accepted'
+      and (
+        (requester_id = a and target_id = b)
+        or (requester_id = b and target_id = a)
+      )
+  );
+$$;
+
+create or replace function public.has_mutual_connection(a uuid, b uuid)
+returns boolean
+language sql
+stable
+set search_path = ''
+as $$
+  with a_conns as (
+    select case when requester_id = a then target_id else requester_id end as other
+    from public.intro_requests
+    where status = 'accepted'
+      and (requester_id = a or target_id = a)
+  ),
+  b_conns as (
+    select case when requester_id = b then target_id else requester_id end as other
+    from public.intro_requests
+    where status = 'accepted'
+      and (requester_id = b or target_id = b)
+  )
+  select exists (select 1 from a_conns intersect select 1 from b_conns);
+$$;
+
+-- Routing decision: broker vs direct, before insert.
+create or replace function public.intro_requests_set_route()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if public.has_mutual_connection(new.requester_id, new.target_id) then
+    new.route := 'broker';
+  else
+    new.route := 'direct';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger intro_requests_set_route
+before insert on public.intro_requests
+for each row execute function public.intro_requests_set_route();
+
+-- Direct-route rate limit: 5 pending direct requests per requester.
+create or replace function public.intro_requests_check_direct_limit()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+declare
+  pending_count int;
+begin
+  if new.route = 'direct' and new.status = 'pending' then
+    select count(*) into pending_count
+    from public.intro_requests
+    where requester_id = new.requester_id
+      and route = 'direct'
+      and status = 'pending';
+    if pending_count >= 5 then
+      raise exception 'You have 5 pending direct intro requests already. Wait for responses or cancel some.'
+        using errcode = 'check_violation';
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+create trigger intro_requests_check_direct_limit
+before insert on public.intro_requests
+for each row execute function public.intro_requests_check_direct_limit();
+
+-- Notification triggers: fire send-intro-notification edge function on
+-- the four state transitions worth emailing about.
+create or replace function public.intro_requests_notify_insert()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  fn_url text := 'https://emlresxklixzcsammste.supabase.co/functions/v1/send-intro-notification';
+begin
+  if new.route = 'direct' and new.status = 'pending' then
+    perform net.http_post(
+      url := fn_url,
+      headers := jsonb_build_object('Content-Type', 'application/json'),
+      body := jsonb_build_object('intro_id', new.id, 'event', 'direct_received')
+    );
+  end if;
+  return new;
+end;
+$$;
+
+create trigger intro_requests_notify_insert
+after insert on public.intro_requests
+for each row execute function public.intro_requests_notify_insert();
+
+create or replace function public.intro_requests_notify()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  fn_url text := 'https://emlresxklixzcsammste.supabase.co/functions/v1/send-intro-notification';
+begin
+  if (old.broker_id is null and new.broker_id is not null and new.status = 'pending') then
+    perform net.http_post(
+      url := fn_url,
+      headers := jsonb_build_object('Content-Type', 'application/json'),
+      body := jsonb_build_object('intro_id', new.id, 'event', 'broker_assigned')
+    );
+  end if;
+
+  if (old.status is distinct from new.status and new.status = 'forwarded') then
+    perform net.http_post(
+      url := fn_url,
+      headers := jsonb_build_object('Content-Type', 'application/json'),
+      body := jsonb_build_object('intro_id', new.id, 'event', 'forwarded')
+    );
+  end if;
+
+  if (old.status is distinct from new.status and new.status = 'accepted' and new.route = 'direct') then
+    perform net.http_post(
+      url := fn_url,
+      headers := jsonb_build_object('Content-Type', 'application/json'),
+      body := jsonb_build_object('intro_id', new.id, 'event', 'direct_accepted')
+    );
+  end if;
+
+  return new;
+end;
+$$;
+
+create trigger intro_requests_notify
+after update on public.intro_requests
+for each row execute function public.intro_requests_notify();
+
+-- Spawn a conversation when an intro hits 'accepted' (either route).
+-- Seeds the conversation with the requester's note as the first message.
+create or replace function public.intro_requests_open_conversation()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  a uuid;
+  b uuid;
+  conv_id uuid;
+begin
+  if old.status = new.status or new.status <> 'accepted' then
+    return new;
+  end if;
+
+  a := least(new.requester_id, new.target_id);
+  b := greatest(new.requester_id, new.target_id);
+
+  insert into public.conversations (member_a, member_b, intro_id)
+  values (a, b, new.id)
+  on conflict (member_a, member_b) do update set intro_id = excluded.intro_id
+  returning id into conv_id;
+
+  if conv_id is not null and new.note is not null then
+    insert into public.messages (conversation_id, sender_id, body)
+    values (conv_id, new.requester_id, new.note);
+  end if;
+
+  return new;
+end;
+$$;
+
+create trigger intro_requests_open_conversation
+after update on public.intro_requests
+for each row execute function public.intro_requests_open_conversation();
 
 ------------------------------------------------------------------------
 -- events
@@ -392,12 +648,9 @@ create index event_rsvps_member_idx on public.event_rsvps (member_id);
 
 alter table public.event_rsvps enable row level security;
 
--- Read: all authed members can see attendance (matches private-club norms
--- where members see who is going to what).
 create policy "rsvps_select_authed" on public.event_rsvps
   for select to authenticated using (true);
 
--- Write: each member manages their own RSVP; admins can manage any.
 create policy "rsvps_insert_self" on public.event_rsvps
   for insert to authenticated
   with check (member_id = auth.uid());
@@ -410,3 +663,191 @@ create policy "rsvps_update_self_or_admin" on public.event_rsvps
 create policy "rsvps_delete_self_or_admin" on public.event_rsvps
   for delete to authenticated
   using (member_id = auth.uid() or public.is_admin());
+
+------------------------------------------------------------------------
+-- conversations + messages
+-- Connection-gated 1:1 DM. Conversation rows are unique per pair (with
+-- canonical ordering: member_a < member_b). Conversation creation is
+-- gated by are_connected() so messaging only opens between members
+-- with an accepted intro on either side.
+------------------------------------------------------------------------
+create table public.conversations (
+  id              uuid primary key default gen_random_uuid(),
+  member_a        uuid not null references public.members(id) on delete cascade,
+  member_b        uuid not null references public.members(id) on delete cascade,
+  intro_id        uuid references public.intro_requests(id) on delete set null,
+  created_at      timestamptz not null default now(),
+  last_message_at timestamptz not null default now(),
+  check (member_a < member_b),
+  unique (member_a, member_b)
+);
+
+create index conversations_member_a_idx       on public.conversations (member_a);
+create index conversations_member_b_idx       on public.conversations (member_b);
+create index conversations_last_message_idx   on public.conversations (last_message_at desc);
+
+alter table public.conversations enable row level security;
+
+create policy "conversations_select_party" on public.conversations
+  for select to authenticated
+  using (member_a = auth.uid() or member_b = auth.uid());
+
+create policy "conversations_insert_connected_party" on public.conversations
+  for insert to authenticated
+  with check (
+    (member_a = auth.uid() or member_b = auth.uid())
+    and public.are_connected(member_a, member_b)
+  );
+
+create policy "conversations_delete_admin" on public.conversations
+  for delete to authenticated using (public.is_admin());
+
+create table public.messages (
+  id               uuid primary key default gen_random_uuid(),
+  conversation_id  uuid not null references public.conversations(id) on delete cascade,
+  sender_id        uuid not null references public.members(id) on delete cascade,
+  body             text not null check (length(body) between 1 and 5000),
+  created_at       timestamptz not null default now(),
+  read_at          timestamptz
+);
+
+create index messages_conversation_idx on public.messages (conversation_id, created_at);
+
+alter table public.messages enable row level security;
+
+create policy "messages_select_party" on public.messages
+  for select to authenticated
+  using (
+    exists (
+      select 1 from public.conversations c
+      where c.id = conversation_id
+        and (c.member_a = auth.uid() or c.member_b = auth.uid())
+    )
+  );
+
+create policy "messages_insert_party" on public.messages
+  for insert to authenticated
+  with check (
+    sender_id = auth.uid()
+    and exists (
+      select 1 from public.conversations c
+      where c.id = conversation_id
+        and (c.member_a = auth.uid() or c.member_b = auth.uid())
+    )
+  );
+
+-- Recipients (non-senders) can mark a message read by setting read_at.
+create policy "messages_update_recipient_read" on public.messages
+  for update to authenticated
+  using (
+    sender_id <> auth.uid()
+    and exists (
+      select 1 from public.conversations c
+      where c.id = conversation_id
+        and (c.member_a = auth.uid() or c.member_b = auth.uid())
+    )
+  )
+  with check (
+    sender_id <> auth.uid()
+    and exists (
+      select 1 from public.conversations c
+      where c.id = conversation_id
+        and (c.member_a = auth.uid() or c.member_b = auth.uid())
+    )
+  );
+
+create policy "messages_delete_admin" on public.messages
+  for delete to authenticated using (public.is_admin());
+
+-- Touch conversation.last_message_at when a new message is inserted.
+create or replace function public.messages_touch_conversation()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  update public.conversations
+  set last_message_at = new.created_at
+  where id = new.conversation_id;
+  return new;
+end;
+$$;
+
+create trigger messages_touch_conversation
+after insert on public.messages
+for each row execute function public.messages_touch_conversation();
+
+------------------------------------------------------------------------
+-- Storage: avatars bucket
+-- Public read so <img src> works; authenticated users can write only
+-- inside a folder named after their own auth.uid().
+------------------------------------------------------------------------
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('avatars', 'avatars', true, 5242880,
+        array['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif'])
+on conflict (id) do nothing;
+
+create policy "avatars_public_read" on storage.objects
+  for select to anon, authenticated
+  using (bucket_id = 'avatars');
+
+create policy "avatars_owner_write" on storage.objects
+  for insert to authenticated
+  with check (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+create policy "avatars_owner_update" on storage.objects
+  for update to authenticated
+  using (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+create policy "avatars_owner_delete" on storage.objects
+  for delete to authenticated
+  using (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+------------------------------------------------------------------------
+-- pg_cron jobs
+------------------------------------------------------------------------
+-- Auto-archive past events. Hourly: any 'upcoming' event whose
+-- ends_at (or starts_at fallback) has passed flips to 'past'.
+do $$ begin
+  if exists (select 1 from cron.job where jobname = 'events_auto_archive') then
+    perform cron.unschedule('events_auto_archive');
+  end if;
+end $$;
+
+select cron.schedule(
+  'events_auto_archive',
+  '0 * * * *',
+  $cron$
+    update public.events
+    set status = 'past'
+    where status = 'upcoming'
+      and coalesce(ends_at, starts_at) < now();
+  $cron$
+);
+
+-- Auto-expire stale intros. Nightly: any pending intro >30d old → expired.
+do $$ begin
+  if exists (select 1 from cron.job where jobname = 'intro_requests_auto_expire') then
+    perform cron.unschedule('intro_requests_auto_expire');
+  end if;
+end $$;
+
+select cron.schedule(
+  'intro_requests_auto_expire',
+  '15 3 * * *',
+  $cron$
+    update public.intro_requests
+    set status = 'expired'
+    where status = 'pending'
+      and created_at < now() - interval '30 days';
+  $cron$
+);

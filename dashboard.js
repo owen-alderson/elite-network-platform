@@ -26,7 +26,7 @@
   async function loadMyProfile(userId, fallbackEmail) {
     var res = await supabase
       .from('members')
-      .select('full_name,headline,primary_pillar,joined_at,avatar_url')
+      .select('full_name,headline,bio,primary_pillar,joined_at,avatar_url')
       .eq('id', userId)
       .maybeSingle();
 
@@ -54,8 +54,20 @@
       setText('#dash-member-since', String(new Date(member.joined_at).getFullYear()));
     }
 
-    setText('.dash-greeting-head', greeting() + ', ' + firstName + '.');
-    setText('.dash-greeting-sub', 'Welcome back. Browse the directory or explore what\'s on at Spring Place.');
+    // First-time greeting: if a member has neither bio nor photo yet,
+    // assume they just landed and nudge them toward profile completion.
+    var profileSparse = !!member && !member.bio && !member.avatar_url;
+    if (profileSparse) {
+      setText('.dash-greeting-head', 'Welcome to Aether, ' + firstName + '.');
+      setHTML(
+        '.dash-greeting-sub',
+        'Take two minutes to complete your profile so other members can find you. ' +
+        '<a href="profile.html" style="color:var(--gold);border-bottom:1px solid var(--gold-dim);">Set it up →</a>'
+      );
+    } else {
+      setText('.dash-greeting-head', greeting() + ', ' + firstName + '.');
+      setText('.dash-greeting-sub', 'Welcome back. Browse the directory or explore what\'s on at Spring Place.');
+    }
   }
 
   function setGreetingDate() {
@@ -289,7 +301,7 @@
     var res = await supabase
       .from('intro_requests')
       .select(
-        'id, created_at, status, note, broker_id, forwarded_at, responded_at,' +
+        'id, created_at, status, route, note, broker_id, forwarded_at, responded_at,' +
         'target:members!target_id(id,full_name,headline,primary_pillar,location_city,avatar_url),' +
         'broker:members!broker_id(id,full_name,avatar_url)'
       )
@@ -325,9 +337,13 @@
     leftHead.appendChild(nameLink);
     head.appendChild(leftHead);
 
-    var statusKey = intro.status === 'pending'
-      ? (intro.broker_id ? 'assigned' : 'awaiting')
-      : intro.status;
+    var statusKey;
+    if (intro.status === 'pending') {
+      if (intro.route === 'direct') statusKey = 'awaiting';
+      else statusKey = intro.broker_id ? 'assigned' : 'awaiting';
+    } else {
+      statusKey = intro.status;
+    }
     head.appendChild(text('span', 'app-status intro-status-' + statusKey, requestStatusLabel(intro)));
     card.appendChild(head);
 
@@ -368,7 +384,10 @@
   }
 
   function requestStatusLabel(intro) {
-    if (intro.status === 'pending') return intro.broker_id ? 'WITH BROKER' : 'AWAITING BROKER';
+    if (intro.status === 'pending') {
+      if (intro.route === 'direct') return 'AWAITING THEIR RESPONSE';
+      return intro.broker_id ? 'WITH BROKER' : 'AWAITING BROKER';
+    }
     return intro.status.toUpperCase();
   }
 
