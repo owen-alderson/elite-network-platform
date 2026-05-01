@@ -43,7 +43,7 @@
 
     var res = await supabase
       .from('members')
-      .select('id,full_name,headline,bio,primary_pillar,secondary_pillars,location_city,location_country,current_work')
+      .select('id,full_name,headline,bio,primary_pillar,secondary_pillars,location_city,location_country,current_work,avatar_url')
       .eq('status', 'active')
       .order('joined_at', { ascending: false });
 
@@ -94,7 +94,7 @@
 
     var avatar = document.createElement('div');
     avatar.className = 'card-avatar';
-    avatar.textContent = (m.full_name || '?').charAt(0).toUpperCase();
+    window.aether.fillAvatar(avatar, m);
     link.appendChild(avatar);
 
     var body = document.createElement('div');

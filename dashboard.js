@@ -25,7 +25,7 @@
   async function loadMyProfile(userId, fallbackEmail) {
     var res = await supabase
       .from('members')
-      .select('full_name,headline,primary_pillar,joined_at')
+      .select('full_name,headline,primary_pillar,joined_at,avatar_url')
       .eq('id', userId)
       .maybeSingle();
 
@@ -34,14 +34,16 @@
     var member = res.data;
     var name = (member && member.full_name) || (fallbackEmail ? fallbackEmail.split('@')[0] : 'Member');
     var firstName = name.split(' ')[0];
-    var initial = firstName.charAt(0).toUpperCase();
     var headline = (member && member.headline) || '';
     var pillar = (member && member.primary_pillar) || '';
 
     setText('.nav-member-name', firstName + '.');
-    setText('.nav-avatar', initial);
+    var navAvatar = document.querySelector('.nav-avatar');
+    if (navAvatar) window.aether.fillAvatar(navAvatar, member || { full_name: firstName });
 
-    setText('.dash-avatar', initial);
+    var dashAvatar = document.querySelector('.dash-avatar');
+    if (dashAvatar) window.aether.fillAvatar(dashAvatar, member || { full_name: firstName });
+
     setText('.dash-profile-name', name);
     setHTML('.dash-profile-role', escapeText(headline) || '<span style="color:var(--muted);font-style:italic;">Headline not set</span>');
     var pillarTag = document.querySelector('.dash-pillar-tag');
@@ -68,7 +70,7 @@
 
     var res = await supabase
       .from('members')
-      .select('id,full_name,headline,primary_pillar,location_city')
+      .select('id,full_name,headline,primary_pillar,location_city,avatar_url')
       .eq('status', 'active')
       .neq('id', currentUserId)
       .order('joined_at', { ascending: false })
@@ -89,7 +91,7 @@
   function buildSuggestionRow(m) {
     var row = el('div', 'suggestion-row');
     var avatar = el('div', 'sug-avatar');
-    avatar.textContent = (m.full_name || '?').charAt(0).toUpperCase();
+    window.aether.fillAvatar(avatar, m);
     row.appendChild(avatar);
 
     var info = el('div', 'sug-info');
@@ -133,8 +135,8 @@
       .from('intro_requests')
       .select(
         'id, created_at, status, note,' +
-        'requester:members!requester_id(id,full_name,headline,primary_pillar,location_city),' +
-        'target:members!target_id(id,full_name,headline,primary_pillar,location_city)'
+        'requester:members!requester_id(id,full_name,headline,primary_pillar,location_city,avatar_url),' +
+        'target:members!target_id(id,full_name,headline,primary_pillar,location_city,avatar_url)'
       )
       .eq('broker_id', userId)
       .eq('status', 'pending')
@@ -164,9 +166,9 @@
     var target = intro.target || {};
 
     var leftHead = el('div', 'intro-mini-people');
-    leftHead.appendChild(buildAvatar(requester.full_name));
+    leftHead.appendChild(buildAvatar(requester));
     leftHead.appendChild(text('span', 'intro-arrow', '→'));
-    leftHead.appendChild(buildAvatar(target.full_name));
+    leftHead.appendChild(buildAvatar(target));
     head.appendChild(leftHead);
 
     head.appendChild(text('span', 'intro-mini-date', relativeTime(intro.created_at)));
@@ -218,8 +220,8 @@
       .from('intro_requests')
       .select(
         'id, created_at, status, note, broker_id, forwarded_at, responded_at,' +
-        'target:members!target_id(id,full_name,headline,primary_pillar,location_city),' +
-        'broker:members!broker_id(id,full_name)'
+        'target:members!target_id(id,full_name,headline,primary_pillar,location_city,avatar_url),' +
+        'broker:members!broker_id(id,full_name,avatar_url)'
       )
       .eq('requester_id', userId)
       .order('created_at', { ascending: false });
@@ -245,7 +247,7 @@
 
     var head = el('div', 'intro-mini-head');
     var leftHead = el('div', 'intro-mini-people');
-    leftHead.appendChild(buildAvatar(target.full_name));
+    leftHead.appendChild(buildAvatar(target));
     var nameLink = document.createElement('a');
     nameLink.href = 'profile.html?id=' + encodeURIComponent(target.id || '');
     nameLink.className = 'intro-mini-link intro-mini-link-strong';
@@ -295,8 +297,8 @@
       .from('intro_requests')
       .select(
         'id, forwarded_at, requester_id, target_id,' +
-        'requester:members!requester_id(id,full_name,headline,primary_pillar,location_city),' +
-        'target:members!target_id(id,full_name,headline,primary_pillar,location_city)'
+        'requester:members!requester_id(id,full_name,headline,primary_pillar,location_city,avatar_url),' +
+        'target:members!target_id(id,full_name,headline,primary_pillar,location_city,avatar_url)'
       )
       .eq('status', 'forwarded')
       .or('requester_id.eq.' + userId + ',target_id.eq.' + userId)
@@ -334,7 +336,7 @@
     card.href = 'profile.html?id=' + encodeURIComponent(m.id);
 
     var avatar = el('div', 'connection-avatar');
-    avatar.textContent = (m.full_name || '?').charAt(0).toUpperCase();
+    window.aether.fillAvatar(avatar, m);
     card.appendChild(avatar);
 
     var info = el('div', 'connection-info');
@@ -419,9 +421,9 @@
       .from('intro_requests')
       .select(
         'id, created_at, status, broker_id, forwarded_at, responded_at, note, requester_id, target_id,' +
-        'requester:members!requester_id(id,full_name),' +
-        'target:members!target_id(id,full_name),' +
-        'broker:members!broker_id(id,full_name)'
+        'requester:members!requester_id(id,full_name,avatar_url),' +
+        'target:members!target_id(id,full_name,avatar_url),' +
+        'broker:members!broker_id(id,full_name,avatar_url)'
       )
       .or('requester_id.eq.' + userId + ',broker_id.eq.' + userId)
       .order('created_at', { ascending: false })
@@ -460,10 +462,10 @@
     var title = '';
     var body = intro.note || '';
     var when = intro.created_at;
-    var avatarSeed;
+    var avatarMember;
 
     if (iAmBroker) {
-      avatarSeed = intro.requester ? intro.requester.full_name : '?';
+      avatarMember = intro.requester || null;
       if (intro.status === 'pending') {
         title = (intro.requester ? intro.requester.full_name : 'Someone') +
           ' asked you to introduce them to ' +
@@ -484,7 +486,7 @@
       }
     } else {
       // I am the requester
-      avatarSeed = intro.target ? intro.target.full_name : '?';
+      avatarMember = intro.target || null;
       if (intro.status === 'pending' && !intro.broker_id) {
         title = 'Your request to meet ' +
           (intro.target ? intro.target.full_name : '—') + ' is awaiting a broker';
@@ -515,7 +517,7 @@
     item.dataset.unread = unread ? 'true' : 'false';
 
     var avatar = el('div', 'inbox-avatar');
-    avatar.textContent = (avatarSeed || '?').charAt(0).toUpperCase();
+    window.aether.fillAvatar(avatar, avatarMember);
     item.appendChild(avatar);
 
     var content = el('div', 'inbox-content');
@@ -573,9 +575,13 @@
     n.textContent = content == null ? '' : String(content);
     return n;
   }
-  function buildAvatar(name) {
+  function buildAvatar(memberOrName) {
     var a = el('div', 'intro-mini-avatar');
-    a.textContent = (name || '?').charAt(0).toUpperCase();
+    if (memberOrName && typeof memberOrName === 'object') {
+      window.aether.fillAvatar(a, memberOrName);
+    } else {
+      a.textContent = (memberOrName || '?').toString().charAt(0).toUpperCase();
+    }
     return a;
   }
   function setText(selector, value) {

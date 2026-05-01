@@ -43,7 +43,7 @@
   async function load(targetId, fallbackEmail) {
     var res = await supabase
       .from('members')
-      .select('id,email,full_name,headline,bio,primary_pillar,secondary_pillars,location_city,location_country,linkedin_url,instagram_handle,website_url,achievements,current_work,joined_at,nominated_by,status')
+      .select('id,email,full_name,headline,bio,primary_pillar,secondary_pillars,location_city,location_country,linkedin_url,instagram_handle,website_url,avatar_url,achievements,current_work,joined_at,nominated_by,status')
       .eq('id', targetId)
       .maybeSingle();
 
@@ -70,7 +70,8 @@
     var m = current;
     setTitle(m.full_name || 'Member');
 
-    setText('#profile-photo', initial(m.full_name));
+    var photoEl = document.getElementById('profile-photo');
+    if (photoEl) window.aether.fillAvatar(photoEl, m);
     setText('#profile-name', formatName(m.full_name));
     setText('#profile-tagline', m.bio || m.headline || '');
     setText('#profile-pillar-badge', m.primary_pillar ? '◈ ' + capitalize(m.primary_pillar) : '');
@@ -142,6 +143,8 @@
     if (!isOwn || !current) return;
     setActionsMode('editing');
 
+    insertPhotoUploader();
+
     swapForInput('#profile-name', 'full_name', current.full_name || '', 'input');
     swapForInput('#profile-tagline', 'bio', current.bio || '', 'textarea');
 
@@ -156,6 +159,68 @@
 
     insertSecondaryPillarsEditor(current.secondary_pillars || []);
     insertAchievementsEditor(current.achievements || []);
+  }
+
+  function insertPhotoUploader() {
+    if (document.getElementById('profile-photo-upload')) return;
+
+    var photo = document.getElementById('profile-photo');
+    if (!photo || !photo.parentNode) return;
+
+    var wrap = document.createElement('div');
+    wrap.id = 'profile-photo-upload';
+    wrap.className = 'profile-photo-upload';
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn-ghost btn-sm';
+    btn.textContent = current && current.avatar_url ? 'Replace photo' : 'Upload photo';
+
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/png,image/jpeg,image/webp,image/gif';
+    input.style.display = 'none';
+
+    var status = document.createElement('p');
+    status.className = 'profile-photo-status';
+
+    btn.addEventListener('click', function () { input.click(); });
+
+    input.addEventListener('change', async function () {
+      var file = input.files && input.files[0];
+      if (!file) return;
+      if (file.size > 5 * 1024 * 1024) {
+        status.textContent = 'File must be under 5 MB.';
+        status.style.color = '#d97a7a';
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = 'Uploading…';
+      status.textContent = '';
+
+      var url = await window.aether.uploadAvatar(sessionUserId, file);
+      btn.disabled = false;
+
+      if (!url) {
+        btn.textContent = 'Try again';
+        status.textContent = 'Upload failed.';
+        status.style.color = '#d97a7a';
+        return;
+      }
+
+      // Refresh local state + re-render the photo immediately.
+      current.avatar_url = url;
+      var photoEl = document.getElementById('profile-photo');
+      if (photoEl) window.aether.fillAvatar(photoEl, current);
+      btn.textContent = 'Replace photo';
+      status.textContent = 'Photo updated.';
+      status.style.color = 'var(--gold)';
+    });
+
+    wrap.appendChild(btn);
+    wrap.appendChild(input);
+    wrap.appendChild(status);
+    photo.parentNode.insertBefore(wrap, photo.nextSibling);
   }
 
   function insertSecondaryPillarsEditor(selected) {

@@ -123,6 +123,9 @@
       return;
     }
 
+    // Confirmation email is dispatched server-side by a postgres trigger
+    // that calls the send-application-confirmation edge function. apply.js
+    // doesn't need to do anything else.
     go('a-confirm');
   };
 

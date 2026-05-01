@@ -110,7 +110,7 @@
   async function loadAttendees() {
     var res = await supabase
       .from('event_rsvps')
-      .select('member_id, status, members!member_id(id, full_name, primary_pillar, location_city)')
+      .select('member_id, status, members!member_id(id, full_name, primary_pillar, location_city, avatar_url)')
       .eq('event_id', currentEventId)
       .eq('status', 'going');
 
@@ -144,7 +144,7 @@
 
           var av = document.createElement('div');
           av.className = 'att-avatar-lg';
-          av.textContent = (m.full_name || '?').charAt(0).toUpperCase();
+          window.aether.fillAvatar(av, m);
           card.appendChild(av);
 
           var name = document.createElement('p');

@@ -601,6 +601,26 @@
     editBtn.addEventListener('click', function () { editEvent(ev); });
     btnRow.appendChild(editBtn);
 
+    if (ev.status === 'upcoming') {
+      var pastBtn = document.createElement('button');
+      pastBtn.className = 'btn-ghost btn-sm';
+      pastBtn.textContent = 'Mark past';
+      pastBtn.addEventListener('click', async function () {
+        pastBtn.disabled = true;
+        var prev = pastBtn.textContent;
+        pastBtn.textContent = 'Saving…';
+        var res = await supabase.from('events').update({ status: 'past' }).eq('id', ev.id);
+        if (res.error) {
+          alert('Could not update: ' + (res.error.message || 'unknown error'));
+          pastBtn.disabled = false;
+          pastBtn.textContent = prev;
+          return;
+        }
+        await refreshEvents();
+      });
+      btnRow.appendChild(pastBtn);
+    }
+
     var deleteBtn = document.createElement('button');
     deleteBtn.className = 'btn-ghost btn-sm app-btn-reject';
     deleteBtn.textContent = 'Delete';

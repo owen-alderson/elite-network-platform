@@ -78,6 +78,53 @@ window.aether = (function () {
     return client.auth.onAuthStateChange(callback);
   }
 
+  // Fill a circular avatar element with either an <img> (when the member
+  // has an avatar_url) or the first letter of their name as a fallback.
+  // Used everywhere a member's face is shown so initial → photo flips
+  // happen consistently.
+  function fillAvatar(divEl, member) {
+    if (!divEl) return;
+    divEl.innerHTML = '';
+    if (member && member.avatar_url) {
+      var img = document.createElement('img');
+      img.src = member.avatar_url;
+      img.alt = member.full_name || '';
+      img.className = 'avatar-img';
+      divEl.appendChild(img);
+      divEl.classList.add('has-avatar');
+    } else {
+      var name = (member && member.full_name) ? member.full_name : '?';
+      divEl.textContent = name.charAt(0).toUpperCase();
+      divEl.classList.remove('has-avatar');
+    }
+  }
+
+  // Upload a File to the avatars bucket under the user's own folder, then
+  // update members.avatar_url. Returns the public URL on success or null
+  // on error (caller logs / surfaces).
+  async function uploadAvatar(userId, file) {
+    if (!userId || !file) return null;
+    var ext = (file.name.split('.').pop() || 'png').toLowerCase();
+    var path = userId + '/' + Date.now() + '.' + ext;
+    var up = await client.storage.from('avatars').upload(path, file, {
+      cacheControl: '3600',
+      upsert: false
+    });
+    if (up.error) {
+      console.error('avatar upload error:', up.error);
+      return null;
+    }
+    var pub = client.storage.from('avatars').getPublicUrl(path);
+    var url = pub && pub.data ? pub.data.publicUrl : null;
+    if (!url) return null;
+    var update = await client.from('members').update({ avatar_url: url }).eq('id', userId);
+    if (update.error) {
+      console.error('avatar_url update error:', update.error);
+      return null;
+    }
+    return url;
+  }
+
   return {
     client: client,
     ADMIN_EMAILS: ADMIN_EMAILS,
@@ -86,6 +133,8 @@ window.aether = (function () {
     signInWithMagicLink: signInWithMagicLink,
     signOut: signOut,
     isAdmin: isAdmin,
-    onAuthStateChange: onAuthStateChange
+    onAuthStateChange: onAuthStateChange,
+    fillAvatar: fillAvatar,
+    uploadAvatar: uploadAvatar
   };
 })();
