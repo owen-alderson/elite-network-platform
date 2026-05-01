@@ -147,7 +147,7 @@ window.aether = (function () {
   }
 
   // Cached "can I make intros?" check for the current user. Pages that gate
-  // intro CTAs call this once and reuse the result.
+  // intro CTAs call this once and reuse the result. Invalidated on profile save.
   var canIntroCache = null;
   async function canIntroNow() {
     if (canIntroCache !== null) return canIntroCache;
@@ -161,6 +161,7 @@ window.aether = (function () {
     canIntroCache = profileChecks(res.data);
     return canIntroCache;
   }
+  function invalidateIntroCache() { canIntroCache = null; }
 
   return {
     client: client,
@@ -174,6 +175,7 @@ window.aether = (function () {
     fillAvatar: fillAvatar,
     uploadAvatar: uploadAvatar,
     profileChecks: profileChecks,
-    canIntroNow: canIntroNow
+    canIntroNow: canIntroNow,
+    invalidateIntroCache: invalidateIntroCache
   };
 })();

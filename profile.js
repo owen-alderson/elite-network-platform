@@ -424,6 +424,7 @@
       btn.textContent = 'Replace photo';
       status.textContent = 'Photo updated.';
       status.style.color = 'var(--gold)';
+      if (window.aether.invalidateIntroCache) window.aether.invalidateIntroCache();
     });
 
     wrap.appendChild(btn);
@@ -590,6 +591,7 @@
 
     current = res.data || Object.assign({}, current, payload);
     renderView();
+    if (window.aether.invalidateIntroCache) window.aether.invalidateIntroCache();
   }
 
   function swapForInput(selector, field, value, kind) {
