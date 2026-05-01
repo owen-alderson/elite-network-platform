@@ -83,8 +83,41 @@
 
       await injectNavSession(session);
       injectMobileSignout();
+      await injectAdminLink();
     });
   });
+
+  async function injectAdminLink() {
+    var ok = await window.aether.isAdmin();
+    if (!ok) return;
+
+    // Desktop nav: append "Admin" to .nav-links if not already present.
+    document.querySelectorAll('.nav-links').forEach(function (group) {
+      if (group.querySelector('a[data-admin-link]')) return;
+      // If the page is already admin.html, the nav-cta has been removed via
+      // the apply-cta hide; we just want the link to read as the active item.
+      var a = document.createElement('a');
+      a.href = 'admin.html';
+      a.dataset.adminLink = 'true';
+      a.textContent = 'Admin';
+      a.style.color = 'var(--gold)';
+      group.appendChild(a);
+    });
+
+    // Mobile menu: same idea.
+    document.querySelectorAll('.mobile-menu').forEach(function (menu) {
+      if (menu.querySelector('a[data-admin-link]')) return;
+      var a = document.createElement('a');
+      a.href = 'admin.html';
+      a.dataset.adminLink = 'true';
+      a.textContent = 'Admin';
+      a.style.color = 'var(--gold)';
+      // Place above the sign-out link so the menu reads: pages → Admin → Sign out.
+      var signout = menu.querySelector('.mobile-signout');
+      if (signout) menu.insertBefore(a, signout);
+      else menu.appendChild(a);
+    });
+  }
 
   function injectMobileSignout() {
     document.querySelectorAll('.mobile-menu').forEach(function (menu) {
