@@ -21,9 +21,19 @@ language sql
 stable
 set search_path = ''
 as $$
-  select coalesce(lower(auth.jwt() ->> 'email'), '') = any(array[
-    'owen.alderson@gmail.com'
-  ]);
+  -- Accepts three classes of caller as admin:
+  --   1. The postgres / service_role / supabase_admin db users (raw DB
+  --      pathways like MCP execute_sql or direct connections).
+  --   2. Service-role JWTs (edge functions using SUPABASE_SERVICE_ROLE_KEY).
+  --   3. The hard-coded admin email allowlist (a member signed in as Owen).
+  -- Without (1) and (2), defensive triggers silently revert legitimate
+  -- privileged writes from the invite-member function and from MCP.
+  select
+    current_user in ('postgres', 'service_role', 'supabase_admin')
+    or coalesce(auth.jwt() ->> 'role', '') = 'service_role'
+    or coalesce(lower(auth.jwt() ->> 'email'), '') = any(array[
+      'owen.alderson@gmail.com'
+    ]);
 $$;
 
 ------------------------------------------------------------------------
