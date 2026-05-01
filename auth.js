@@ -85,8 +85,49 @@
       injectMobileSignout();
       await injectMessagesLink(session.user.id);
       await injectAdminLink();
+      subscribeToUnreadUpdates(session.user.id);
     });
   });
+
+  // Listen for new messages + intro_requests in realtime so the nav badge
+  // and any inbox-aware page can react without a page reload. RLS filters
+  // the realtime payloads to rows the user is allowed to see.
+  function subscribeToUnreadUpdates(userId) {
+    var client = window.aether.client;
+    return client
+      .channel('inbox-realtime-' + userId)
+      .on('postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'messages' },
+        function (payload) {
+          if (!payload.new || payload.new.sender_id === userId) return;
+          refreshMessagesBadge(userId);
+          window.dispatchEvent(new CustomEvent('aether:unread-changed'));
+        })
+      .on('postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'intro_requests' },
+        function () {
+          window.dispatchEvent(new CustomEvent('aether:unread-changed'));
+        })
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'intro_requests' },
+        function () {
+          window.dispatchEvent(new CustomEvent('aether:unread-changed'));
+        })
+      .subscribe();
+  }
+
+  async function refreshMessagesBadge(userId) {
+    var n = await fetchUnreadMessageCount(userId);
+    document.querySelectorAll('a[data-messages-link]').forEach(function (a) {
+      var existing = a.querySelector('.nav-badge');
+      if (n > 0) {
+        if (existing) existing.textContent = n > 99 ? '99+' : String(n);
+        else a.appendChild(buildNavBadge(n));
+      } else if (existing) {
+        existing.remove();
+      }
+    });
+  }
 
   async function injectMessagesLink(userId) {
     var unreadCount = await fetchUnreadMessageCount(userId);

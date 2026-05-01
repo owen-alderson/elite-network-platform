@@ -35,6 +35,17 @@
       .then(function (res) {
         if (res.error) console.warn('last_seen_at stamp failed:', res.error);
       });
+
+    // Refresh the inbox surface when a message or intro arrives in realtime.
+    // auth.js subscribes and dispatches; we just react.
+    var refreshTimer = null;
+    window.addEventListener('aether:unread-changed', function () {
+      if (refreshTimer) return; // Coalesce rapid bursts.
+      refreshTimer = setTimeout(function () {
+        refreshTimer = null;
+        loadInbox(session.user.id);
+      }, 400);
+    });
   })();
 
   async function fetchLastSeenAt(userId) {

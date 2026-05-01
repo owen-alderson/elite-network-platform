@@ -892,3 +892,12 @@ select cron.schedule(
       and created_at < now() - interval '30 days';
   $cron$
 );
+
+------------------------------------------------------------------------
+-- Realtime publication
+-- The supabase_realtime publication exists by default but ships empty.
+-- Tables must be added explicitly so client-side .on('postgres_changes')
+-- subscriptions actually receive payloads.
+------------------------------------------------------------------------
+alter publication supabase_realtime add table public.messages;
+alter publication supabase_realtime add table public.intro_requests;
