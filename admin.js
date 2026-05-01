@@ -16,6 +16,7 @@
   // ── DOM refs ────────────────────────────────────────────────
   var appListEl, appTabsEl, appStatEls;
   var introListEl, introTabsEl, introStatEls;
+  var eventListEl, eventCreateBtn;
 
   // ── Boot ────────────────────────────────────────────────────
   (async function init() {
@@ -40,9 +41,13 @@
       declined: document.getElementById('intro-stat-declined')
     };
 
+    eventListEl = document.getElementById('admin-event-list');
+    eventCreateBtn = document.getElementById('evt-create-btn');
+
     bindViewSwitcher();
     bindAppTabs();
     bindIntroTabs();
+    if (eventCreateBtn) eventCreateBtn.addEventListener('click', createEvent);
 
     await Promise.all([
       refreshApps(),
@@ -61,6 +66,7 @@
         sections.forEach(function (s) { s.hidden = (s.dataset.view !== view); });
         if (view === 'intros') refreshIntros();
         if (view === 'applications') refreshApps();
+        if (view === 'events') refreshEvents();
       });
     });
   }
@@ -237,6 +243,7 @@
     btn.textContent = label;
     btn.addEventListener('click', async function () {
       if (status === 'rejected' && !confirm('Reject this application?')) return;
+      if (status === 'approved' && !confirm('Approve this application? This sends an invite email and creates a member row.')) return;
       btn.disabled = true;
       var original = btn.textContent;
       btn.textContent = 'Saving…';
@@ -247,6 +254,18 @@
         btn.disabled = false;
         btn.textContent = original;
         return;
+      }
+
+      // For Approve: also kick off the invite + member-creation edge function.
+      if (status === 'approved') {
+        btn.textContent = 'Inviting…';
+        var inviteErr = await inviteApplicant(appId);
+        if (inviteErr) {
+          console.error('Invite failed:', inviteErr);
+          alert('Application approved, but invite failed: ' + (inviteErr.message || 'unknown error') +
+                '\n\nYou can retry by approving again, or finish the invite manually in Supabase.');
+          // Fall through to refresh; admin can see status moved but member missing.
+        }
       }
       await refreshApps();
     });
@@ -263,6 +282,15 @@
       reviewer_notes: notes || null
     }).eq('id', id);
     return res.error;
+  }
+
+  async function inviteApplicant(applicationId) {
+    var res = await supabase.functions.invoke('invite-member', {
+      body: { application_id: applicationId }
+    });
+    if (res.error) return res.error;
+    if (res.data && res.data.error) return { message: res.data.error };
+    return null;
   }
 
   // ── Intros: load + render ───────────────────────────────────
@@ -487,6 +515,142 @@
   function introStatusLabel(intro) {
     if (intro.status === 'pending') return intro.broker_id ? 'WITH BROKER' : 'AWAITING BROKER';
     return intro.status.toUpperCase();
+  }
+
+  // ── Events: create + list + delete ──────────────────────────
+  async function refreshEvents() {
+    if (!eventListEl) return;
+    eventListEl.innerHTML = '<p class="admin-loading">Loading…</p>';
+
+    var res = await supabase
+      .from('events')
+      .select('id, title, description, starts_at, ends_at, location_text, capacity, status')
+      .order('starts_at', { ascending: true });
+
+    eventListEl.innerHTML = '';
+    if (res.error) {
+      eventListEl.appendChild(emptyMsg('Could not load events: ' + res.error.message));
+      return;
+    }
+    if (!res.data || !res.data.length) {
+      eventListEl.appendChild(emptyMsg('No events yet. Create one above.'));
+      return;
+    }
+    res.data.forEach(function (ev) { eventListEl.appendChild(buildEventCard(ev)); });
+  }
+
+  function buildEventCard(ev) {
+    var article = el('article', 'app-card');
+    article.dataset.id = ev.id;
+
+    var head = el('header', 'app-card-head');
+    var left = el('div', 'app-card-head-left');
+    left.appendChild(text('p', 'app-card-eyebrow', 'EVENT · ' + (ev.status || 'upcoming').toUpperCase()));
+    left.appendChild(text('h2', 'app-card-name', ev.title || '—'));
+    if (ev.location_text) left.appendChild(text('p', 'app-card-email', ev.location_text));
+    head.appendChild(left);
+
+    var right = el('div', 'app-card-meta');
+    right.appendChild(text('p', 'app-card-date', formatDateTime(ev.starts_at)));
+    if (ev.capacity) right.appendChild(text('p', 'app-card-date', 'Capacity ' + ev.capacity));
+    head.appendChild(right);
+    article.appendChild(head);
+
+    if (ev.description) {
+      var body = el('div', 'app-card-body');
+      var p = el('p', 'app-card-line');
+      p.style.whiteSpace = 'pre-wrap';
+      p.textContent = ev.description;
+      body.appendChild(p);
+      article.appendChild(body);
+    }
+
+    var foot = el('footer', 'app-card-actions');
+    var btnRow = el('div', 'app-action-buttons');
+    var deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn-ghost btn-sm app-btn-reject';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.addEventListener('click', async function () {
+      if (!confirm('Delete this event? RSVPs are removed too.')) return;
+      deleteBtn.disabled = true;
+      var prev = deleteBtn.textContent;
+      deleteBtn.textContent = 'Deleting…';
+      var res = await supabase.from('events').delete().eq('id', ev.id);
+      if (res.error) {
+        alert('Could not delete: ' + (res.error.message || 'unknown error'));
+        deleteBtn.disabled = false;
+        deleteBtn.textContent = prev;
+        return;
+      }
+      await refreshEvents();
+    });
+    btnRow.appendChild(deleteBtn);
+    foot.appendChild(btnRow);
+    article.appendChild(foot);
+
+    return article;
+  }
+
+  async function createEvent() {
+    var title = (document.getElementById('evt-title').value || '').trim();
+    var startsLocal = (document.getElementById('evt-starts').value || '').trim();
+    var endsLocal = (document.getElementById('evt-ends').value || '').trim();
+    var location = (document.getElementById('evt-location').value || '').trim();
+    var capacityRaw = (document.getElementById('evt-capacity').value || '').trim();
+    var description = (document.getElementById('evt-description').value || '').trim();
+
+    if (!title) { alert('Title is required.'); return; }
+    if (!startsLocal) { alert('Start date/time is required.'); return; }
+
+    var capacity = capacityRaw ? parseInt(capacityRaw, 10) : null;
+    if (capacityRaw && (!Number.isFinite(capacity) || capacity <= 0)) {
+      alert('Capacity must be a positive number.');
+      return;
+    }
+
+    var session = await window.aether.getSession();
+    if (!session) { alert('Session expired. Refresh the page.'); return; }
+
+    var payload = {
+      title: title,
+      description: description || null,
+      starts_at: new Date(startsLocal).toISOString(),
+      ends_at: endsLocal ? new Date(endsLocal).toISOString() : null,
+      location_text: location || null,
+      capacity: capacity,
+      created_by: session.user.id
+    };
+
+    eventCreateBtn.disabled = true;
+    var prev = eventCreateBtn.textContent;
+    eventCreateBtn.textContent = 'Creating…';
+
+    var res = await supabase.from('events').insert(payload);
+    eventCreateBtn.disabled = false;
+    eventCreateBtn.textContent = prev;
+
+    if (res.error) {
+      console.error('Event create failed:', res.error);
+      alert('Could not create event: ' + (res.error.message || 'unknown error'));
+      return;
+    }
+
+    // Clear form + refresh list.
+    ['evt-title', 'evt-starts', 'evt-ends', 'evt-location', 'evt-capacity', 'evt-description'].forEach(function (id) {
+      var node = document.getElementById(id);
+      if (node) node.value = '';
+    });
+    await refreshEvents();
+  }
+
+  function formatDateTime(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    if (isNaN(d)) return '';
+    return d.toLocaleString(undefined, {
+      weekday: 'short', month: 'short', day: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
   }
 
   // ── Tiny DOM helpers ────────────────────────────────────────

@@ -16,6 +16,7 @@
       loadBrokerQueue(session.user.id),
       loadMyRequests(session.user.id),
       loadConnections(session.user.id),
+      loadUpcomingEvents(),
       loadInbox(session.user.id)
     ]);
   })();
@@ -351,6 +352,61 @@
       card.appendChild(text('span', 'connection-when', 'Met ' + relativeTime(c.forwarded_at)));
     }
     return card;
+  }
+
+  // ── Upcoming events ─────────────────────────────────────────
+  async function loadUpcomingEvents() {
+    var section = document.getElementById('dash-events-section');
+    var listEl = document.getElementById('dash-events-list');
+    if (!section || !listEl) return;
+
+    var nowIso = new Date().toISOString();
+    var res = await supabase
+      .from('events')
+      .select('id, title, starts_at, location_text, capacity')
+      .eq('status', 'upcoming')
+      .gte('starts_at', nowIso)
+      .order('starts_at', { ascending: true })
+      .limit(3);
+
+    if (res.error) {
+      console.error('loadUpcomingEvents error:', res.error);
+      section.hidden = true;
+      return;
+    }
+    var rows = res.data || [];
+    if (!rows.length) {
+      section.hidden = true;
+      return;
+    }
+    section.hidden = false;
+    listEl.innerHTML = '';
+    rows.forEach(function (ev) { listEl.appendChild(buildDashEventRow(ev)); });
+  }
+
+  function buildDashEventRow(ev) {
+    var row = document.createElement('a');
+    row.className = 'dash-event-row';
+    row.href = 'event.html?id=' + encodeURIComponent(ev.id);
+    var d = new Date(ev.starts_at);
+
+    var date = el('div', 'dash-event-date');
+    date.appendChild(text('span', 'dash-event-day', String(d.getDate())));
+    date.appendChild(text('span', 'dash-event-month', d.toLocaleString(undefined, { month: 'short' })));
+    row.appendChild(date);
+
+    var info = el('div', 'dash-event-info');
+    info.appendChild(text('p', 'dash-event-title', ev.title || '—'));
+    var sub = [];
+    sub.push(d.toLocaleString(undefined, { weekday: 'short', hour: '2-digit', minute: '2-digit' }));
+    if (ev.location_text) sub.push(ev.location_text);
+    info.appendChild(text('p', 'dash-event-sub', sub.join(' · ')));
+    row.appendChild(info);
+
+    var arrow = el('span', 'dash-event-arrow');
+    arrow.textContent = '→';
+    row.appendChild(arrow);
+    return row;
   }
 
   // ── Inbox feed ──────────────────────────────────────────────

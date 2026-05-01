@@ -46,103 +46,8 @@
   </div>
 
   <div style="background: var(--black); min-height: 60vh; padding: 48px 0;">
-    <div class="events-list">
-
-      <div class="event-row" onclick="window.location='event.html'" style="cursor:pointer">
-        <div class="event-date-block">
-          <div class="event-day">24</div>
-          <div class="event-month">Apr</div>
-        </div>
-        <div class="event-info">
-          <h3 class="event-title">Spring Place — Members Evening</h3>
-          <p class="event-meta">
-            <span>📍 Spring Place, New York</span>
-            <span>7:00 PM</span>
-            <span>Finance · Technology</span>
-          </p>
-        </div>
-        <div class="event-tags">
-          <span class="event-tag">Members Only</span>
-          <span class="event-spots">12 spots remaining</span>
-        </div>
-      </div>
-
-      <div class="event-row" onclick="window.location='event.html'" style="cursor:pointer">
-        <div class="event-date-block">
-          <div class="event-day">02</div>
-          <div class="event-month">May</div>
-        </div>
-        <div class="event-info">
-          <h3 class="event-title">Private Dinner — Milan</h3>
-          <p class="event-meta">
-            <span>📍 Private Residence, Milan</span>
-            <span>8:30 PM</span>
-            <span>All Pillars</span>
-          </p>
-        </div>
-        <div class="event-tags">
-          <span class="event-tag">Invite Only</span>
-          <span class="event-spots">8 spots remaining</span>
-        </div>
-      </div>
-
-      <div class="event-row" onclick="window.location='event.html'" style="cursor:pointer">
-        <div class="event-date-block">
-          <div class="event-day">10</div>
-          <div class="event-month">May</div>
-        </div>
-        <div class="event-info">
-          <h3 class="event-title">Founder Roundtable — London</h3>
-          <p class="event-meta">
-            <span>📍 Mayfair, London</span>
-            <span>6:00 PM</span>
-            <span>Technology · Finance</span>
-          </p>
-        </div>
-        <div class="event-tags">
-          <span class="event-tag">Members Only</span>
-          <span class="event-spots">5 spots remaining</span>
-        </div>
-      </div>
-
-      <div class="event-row" onclick="window.location='event.html'" style="cursor:pointer">
-        <div class="event-date-block">
-          <div class="event-day">18</div>
-          <div class="event-month">May</div>
-        </div>
-        <div class="event-info">
-          <h3 class="event-title">Sport & Performance Summit</h3>
-          <p class="event-meta">
-            <span>📍 Madrid</span>
-            <span>Full Day</span>
-            <span>Sport · Medicine</span>
-          </p>
-        </div>
-        <div class="event-tags">
-          <span class="event-tag">Members Only</span>
-          <span class="event-spots">20 spots remaining</span>
-        </div>
-      </div>
-
-      <div class="event-row" onclick="window.location='event.html'" style="cursor:pointer">
-        <div class="event-date-block">
-          <div class="event-day">06</div>
-          <div class="event-month">Jun</div>
-        </div>
-        <div class="event-info">
-          <h3 class="event-title">Art Basel Members Gathering</h3>
-          <p class="event-meta">
-            <span>📍 Basel, Switzerland</span>
-            <span>Evening</span>
-            <span>Arts & Culture · Finance</span>
-          </p>
-        </div>
-        <div class="event-tags">
-          <span class="event-tag">Invite Only</span>
-          <span class="event-spots">6 spots remaining</span>
-        </div>
-      </div>
-
+    <div class="events-list" id="events-list">
+      <p class="events-empty">Loading events…</p>
     </div>
   </div>
 
@@ -164,5 +69,6 @@
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="supabase.js"></script>
   <script src="auth.js"></script>
+  <script src="events.js"></script>
 </body>
 </html>

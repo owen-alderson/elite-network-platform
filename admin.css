@@ -378,3 +378,68 @@
     flex: 1;
   }
 }
+
+/* ── Events admin form ───────────────────────────────── */
+.admin-event-form {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 28px 32px;
+  margin-bottom: 24px;
+}
+
+.admin-form-heading {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 20px;
+  color: var(--white);
+  margin: 0 0 18px;
+}
+
+.admin-event-form .form-row {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.admin-event-form .form-row .form-group { flex: 1; }
+
+.admin-event-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.admin-event-form .form-label {
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.admin-event-form .form-label-opt {
+  letter-spacing: 0.05em;
+  text-transform: none;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.admin-event-form .form-input,
+.admin-event-form .form-textarea {
+  background: var(--black);
+  font-size: 13px;
+  padding: 10px 12px;
+  color-scheme: dark;
+}
+
+.admin-event-form .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+@media (max-width: 700px) {
+  .admin-event-form { padding: 20px; }
+  .admin-event-form .form-row { flex-direction: column; gap: 0; }
+}

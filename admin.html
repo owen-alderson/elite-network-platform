@@ -39,6 +39,7 @@
     <div class="admin-views">
       <button class="admin-view-btn is-active" data-view="applications">Applications</button>
       <button class="admin-view-btn" data-view="intros">Intros</button>
+      <button class="admin-view-btn" data-view="events">Events</button>
     </div>
 
     <!-- ================== Applications view ================== -->
@@ -93,6 +94,56 @@
       </header>
 
       <section id="admin-intro-list" class="admin-list" aria-live="polite">
+        <p class="admin-loading">Loading…</p>
+      </section>
+    </section>
+
+    <!-- ================== Events view ================== -->
+    <section class="admin-view-section" data-view="events" hidden>
+      <header class="admin-header">
+        <p class="admin-eyebrow">CALENDAR</p>
+        <h1 class="admin-title">Events</h1>
+        <p class="admin-subtitle">Create curated events for members. They appear on the public events page and on every member's dashboard.</p>
+      </header>
+
+      <section class="admin-event-form">
+        <h2 class="admin-form-heading">Create event</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Title</label>
+            <input class="form-input" type="text" id="evt-title" placeholder="e.g. Spring Place — Members Evening" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Starts</label>
+            <input class="form-input" type="datetime-local" id="evt-starts" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ends <span class="form-label-opt">(optional)</span></label>
+            <input class="form-input" type="datetime-local" id="evt-ends" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Location</label>
+            <input class="form-input" type="text" id="evt-location" placeholder="e.g. Spring Place, Tribeca, New York" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Capacity <span class="form-label-opt">(optional)</span></label>
+            <input class="form-input" type="number" min="1" id="evt-capacity" placeholder="20" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-input form-textarea" id="evt-description" rows="4" placeholder="What is this event, what's the format, who is it for."></textarea>
+        </div>
+        <div class="form-actions">
+          <button class="btn-primary btn-sm" id="evt-create-btn">Create event</button>
+        </div>
+      </section>
+
+      <section id="admin-event-list" class="admin-list" aria-live="polite" style="margin-top: 32px;">
         <p class="admin-loading">Loading…</p>
       </section>
     </section>

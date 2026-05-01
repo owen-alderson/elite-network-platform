@@ -250,15 +250,8 @@
 
   <script src="nav.js"></script>
   <script>
-    function handleRsvp() {
-      document.getElementById('rsvp-confirm').style.display = 'flex';
-      document.body.style.overflow = 'hidden';
-      const btn = document.getElementById('rsvp-btn');
-      btn.textContent = 'Reserved ✓';
-      btn.style.opacity = '0.6';
-      btn.disabled = true;
-      document.querySelector('.rsvp-spots-num').textContent = '7';
-    }
+    // Confirm-overlay close handler stays inline; the RSVP button itself
+    // is wired up by event.js after data loads.
     function closeRsvp() {
       document.getElementById('rsvp-confirm').style.display = 'none';
       document.body.style.overflow = '';
@@ -267,6 +260,7 @@
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="supabase.js"></script>
   <script src="auth.js"></script>
+  <script src="event.js"></script>
 
 </body>
 </html>

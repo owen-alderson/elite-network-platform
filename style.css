@@ -1096,3 +1096,11 @@ a { color: inherit; text-decoration: none; }
   margin-top: 12px;
   padding-top: 16px;
 }
+
+.events-empty {
+  color: var(--muted);
+  text-align: center;
+  padding: 60px 20px;
+  font-size: 14px;
+  line-height: 1.6;
+}
