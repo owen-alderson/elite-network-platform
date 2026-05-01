@@ -31,14 +31,38 @@
       if (match) {
         await openConversation(match.id);
       } else {
-        // No conversation yet with this member. Could happen if links are
-        // followed in stale state — they might not be connected.
-        console.warn('No conversation with member', withId);
+        // No conversation row yet. Broker-route accepted intros and any
+        // "Say hi" entry from the connections grid land here. Try to create
+        // the row — RLS gates it on are_connected().
+        var newId = await findOrCreateConversationWith(withId);
+        if (newId) {
+          await loadConversations();
+          await openConversation(newId);
+        } else {
+          console.warn('Could not open conversation with', withId);
+        }
       }
     } else if (conversations.length && window.matchMedia('(min-width: 700px)').matches) {
       await openConversation(conversations[0].id, { replaceUrl: true });
     }
   })();
+
+  async function findOrCreateConversationWith(otherId) {
+    // The conversations table has a check constraint member_a < member_b
+    // (uuid ordering) and a unique pair index. Order before inserting.
+    var a = sessionUserId < otherId ? sessionUserId : otherId;
+    var b = sessionUserId < otherId ? otherId : sessionUserId;
+    var ins = await supabase.from('conversations')
+      .insert({ member_a: a, member_b: b })
+      .select('id')
+      .maybeSingle();
+    if (!ins.error && ins.data) return ins.data.id;
+    // Race: another tab created it. Re-fetch.
+    var lookup = await supabase.from('conversations')
+      .select('id').eq('member_a', a).eq('member_b', b).maybeSingle();
+    if (lookup.data) return lookup.data.id;
+    return null;
+  }
 
   // ── Conversation list ────────────────────────────────────────
   async function loadConversations() {
@@ -96,7 +120,7 @@
     if (!listEl) return;
     listEl.innerHTML = '';
     if (!conversations.length) {
-      listEl.innerHTML = '<p class="msg-empty">No conversations yet. They open when an introduction is accepted.</p>';
+      listEl.innerHTML = '<p class="msg-empty">No conversations yet. Say hi to a connection from your <a href="dashboard.html#connections-section" style="color:var(--gold);">dashboard</a>.</p>';
       return;
     }
     conversations.forEach(function (c) { listEl.appendChild(buildConversationRow(c)); });

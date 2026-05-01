@@ -591,13 +591,16 @@
 
   function buildConnectionCard(c) {
     var m = c.member;
-    var card = document.createElement('a');
-    card.className = 'connection-card';
-    card.href = 'profile.html?id=' + encodeURIComponent(m.id);
+    var card = el('div', 'connection-card');
+
+    // Left side (avatar + info) is a single click target → profile.
+    var leftLink = document.createElement('a');
+    leftLink.className = 'connection-card-left';
+    leftLink.href = 'profile.html?id=' + encodeURIComponent(m.id);
 
     var avatar = el('div', 'connection-avatar');
     window.aether.fillAvatar(avatar, m);
-    card.appendChild(avatar);
+    leftLink.appendChild(avatar);
 
     var info = el('div', 'connection-info');
     info.appendChild(text('p', 'connection-name', m.full_name || '—'));
@@ -608,12 +611,36 @@
     if (m.location_city) tags.push(m.location_city);
     if (tags.length) info.appendChild(text('span', 'connection-tag', tags.join(' · ')));
 
-    card.appendChild(info);
+    leftLink.appendChild(info);
+    card.appendChild(leftLink);
+
+    // Right side: message action + freshness label.
+    var actions = el('div', 'connection-actions');
+
+    var msgBtn = document.createElement('a');
+    msgBtn.className = 'connection-msg-btn';
+    msgBtn.href = 'messages.html?with=' + encodeURIComponent(m.id);
+    msgBtn.textContent = isFreshConnection(c.forwarded_at) ? 'Say hi →' : 'Message →';
+    actions.appendChild(msgBtn);
 
     if (c.forwarded_at) {
-      card.appendChild(text('span', 'connection-when', 'Met ' + relativeTime(c.forwarded_at)));
+      var whenLabel = isFreshConnection(c.forwarded_at)
+        ? 'New connection'
+        : 'Met ' + relativeTime(c.forwarded_at);
+      actions.appendChild(text('span', 'connection-when', whenLabel));
     }
+
+    card.appendChild(actions);
     return card;
+  }
+
+  // A connection is "fresh" for 7 days after responded_at — long enough to
+  // catch testers who connect on Monday and don't open the platform until
+  // the weekend.
+  function isFreshConnection(forwardedAt) {
+    if (!forwardedAt) return false;
+    var ms = Date.now() - new Date(forwardedAt).getTime();
+    return ms >= 0 && ms < 7 * 24 * 60 * 60 * 1000;
   }
 
   // ── Upcoming events ─────────────────────────────────────────
