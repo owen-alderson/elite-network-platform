@@ -23,8 +23,19 @@
     await loadConversations();
     var params = new URLSearchParams(window.location.search);
     var openId = params.get('c');
-    if (openId) await openConversation(openId);
-    else if (conversations.length && window.matchMedia('(min-width: 700px)').matches) {
+    var withId = params.get('with');
+    if (openId) {
+      await openConversation(openId);
+    } else if (withId) {
+      var match = conversations.find(function (c) { return c.other && c.other.id === withId; });
+      if (match) {
+        await openConversation(match.id);
+      } else {
+        // No conversation yet with this member. Could happen if links are
+        // followed in stale state — they might not be connected.
+        console.warn('No conversation with member', withId);
+      }
+    } else if (conversations.length && window.matchMedia('(min-width: 700px)').matches) {
       await openConversation(conversations[0].id, { replaceUrl: true });
     }
   })();

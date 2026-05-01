@@ -39,7 +39,7 @@
     isOwn = (targetId === sessionUserId);
 
     await load(targetId, session.user.email);
-    bindActions();
+    await bindActions();
   })();
 
   async function load(targetId, fallbackEmail) {
@@ -171,7 +171,7 @@
     if (sidebar) sidebar.style.display = 'none';
   }
 
-  function bindActions() {
+  async function bindActions() {
     var editBtn = document.getElementById('profile-edit-btn');
     var saveBtn = document.getElementById('profile-save-btn');
     var cancelBtn = document.getElementById('profile-cancel-btn');
@@ -180,10 +180,39 @@
     if (editBtn) editBtn.addEventListener('click', enterEditMode);
     if (cancelBtn) cancelBtn.addEventListener('click', exitEditMode);
     if (saveBtn) saveBtn.addEventListener('click', saveEdits);
-    if (introBtn) introBtn.addEventListener('click', function () {
-      if (!current) return;
-      window.aetherIntro.open(current.full_name || 'Member', current.id);
-    });
+
+    // For other members' profiles: if I'm already connected to them,
+    // swap the Request Introduction button for a Send message link.
+    if (!isOwn && current && introBtn) {
+      var connected = await checkConnection(current.id);
+      if (connected) {
+        var msgBtn = document.createElement('a');
+        msgBtn.className = 'btn-primary';
+        msgBtn.href = 'messages.html?with=' + encodeURIComponent(current.id);
+        msgBtn.textContent = 'Send message';
+        msgBtn.dataset.mode = 'other';
+        introBtn.parentNode.replaceChild(msgBtn, introBtn);
+      } else {
+        introBtn.addEventListener('click', function () {
+          window.aetherIntro.open(current.full_name || 'Member', current.id);
+        });
+      }
+    } else if (introBtn) {
+      introBtn.addEventListener('click', function () {
+        if (!current) return;
+        window.aetherIntro.open(current.full_name || 'Member', current.id);
+      });
+    }
+  }
+
+  async function checkConnection(otherId) {
+    if (!otherId || otherId === sessionUserId) return false;
+    var res = await supabase.rpc('are_connected', { a: sessionUserId, b: otherId });
+    if (res.error) {
+      console.warn('checkConnection failed:', res.error);
+      return false;
+    }
+    return res.data === true;
   }
 
   // ── Edit mode ───────────────────────────────────────────────
