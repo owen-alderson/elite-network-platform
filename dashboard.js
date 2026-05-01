@@ -278,6 +278,22 @@
     }
     card.appendChild(text('p', 'intro-mini-meta', meta.join(' · ')));
 
+    // Requester actions: Cancel a pending request, or Mark accepted once
+    // a forwarded intro has actually led somewhere.
+    if (intro.status === 'pending' || intro.status === 'forwarded') {
+      var actions = el('div', 'intro-mini-actions');
+      if (intro.status === 'pending') {
+        actions.appendChild(introActionBtn('Cancel request', 'btn-ghost btn-sm app-btn-reject', function () {
+          return updateIntro(intro.id, { status: 'declined', responded_at: new Date().toISOString() });
+        }, 'Cancel this intro request? It will move to declined.'));
+      } else if (intro.status === 'forwarded') {
+        actions.appendChild(introActionBtn('Mark accepted', 'btn-primary btn-sm', function () {
+          return updateIntro(intro.id, { status: 'accepted', responded_at: new Date().toISOString() });
+        }));
+      }
+      card.appendChild(actions);
+    }
+
     return card;
   }
 
@@ -506,7 +522,7 @@
         body = '';
         when = intro.responded_at || intro.created_at;
       } else if (intro.status === 'accepted') {
-        title = (intro.target ? intro.target.full_name : '—') + ' accepted your introduction';
+        title = 'You met ' + (intro.target ? intro.target.full_name : '—') + ' through Aether';
         when = intro.responded_at || intro.created_at;
       } else {
         return null;
