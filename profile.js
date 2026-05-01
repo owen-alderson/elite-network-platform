@@ -27,6 +27,7 @@
   var current = null;
   var isOwn = false;
   var sessionUserId = null;
+  var isEditing = false;
 
   (async function init() {
     var session = await window.aether.requireAuth();
@@ -360,6 +361,8 @@
   // ── Edit mode ───────────────────────────────────────────────
   function enterEditMode() {
     if (!isOwn || !current) return;
+    if (isEditing) return; // idempotent — second call would double DOM
+    isEditing = true;
     setActionsMode('editing');
 
     insertPhotoUploader();
@@ -548,8 +551,11 @@
   }
 
   function exitEditMode() {
-    // Easiest: reload the current data and re-render.
-    renderView();
+    // Edit mode mutates the DOM (replaceWith swaps + inserted rows) in
+    // ways renderView can't undo. A full page reload to a clean URL is
+    // the surgical reset — strips ?edit=1 so we don't bounce right back.
+    isEditing = false;
+    window.location.href = 'profile.html';
   }
 
   async function saveEdits() {
@@ -602,8 +608,10 @@
     }
 
     current = res.data || Object.assign({}, current, payload);
-    renderView();
     if (window.aether.invalidateIntroCache) window.aether.invalidateIntroCache();
+    // Clean DOM reset — see exitEditMode for the same reasoning.
+    isEditing = false;
+    window.location.href = 'profile.html';
   }
 
   function swapForInput(selector, field, value, kind) {

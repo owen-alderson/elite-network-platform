@@ -375,7 +375,7 @@
     var q = supabase
       .from('intro_requests')
       .select(
-        'id, created_at, status, note, broker_id, forwarded_at, responded_at,' +
+        'id, created_at, status, note, broker_id, route, forwarded_at, responded_at, requester_id, target_id,' +
         'requester:members!requester_id(id,full_name,headline,primary_pillar,location_city),' +
         'target:members!target_id(id,full_name,headline,primary_pillar,location_city),' +
         'broker:members!broker_id(id,full_name)'
@@ -383,9 +383,13 @@
       .order('created_at', { ascending: false });
 
     if (currentIntroFilter === 'awaiting') {
-      q = q.eq('status', 'pending').is('broker_id', null);
+      // Broker-route only — direct-route pending intros never need a broker.
+      q = q.eq('status', 'pending').is('broker_id', null).eq('route', 'broker');
     } else if (currentIntroFilter === 'assigned') {
-      q = q.eq('status', 'pending').not('broker_id', 'is', null);
+      q = q.eq('status', 'pending').not('broker_id', 'is', null).eq('route', 'broker');
+    } else if (currentIntroFilter === 'direct') {
+      // Direct-route pending intros — admin visibility, no admin action needed.
+      q = q.eq('status', 'pending').eq('route', 'direct');
     } else if (currentIntroFilter === 'forwarded') {
       q = q.eq('status', 'forwarded');
     } else if (currentIntroFilter === 'declined') {
@@ -403,6 +407,20 @@
       introListEl.appendChild(emptyMsg('No intros in this view.'));
       return;
     }
+
+    // For pending broker-route intros, prefetch the set of mutual
+    // connections so the broker picker shows only valid candidates —
+    // members connected to both requester and target.
+    await Promise.all(res.data.map(async function (intro) {
+      if (intro.status !== 'pending' || intro.route !== 'broker') return;
+      var rpc = await supabase.rpc('mutual_connections', {
+        a: intro.requester_id, b: intro.target_id
+      });
+      intro._mutualIds = rpc.error ? [] : (rpc.data || []).map(function (r) {
+        return typeof r === 'string' ? r : r.mutual_connections;
+      });
+    }));
+
     res.data.forEach(function (intro) { introListEl.appendChild(buildIntroCard(intro)); });
   }
 
@@ -478,14 +496,30 @@
 
     var requesterId = intro.requester ? intro.requester.id : null;
     var targetId = intro.target ? intro.target.id : null;
-    activeMembers.forEach(function (m) {
-      if (m.id === requesterId || m.id === targetId) return;
-      var opt = document.createElement('option');
-      opt.value = m.id;
-      opt.textContent = m.full_name + (m.primary_pillar ? ' · ' + m.primary_pillar.replace(/_/g, ' ') : '');
-      if (intro.broker_id === m.id) opt.selected = true;
-      select.appendChild(opt);
+
+    // Only members connected to BOTH requester and target are valid brokers.
+    // _mutualIds is populated upstream in renderIntros via the
+    // mutual_connections() SQL helper.
+    var mutualSet = {};
+    (intro._mutualIds || []).forEach(function (id) { mutualSet[id] = true; });
+
+    var eligible = activeMembers.filter(function (m) {
+      if (m.id === requesterId || m.id === targetId) return false;
+      return !!mutualSet[m.id];
     });
+
+    if (eligible.length === 0) {
+      blank.textContent = '— no mutual connections to broker via —';
+      select.disabled = true;
+    } else {
+      eligible.forEach(function (m) {
+        var opt = document.createElement('option');
+        opt.value = m.id;
+        opt.textContent = m.full_name + (m.primary_pillar ? ' · ' + m.primary_pillar.replace(/_/g, ' ') : '');
+        if (intro.broker_id === m.id) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
     pickerWrap.appendChild(select);
     foot.appendChild(pickerWrap);
 

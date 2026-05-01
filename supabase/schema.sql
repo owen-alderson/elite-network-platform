@@ -456,6 +456,32 @@ as $$
   select exists (select 1 from a_conns intersect select 1 from b_conns);
 $$;
 
+-- Returns the set of member IDs connected to BOTH a and b. Used by the
+-- admin broker picker so only valid brokers appear.
+create or replace function public.mutual_connections(a uuid, b uuid)
+returns setof uuid
+language sql
+stable
+set search_path = ''
+as $$
+  with a_conns as (
+    select case when requester_id = a then target_id else requester_id end as other
+    from public.intro_requests
+    where status = 'accepted'
+      and (requester_id = a or target_id = a)
+  ),
+  b_conns as (
+    select case when requester_id = b then target_id else requester_id end as other
+    from public.intro_requests
+    where status = 'accepted'
+      and (requester_id = b or target_id = b)
+  )
+  select other from a_conns intersect select other from b_conns;
+$$;
+
+revoke execute on function public.mutual_connections(uuid, uuid) from public;
+grant  execute on function public.mutual_connections(uuid, uuid) to authenticated;
+
 -- Combined routing + rate-limit trigger.
 --
 -- These two operations were previously split across two BEFORE INSERT
