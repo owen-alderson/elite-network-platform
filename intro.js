@@ -40,6 +40,8 @@
     var textarea = modal.querySelector('.intro-textarea');
     if (textarea) textarea.value = '';
 
+    bindNoteCounter(modal);
+
     // Inject the routing hint so the requester knows whether their note
     // will reach a broker or go directly to the target.
     setRoutingHint(modal, null);
@@ -90,6 +92,49 @@
     Array.prototype.forEach.call(inner.children, function (c) {
       if (c.style) c.style.display = '';
     });
+  }
+
+  // Live counter beneath the textarea so the 20-char minimum (and 2000-char
+  // ceiling) aren't surprises at submit time.
+  var MIN_NOTE = 20;
+  var MAX_NOTE = 2000;
+  function bindNoteCounter(modal) {
+    var textarea = modal.querySelector('.intro-textarea');
+    if (!textarea || textarea.dataset.counterBound === '1') {
+      if (textarea) updateCounter(modal, textarea.value.trim().length);
+      return;
+    }
+    textarea.dataset.counterBound = '1';
+    textarea.addEventListener('input', function () {
+      updateCounter(modal, textarea.value.trim().length);
+    });
+    updateCounter(modal, 0);
+  }
+  function updateCounter(modal, n) {
+    var counter = modal.querySelector('.intro-note-counter');
+    if (!counter) {
+      counter = document.createElement('p');
+      counter.className = 'intro-note-counter';
+      counter.style.cssText = 'font-size:11px;margin-top:6px;line-height:1.5;';
+      var ta = modal.querySelector('.intro-textarea');
+      if (ta && ta.parentNode) ta.parentNode.insertBefore(counter, ta.nextSibling);
+      // Hide the static help line — counter replaces it.
+      var help = ta && ta.parentNode ? ta.parentNode.querySelector('p[style*="font-size:11px"]:not(.intro-note-counter)') : null;
+      if (help && help !== counter) help.style.display = 'none';
+    }
+    if (n === 0) {
+      counter.textContent = '2–4 sentences. Specific beats flattering.';
+      counter.style.color = '#444';
+    } else if (n < MIN_NOTE) {
+      counter.textContent = (MIN_NOTE - n) + ' more characters before you can send.';
+      counter.style.color = 'var(--muted)';
+    } else if (n > MAX_NOTE) {
+      counter.textContent = (n - MAX_NOTE) + ' over the limit. Trim to send.';
+      counter.style.color = '#b34c4c';
+    } else {
+      counter.textContent = 'Looks good. ' + n + ' characters.';
+      counter.style.color = 'var(--gold)';
+    }
   }
 
   function setRoutingHint(modal, route) {

@@ -43,7 +43,7 @@
 
     var res = await supabase
       .from('members')
-      .select('id,full_name,headline,bio,primary_pillar,secondary_pillars,location_city,location_country,current_work,avatar_url')
+      .select('id,full_name,headline,bio,primary_pillar,secondary_pillars,location_city,location_country,current_work,avatar_url,joined_at,last_seen_at')
       .eq('status', 'active')
       .order('joined_at', { ascending: false });
 
@@ -107,10 +107,19 @@
       body.appendChild(pillar);
     }
 
+    var nameRow = document.createElement('div');
+    nameRow.className = 'card-name-row';
     var name = document.createElement('h3');
     name.className = 'card-name';
     name.textContent = m.full_name || '—';
-    body.appendChild(name);
+    nameRow.appendChild(name);
+    if (isActiveToday(m)) {
+      var pip = document.createElement('span');
+      pip.className = 'card-active-pip';
+      pip.title = 'Active in the last 24 hours';
+      nameRow.appendChild(pip);
+    }
+    body.appendChild(nameRow);
 
     if (m.headline) {
       var title = document.createElement('p');
@@ -136,6 +145,18 @@
     link.appendChild(body);
     card.appendChild(link);
     return card;
+  }
+
+  // Show the "active today" pip only if the member has had a real session
+  // beyond row creation. last_seen_at defaults to now() at row creation, so
+  // newly-seeded members would otherwise all show as active. Require a gap
+  // of at least 5 minutes between joined_at and last_seen_at to filter that.
+  function isActiveToday(m) {
+    if (!m.last_seen_at || !m.joined_at) return false;
+    var seen = new Date(m.last_seen_at).getTime();
+    var joined = new Date(m.joined_at).getTime();
+    if (seen - joined < 5 * 60 * 1000) return false;
+    return Date.now() - seen < 24 * 60 * 60 * 1000;
   }
 
   function capitalize(s) {
