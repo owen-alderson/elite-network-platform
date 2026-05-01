@@ -148,10 +148,11 @@
       listEl.innerHTML = '<p style="color:var(--muted);font-size:13px;">No new members to suggest right now. Browse the directory directly.</p>';
       return;
     }
-    rows.forEach(function (m) { listEl.appendChild(buildSuggestionRow(m)); });
+    var canIntro = await window.aether.canIntroNow();
+    rows.forEach(function (m) { listEl.appendChild(buildSuggestionRow(m, canIntro.ready)); });
   }
 
-  function buildSuggestionRow(m) {
+  function buildSuggestionRow(m, canIntro) {
     var row = el('div', 'suggestion-row');
     var avatar = el('div', 'sug-avatar');
     window.aether.fillAvatar(avatar, m);
@@ -176,12 +177,21 @@
     info.appendChild(text('span', 'sug-tag', tagText.join(' · ')));
     row.appendChild(info);
 
-    var btn = document.createElement('button');
-    btn.className = 'sug-intro-btn';
-    btn.textContent = 'Request intro';
-    btn.addEventListener('click', function () {
-      window.aetherIntro.open(m.full_name || 'Member', m.id);
-    });
+    var btn;
+    if (canIntro) {
+      btn = document.createElement('button');
+      btn.className = 'sug-intro-btn';
+      btn.textContent = 'Request intro';
+      btn.addEventListener('click', function () {
+        window.aetherIntro.open(m.full_name || 'Member', m.id);
+      });
+    } else {
+      btn = document.createElement('a');
+      btn.className = 'sug-intro-btn sug-intro-locked';
+      btn.href = 'profile.html?edit=1';
+      btn.textContent = 'Finish profile';
+      btn.title = 'Finish your profile to request intros';
+    }
     row.appendChild(btn);
 
     return row;

@@ -433,6 +433,13 @@
   transition: all 0.15s;
 }
 .sug-intro-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
+.sug-intro-locked {
+  text-decoration: none;
+  color: var(--gold);
+  border-color: var(--gold-dim);
+  display: inline-block;
+}
+.sug-intro-locked:hover { background: rgba(201, 168, 76, 0.06); }
 
 /* ── Mini events ───────────────────────────────────────────── */
 .mini-events {

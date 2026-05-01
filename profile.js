@@ -264,9 +264,21 @@
           introBtn.style.opacity = '0.55';
           introBtn.style.cursor = 'default';
         } else {
-          introBtn.addEventListener('click', function () {
-            window.aetherIntro.open(current.full_name || 'Member', current.id);
-          });
+          var canIntro = await window.aether.canIntroNow();
+          if (!canIntro.ready) {
+            // Soft gate — replace with a link to profile-edit. The hard gate
+            // in intro.js still catches any leak past this.
+            var lockedLink = document.createElement('a');
+            lockedLink.className = 'btn-primary';
+            lockedLink.href = 'profile.html?edit=1';
+            lockedLink.textContent = 'Finish profile to request intros';
+            lockedLink.dataset.mode = 'locked';
+            introBtn.parentNode.replaceChild(lockedLink, introBtn);
+          } else {
+            introBtn.addEventListener('click', function () {
+              window.aetherIntro.open(current.full_name || 'Member', current.id);
+            });
+          }
         }
       }
     } else if (introBtn) {
