@@ -24,6 +24,9 @@
   --btn-text-disabled:   #6f633d;
   --btn-border-disabled: #3a321d;
   --btn-focus-ring:      rgba(185, 151, 63, 0.35);
+  /* Hover target for the gold-fill primary button. ~17% darker than --gold
+     so the hover reads clearly without breaking the luxe restraint. */
+  --gold-hover:          #a78838;
 
   --font-serif: 'Cormorant Garamond', Georgia, serif;
   --font-sans:  'Inter', system-ui, sans-serif;
@@ -208,7 +211,7 @@ a { color: inherit; text-decoration: none; }
   border: 1px solid var(--gold);
   font-weight: 500;
 }
-.btn-primary:hover { background: var(--btn-bg-active); border-color: var(--btn-bg-active); }
+.btn-primary:hover { background: var(--gold-hover); border-color: var(--gold-hover); }
 
 .btn-ghost {
   background: var(--btn-bg);
