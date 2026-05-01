@@ -75,9 +75,40 @@
 
     await Promise.all([
       refreshApps(),
-      loadActiveMembers().then(refreshIntros)
+      loadActiveMembers().then(refreshIntros),
+      loadTodayOverview()
     ]);
   })();
+
+  // ── Today overview (last 24h) ──────────────────────────────
+  async function loadTodayOverview() {
+    var section = document.getElementById('admin-today');
+    if (!section) return;
+    var since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+    var queries = await Promise.all([
+      supabase.from('applications').select('id', { count: 'exact', head: true })
+        .gt('created_at', since),
+      supabase.from('intro_requests').select('id', { count: 'exact', head: true })
+        .gt('created_at', since),
+      supabase.from('intro_requests').select('id', { count: 'exact', head: true })
+        .eq('status', 'accepted').gt('responded_at', since),
+      supabase.from('members').select('id', { count: 'exact', head: true })
+        .eq('status', 'active').gt('last_seen_at', since),
+      supabase.from('messages').select('id', { count: 'exact', head: true })
+        .gt('created_at', since)
+    ]);
+
+    var els = [
+      'today-applications', 'today-intros', 'today-accepted',
+      'today-members', 'today-messages'
+    ];
+    queries.forEach(function (q, i) {
+      var el = document.getElementById(els[i]);
+      if (el) el.textContent = q.error ? '?' : (q.count != null ? q.count : 0);
+    });
+    section.hidden = false;
+  }
 
   // ── View switcher ───────────────────────────────────────────
   function bindViewSwitcher() {

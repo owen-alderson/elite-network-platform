@@ -35,6 +35,18 @@
   </div>
 
   <main class="admin-shell">
+    <!-- "Today" overview — last-24h activity across all axes. Always visible. -->
+    <section class="admin-today" id="admin-today" hidden>
+      <p class="admin-today-eyebrow">Last 24 hours</p>
+      <div class="admin-today-stats">
+        <div class="admin-today-stat"><strong id="today-applications">—</strong><span>applications</span></div>
+        <div class="admin-today-stat"><strong id="today-intros">—</strong><span>intro requests</span></div>
+        <div class="admin-today-stat"><strong id="today-accepted">—</strong><span>connections formed</span></div>
+        <div class="admin-today-stat"><strong id="today-members">—</strong><span>members active</span></div>
+        <div class="admin-today-stat"><strong id="today-messages">—</strong><span>messages sent</span></div>
+      </div>
+    </section>
+
     <div class="admin-views">
       <button class="admin-view-btn is-active" data-view="applications">Applications</button>
       <button class="admin-view-btn" data-view="intros">Intros</button>
