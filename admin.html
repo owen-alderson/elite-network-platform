@@ -40,6 +40,7 @@
       <button class="admin-view-btn" data-view="intros">Intros</button>
       <button class="admin-view-btn" data-view="events">Events</button>
       <button class="admin-view-btn" data-view="members">Members</button>
+      <button class="admin-view-btn" data-view="spaces">Spaces</button>
     </div>
 
     <!-- ================== Applications view ================== -->
@@ -171,6 +172,76 @@
       </header>
 
       <section id="admin-member-list" class="admin-list" aria-live="polite">
+        <p class="admin-loading">Loading…</p>
+      </section>
+    </section>
+
+    <!-- ================== Spaces view ================== -->
+    <section class="admin-view-section" data-view="spaces" hidden>
+      <header class="admin-header">
+        <p class="admin-eyebrow">PARTNER VENUES</p>
+        <h1 class="admin-title">Spaces</h1>
+        <p class="admin-subtitle">The physical layer. Confirmed spaces appear publicly on the Spaces page; prospective spaces show as "in discussion." Inactive spaces are hidden from members.</p>
+      </header>
+
+      <section class="admin-event-form">
+        <h2 class="admin-form-heading" id="space-form-heading">Add space</h2>
+        <input type="hidden" id="space-edit-id" value="" />
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Name</label>
+            <input class="form-input" type="text" id="space-name" placeholder="e.g. Spring Place" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Slug</label>
+            <input class="form-input" type="text" id="space-slug" placeholder="spring-place-london" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">City</label>
+            <input class="form-input" type="text" id="space-city" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Country</label>
+            <input class="form-input" type="text" id="space-country" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Address <span class="form-label-opt">(optional)</span></label>
+          <input class="form-input" type="text" id="space-address" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-input form-textarea" id="space-description" rows="4"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Amenities <span class="form-label-opt">(comma-separated)</span></label>
+          <input class="form-input" type="text" id="space-amenities" placeholder="Private dining, Co-working, Library" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select class="form-input" id="space-status">
+              <option value="prospective">Prospective</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="inactive">Inactive (hidden)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Founding partner</label>
+            <select class="form-input" id="space-founding">
+              <option value="false">No</option>
+              <option value="true">Yes</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-primary btn-sm" id="space-save-btn">Add space</button>
+        </div>
+      </section>
+
+      <section id="admin-space-list" class="admin-list" aria-live="polite" style="margin-top: 32px;">
         <p class="admin-loading">Loading…</p>
       </section>
     </section>

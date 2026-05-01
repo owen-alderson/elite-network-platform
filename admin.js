@@ -14,12 +14,19 @@
   var currentMemberFilter = 'active';
   var activeMembers = [];   // cached for the broker picker
   var editingEventId = null;  // null = creating, uuid = updating
+  var editingSpaceId = null;
+
+  var ALL_PILLARS = [
+    'finance', 'real_estate', 'technology', 'media',
+    'hospitality', 'arts', 'sport', 'medicine', 'law'
+  ];
 
   // ── DOM refs ────────────────────────────────────────────────
   var appListEl, appTabsEl, appStatEls;
   var introListEl, introTabsEl, introStatEls;
   var eventListEl, eventCreateBtn;
   var memberListEl, memberTabsEl, memberStatEls;
+  var spaceListEl, spaceSaveBtn;
 
   // ── Boot ────────────────────────────────────────────────────
   (async function init() {
@@ -56,11 +63,15 @@
       total: document.getElementById('member-stat-total')
     };
 
+    spaceListEl = document.getElementById('admin-space-list');
+    spaceSaveBtn = document.getElementById('space-save-btn');
+
     bindViewSwitcher();
     bindAppTabs();
     bindIntroTabs();
     bindMemberTabs();
     if (eventCreateBtn) eventCreateBtn.addEventListener('click', saveEvent);
+    if (spaceSaveBtn) spaceSaveBtn.addEventListener('click', saveSpace);
 
     await Promise.all([
       refreshApps(),
@@ -81,6 +92,7 @@
         if (view === 'applications') refreshApps();
         if (view === 'events') refreshEvents();
         if (view === 'members') refreshMembers();
+        if (view === 'spaces') refreshSpaces();
       });
     });
   }
@@ -841,6 +853,8 @@
     article.appendChild(body);
 
     var foot = el('footer', 'app-card-actions');
+    foot.appendChild(buildPillarPicker(m));
+
     var btnRow = el('div', 'app-action-buttons');
 
     if (m.status === 'active') {
@@ -877,6 +891,239 @@
       await refreshMembers();
     });
     return btn;
+  }
+
+  // Append a primary-pillar select to a member card so admin can
+  // re-classify. Members can't change their own primary_pillar (locked
+  // by the protect_columns trigger); only admin can.
+  function buildPillarPicker(member) {
+    var wrap = el('div', 'intro-picker-wrap');
+    wrap.appendChild(text('label', 'app-section-label', 'Primary pillar'));
+
+    var select = document.createElement('select');
+    select.className = 'app-notes intro-broker-select';
+    var blank = document.createElement('option');
+    blank.value = '';
+    blank.textContent = '— unset —';
+    select.appendChild(blank);
+    ALL_PILLARS.forEach(function (p) {
+      var opt = document.createElement('option');
+      opt.value = p;
+      opt.textContent = p.replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+      if (member.primary_pillar === p) opt.selected = true;
+      select.appendChild(opt);
+    });
+
+    select.addEventListener('change', async function () {
+      var prev = member.primary_pillar;
+      select.disabled = true;
+      var res = await supabase
+        .from('members')
+        .update({ primary_pillar: select.value || null })
+        .eq('id', member.id);
+      if (res.error) {
+        alert('Could not save pillar: ' + (res.error.message || 'unknown error'));
+        select.value = prev || '';
+      } else {
+        member.primary_pillar = select.value || null;
+      }
+      select.disabled = false;
+    });
+
+    wrap.appendChild(select);
+    return wrap;
+  }
+
+  // ── Spaces admin ────────────────────────────────────────────
+  async function refreshSpaces() {
+    if (!spaceListEl) return;
+    spaceListEl.innerHTML = '<p class="admin-loading">Loading…</p>';
+
+    var res = await supabase
+      .from('partner_spaces')
+      .select('*')
+      .order('is_founding_partner', { ascending: false })
+      .order('status', { ascending: true })
+      .order('city', { ascending: true });
+
+    spaceListEl.innerHTML = '';
+    if (res.error) {
+      spaceListEl.appendChild(emptyMsg('Could not load spaces: ' + res.error.message));
+      return;
+    }
+    if (!res.data || !res.data.length) {
+      spaceListEl.appendChild(emptyMsg('No partner spaces yet. Add one above.'));
+      return;
+    }
+    res.data.forEach(function (s) { spaceListEl.appendChild(buildSpaceCard(s)); });
+  }
+
+  function buildSpaceCard(s) {
+    var article = el('article', 'app-card');
+    article.dataset.id = s.id;
+
+    var head = el('header', 'app-card-head');
+    var left = el('div', 'app-card-head-left');
+    left.appendChild(text('p', 'app-card-eyebrow',
+      'SPACE · ' + (s.status || '').toUpperCase() + (s.is_founding_partner ? ' · FOUNDING' : '')
+    ));
+    left.appendChild(text('h2', 'app-card-name', s.name || '—'));
+    if (s.city || s.country) {
+      left.appendChild(text('p', 'app-card-email',
+        [s.city, s.country].filter(Boolean).join(', ')
+      ));
+    }
+    head.appendChild(left);
+
+    var right = el('div', 'app-card-meta');
+    right.appendChild(text('p', 'app-card-date', 'Slug: ' + (s.slug || '—')));
+    head.appendChild(right);
+    article.appendChild(head);
+
+    if (s.description || (Array.isArray(s.amenities) && s.amenities.length)) {
+      var body = el('div', 'app-card-body');
+      if (s.description) {
+        var d = el('p', 'app-card-line');
+        d.style.whiteSpace = 'pre-wrap';
+        d.textContent = s.description.split('\n\n')[0];
+        body.appendChild(d);
+      }
+      if (Array.isArray(s.amenities) && s.amenities.length) {
+        body.appendChild(text('p', 'app-section-label', 'Amenities'));
+        body.appendChild(text('p', 'app-card-line', s.amenities.join(' · ')));
+      }
+      article.appendChild(body);
+    }
+
+    var foot = el('footer', 'app-card-actions');
+    var btnRow = el('div', 'app-action-buttons');
+    var editBtn = document.createElement('button');
+    editBtn.className = 'btn-ghost btn-sm';
+    editBtn.textContent = 'Edit';
+    editBtn.addEventListener('click', function () { editSpace(s); });
+    btnRow.appendChild(editBtn);
+
+    var deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn-ghost btn-sm app-btn-reject';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.addEventListener('click', async function () {
+      if (!confirm('Delete this space? Events linked to it stay but lose the venue link.')) return;
+      var res = await supabase.from('partner_spaces').delete().eq('id', s.id);
+      if (res.error) {
+        alert('Could not delete: ' + (res.error.message || 'unknown error'));
+        return;
+      }
+      if (editingSpaceId === s.id) cancelSpaceEdit();
+      await refreshSpaces();
+    });
+    btnRow.appendChild(deleteBtn);
+    foot.appendChild(btnRow);
+    article.appendChild(foot);
+
+    return article;
+  }
+
+  function editSpace(s) {
+    editingSpaceId = s.id;
+    document.getElementById('space-edit-id').value = s.id;
+    document.getElementById('space-name').value = s.name || '';
+    document.getElementById('space-slug').value = s.slug || '';
+    document.getElementById('space-city').value = s.city || '';
+    document.getElementById('space-country').value = s.country || '';
+    document.getElementById('space-address').value = s.address || '';
+    document.getElementById('space-description').value = s.description || '';
+    document.getElementById('space-amenities').value = (s.amenities || []).join(', ');
+    document.getElementById('space-status').value = s.status || 'prospective';
+    document.getElementById('space-founding').value = s.is_founding_partner ? 'true' : 'false';
+
+    var heading = document.getElementById('space-form-heading');
+    if (heading) heading.textContent = 'Edit space';
+    if (spaceSaveBtn) spaceSaveBtn.textContent = 'Update space';
+    ensureSpaceCancelBtn();
+
+    var form = document.querySelector('[data-view="spaces"] .admin-event-form');
+    if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function cancelSpaceEdit() {
+    editingSpaceId = null;
+    ['space-edit-id','space-name','space-slug','space-city','space-country',
+     'space-address','space-description','space-amenities'].forEach(function (id) {
+      var node = document.getElementById(id);
+      if (node) node.value = '';
+    });
+    document.getElementById('space-status').value = 'prospective';
+    document.getElementById('space-founding').value = 'false';
+    var heading = document.getElementById('space-form-heading');
+    if (heading) heading.textContent = 'Add space';
+    if (spaceSaveBtn) spaceSaveBtn.textContent = 'Add space';
+    var cancel = document.getElementById('space-cancel-edit-btn');
+    if (cancel) cancel.remove();
+  }
+
+  function ensureSpaceCancelBtn() {
+    if (document.getElementById('space-cancel-edit-btn')) return;
+    var actions = document.querySelector('[data-view="spaces"] .admin-event-form .form-actions');
+    if (!actions) return;
+    var btn = document.createElement('button');
+    btn.id = 'space-cancel-edit-btn';
+    btn.className = 'btn-ghost btn-sm';
+    btn.textContent = 'Cancel edit';
+    btn.addEventListener('click', cancelSpaceEdit);
+    actions.insertBefore(btn, actions.firstChild);
+  }
+
+  async function saveSpace() {
+    var name = (document.getElementById('space-name').value || '').trim();
+    var slug = (document.getElementById('space-slug').value || '').trim().toLowerCase().replace(/\s+/g, '-');
+    var city = (document.getElementById('space-city').value || '').trim();
+    var country = (document.getElementById('space-country').value || '').trim();
+    var address = (document.getElementById('space-address').value || '').trim();
+    var description = (document.getElementById('space-description').value || '').trim();
+    var amenitiesRaw = (document.getElementById('space-amenities').value || '').trim();
+    var status = document.getElementById('space-status').value;
+    var founding = document.getElementById('space-founding').value === 'true';
+
+    if (!name) { alert('Name is required.'); return; }
+    if (!slug) { alert('Slug is required (URL-safe identifier, e.g. spring-place-london).'); return; }
+
+    var amenities = amenitiesRaw
+      ? amenitiesRaw.split(',').map(function (a) { return a.trim(); }).filter(Boolean)
+      : [];
+
+    var payload = {
+      name: name,
+      slug: slug,
+      city: city || null,
+      country: country || null,
+      address: address || null,
+      description: description || null,
+      amenities: amenities,
+      status: status,
+      is_founding_partner: founding
+    };
+
+    spaceSaveBtn.disabled = true;
+    var prev = spaceSaveBtn.textContent;
+    spaceSaveBtn.textContent = editingSpaceId ? 'Updating…' : 'Adding…';
+
+    var res;
+    if (editingSpaceId) {
+      res = await supabase.from('partner_spaces').update(payload).eq('id', editingSpaceId);
+    } else {
+      res = await supabase.from('partner_spaces').insert(payload);
+    }
+
+    spaceSaveBtn.disabled = false;
+    spaceSaveBtn.textContent = prev;
+
+    if (res.error) {
+      alert('Could not save: ' + (res.error.message || 'unknown error'));
+      return;
+    }
+
+    cancelSpaceEdit();
+    await refreshSpaces();
   }
 
   // ── Tiny DOM helpers ────────────────────────────────────────

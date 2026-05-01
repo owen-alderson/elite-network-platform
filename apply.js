@@ -119,7 +119,11 @@
     if (res.error) {
       console.error('Application insert failed:', res.error);
       clearSubmitting(btn);
-      alert('Submission failed. Please try again — if it keeps happening, email hello@aether.network.');
+      if (isDuplicateError(res.error)) {
+        alert('We already have an application from this email under review. You\'ll hear from us by email when there\'s an update.');
+      } else {
+        alert('Submission failed. Please try again — if it keeps happening, email hello@aether.network.');
+      }
       return;
     }
 
@@ -176,10 +180,26 @@
     if (res.error) {
       console.error('Nomination insert failed:', res.error);
       clearSubmitting(btn);
-      alert('Submission failed. Please try again — if it keeps happening, email hello@aether.network.');
+      if (isDuplicateError(res.error)) {
+        alert('This person is already in our review queue (someone may have nominated them, or they may have applied directly). We\'ll handle it from here.');
+      } else {
+        alert('Submission failed. Please try again — if it keeps happening, email hello@aether.network.');
+      }
       return;
     }
 
     go('n-confirm');
   };
+
+  // The DB has a partial unique index on (lower(applicant_email))
+  // where status in ('pending','needs_more_info'). Postgres returns
+  // SQLSTATE 23505 (unique_violation); Supabase passes that through
+  // as code "23505".
+  function isDuplicateError(err) {
+    return err && (
+      err.code === '23505'
+      || (err.message && err.message.toLowerCase().indexOf('duplicate') !== -1)
+      || (err.message && err.message.indexOf('applications_unique_open_email') !== -1)
+    );
+  }
 })();

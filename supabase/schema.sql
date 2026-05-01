@@ -79,8 +79,10 @@ create index partner_spaces_status_idx on public.partner_spaces (status);
 
 alter table public.partner_spaces enable row level security;
 
-create policy "spaces_select_authed" on public.partner_spaces
-  for select to authenticated using (true);
+-- Public read: spaces.html is a marketing surface visible to anonymous
+-- visitors. Anyone can read; only admin can write.
+create policy "spaces_select_public" on public.partner_spaces
+  for select to anon, authenticated using (true);
 
 create policy "spaces_insert_admin" on public.partner_spaces
   for insert to authenticated with check (public.is_admin());
@@ -159,6 +161,9 @@ begin
     new.nominated_by := old.nominated_by;
     new.joined_at := old.joined_at;
     new.created_at := old.created_at;
+    -- primary_pillar is admin-only — members can't self-reclassify.
+    -- Secondary pillars stay self-editable.
+    new.primary_pillar := old.primary_pillar;
   end if;
   new.updated_at := now();
   return new;
@@ -207,6 +212,13 @@ create table public.applications (
 
 create index applications_status_idx on public.applications (status);
 create index applications_submitted_at_idx on public.applications (submitted_at desc);
+
+-- Block multiple pending / needs_more_info applications for the same
+-- email. Once an application is closed (rejected, approved), a fresh
+-- attempt is allowed.
+create unique index if not exists applications_unique_open_email
+  on public.applications (lower(applicant_email))
+  where status in ('pending', 'needs_more_info');
 
 alter table public.applications enable row level security;
 
