@@ -503,3 +503,20 @@
 .member-status-active   { color: #6fbf73; border-color: #6fbf73; }
 .member-status-paused   { color: #d9b87a; border-color: #d9b87a; }
 .member-status-removed  { color: var(--muted); border-color: var(--border); }
+
+/* ── Tags on member + application cards ─────────── */
+.admin-tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+.admin-tag {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--gold);
+  background: rgba(201, 168, 76, 0.06);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 3px 8px;
+}

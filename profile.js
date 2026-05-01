@@ -9,6 +9,7 @@
     'full_name',
     'headline',
     'bio',
+    'primary_pillar',
     'location_city',
     'location_country',
     'current_work',
@@ -16,6 +17,9 @@
     'instagram_handle',
     'website_url'
   ];
+
+  // Tags: free-form, capped at 5, normalized to lowercase + trimmed.
+  var MAX_TAGS = 5;
 
   // Pillar list mirrors the directory + apply form. Owen is the source of truth.
   var ALL_PILLARS = [
@@ -52,7 +56,7 @@
   async function load(targetId, fallbackEmail) {
     var res = await supabase
       .from('members')
-      .select('id,email,full_name,headline,bio,primary_pillar,secondary_pillars,location_city,location_country,linkedin_url,instagram_handle,website_url,avatar_url,achievements,current_work,joined_at,nominated_by,status')
+      .select('id,email,full_name,headline,bio,primary_pillar,secondary_pillars,tags,location_city,location_country,linkedin_url,instagram_handle,website_url,avatar_url,achievements,current_work,joined_at,nominated_by,status')
       .eq('id', targetId)
       .maybeSingle();
 
@@ -95,10 +99,45 @@
 
     renderAchievements(m.achievements);
     setText('#profile-current-work', m.current_work || '—');
+    renderTags(m.tags || []);
     renderLinks(m);
     if (isOwn) renderCompleteness(m);
 
     setActionsMode(isOwn ? 'self' : 'other');
+  }
+
+  function renderTags(tags) {
+    var existing = document.getElementById('profile-tags');
+    if (existing) existing.remove();
+    if (!tags || !tags.length) return;
+    var anchor = document.querySelector('.profile-main');
+    if (!anchor) return;
+
+    var section = document.createElement('section');
+    section.id = 'profile-tags';
+    section.className = 'profile-tags-section';
+    var label = document.createElement('p');
+    label.className = 'profile-section-label';
+    label.textContent = 'Tags';
+    section.appendChild(label);
+
+    var wrap = document.createElement('div');
+    wrap.className = 'profile-tag-row';
+    tags.forEach(function (t) {
+      var chip = document.createElement('span');
+      chip.className = 'profile-tag-chip is-readonly';
+      chip.textContent = t;
+      wrap.appendChild(chip);
+    });
+    section.appendChild(wrap);
+
+    // Insert after the Current focus block if present, else at top of main.
+    var workSection = document.getElementById('profile-current-work');
+    if (workSection && workSection.parentNode) {
+      workSection.parentNode.parentNode.insertBefore(section, workSection.parentNode.nextSibling);
+    } else {
+      anchor.appendChild(section);
+    }
   }
 
   function renderCompleteness(m) {
@@ -381,8 +420,149 @@
     insertEditRow('instagram_handle', 'Instagram handle', current.instagram_handle || '', 'input');
     insertEditRow('website_url', 'Website', current.website_url || '', 'input');
 
-    insertSecondaryPillarsEditor(current.secondary_pillars || []);
+    insertPrimaryPillarEditor(current.primary_pillar || '');
+    insertTagsEditor(Array.isArray(current.tags) ? current.tags : []);
     insertAchievementsEditor(current.achievements || []);
+  }
+
+  function insertPrimaryPillarEditor(selected) {
+    var rows = document.querySelectorAll('.profile-edit-row');
+    var anchor = rows[rows.length - 1];
+    if (!anchor) return;
+
+    var row = document.createElement('div');
+    row.className = 'profile-edit-row';
+
+    var label = document.createElement('p');
+    label.className = 'profile-edit-label';
+    label.textContent = 'Primary pillar';
+    row.appendChild(label);
+
+    var hint = document.createElement('p');
+    hint.style.cssText = 'font-size:11px;color:var(--muted);margin:0 0 8px;';
+    hint.textContent = 'Your main industry. Tags below can capture the rest.';
+    row.appendChild(hint);
+
+    var sel = document.createElement('select');
+    sel.className = 'profile-edit-input';
+    sel.dataset.editField = 'primary_pillar';
+    var blank = document.createElement('option');
+    blank.value = '';
+    blank.textContent = '— select a pillar —';
+    sel.appendChild(blank);
+    ALL_PILLARS.forEach(function (p) {
+      var opt = document.createElement('option');
+      opt.value = p;
+      opt.textContent = capitalize(p);
+      if (selected === p) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    row.appendChild(sel);
+
+    anchor.parentNode.insertBefore(row, anchor.nextSibling);
+  }
+
+  function insertTagsEditor(tags) {
+    var rows = document.querySelectorAll('.profile-edit-row');
+    var anchor = rows[rows.length - 1];
+    if (!anchor) return;
+
+    var row = document.createElement('div');
+    row.className = 'profile-edit-row';
+
+    var label = document.createElement('p');
+    label.className = 'profile-edit-label';
+    label.textContent = 'Tags';
+    row.appendChild(label);
+
+    var hint = document.createElement('p');
+    hint.id = 'profile-tag-hint';
+    hint.style.cssText = 'font-size:11px;color:var(--muted);margin:0 0 8px;';
+    row.appendChild(hint);
+
+    var box = document.createElement('div');
+    box.className = 'profile-tag-box';
+    box.dataset.editField = 'tags';
+    row.appendChild(box);
+
+    var chipWrap = document.createElement('div');
+    chipWrap.className = 'profile-tag-chips';
+    box.appendChild(chipWrap);
+
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'profile-edit-input profile-tag-input';
+    input.placeholder = 'Type a tag and press Enter';
+    box.appendChild(input);
+
+    var state = (tags || []).map(normalizeTag).filter(Boolean);
+    state = dedupe(state).slice(0, MAX_TAGS);
+
+    function render() {
+      chipWrap.innerHTML = '';
+      state.forEach(function (t, i) {
+        var chip = document.createElement('span');
+        chip.className = 'profile-tag-chip';
+        chip.textContent = t;
+        var x = document.createElement('button');
+        x.type = 'button';
+        x.className = 'profile-tag-x';
+        x.setAttribute('aria-label', 'Remove ' + t);
+        x.textContent = '×';
+        x.addEventListener('click', function () {
+          state.splice(i, 1);
+          render();
+        });
+        chip.appendChild(x);
+        chipWrap.appendChild(chip);
+      });
+      input.disabled = state.length >= MAX_TAGS;
+      hint.textContent = state.length >= MAX_TAGS
+        ? 'Cap reached. Remove one to add another.'
+        : 'Up to ' + MAX_TAGS + '. ' + state.length + ' / ' + MAX_TAGS + ' used. Lowercase, trimmed, no duplicates.';
+      // Stash on the box so saveEdits can read it.
+      box.dataset.tagState = JSON.stringify(state);
+    }
+
+    function tryAdd(raw) {
+      var t = normalizeTag(raw);
+      if (!t) return;
+      if (state.length >= MAX_TAGS) return;
+      if (state.indexOf(t) !== -1) return;
+      state.push(t);
+      render();
+    }
+
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ',' || e.key === 'Tab') {
+        if (input.value.trim()) {
+          e.preventDefault();
+          tryAdd(input.value);
+          input.value = '';
+        }
+      } else if (e.key === 'Backspace' && !input.value && state.length) {
+        state.pop();
+        render();
+      }
+    });
+    input.addEventListener('blur', function () {
+      if (input.value.trim()) {
+        tryAdd(input.value);
+        input.value = '';
+      }
+    });
+
+    render();
+    anchor.parentNode.insertBefore(row, anchor.nextSibling);
+  }
+
+  function normalizeTag(s) {
+    return String(s || '').trim().toLowerCase().replace(/\s+/g, ' ').slice(0, 40);
+  }
+  function dedupe(arr) {
+    var seen = {}, out = [];
+    arr.forEach(function (x) { if (!seen[x]) { seen[x] = true; out.push(x); } });
+    return out;
   }
 
   function insertPhotoUploader() {
@@ -570,13 +750,16 @@
       payload[field] = v === '' ? null : v;
     });
 
-    // Secondary pillars: collect selected chips.
-    var pillarsBox = document.querySelector('[data-edit-field="secondary_pillars"]');
-    if (pillarsBox) {
-      var selected = pillarsBox.querySelectorAll('.profile-pillar-chip.selected');
-      payload.secondary_pillars = Array.prototype.map.call(selected, function (c) {
-        return c.dataset.pillar;
-      });
+    // Tags: read state from the chip-editor's stash. Capped at 5 by the
+    // editor + a CHECK constraint at the DB layer.
+    var tagsBox = document.querySelector('[data-edit-field="tags"]');
+    if (tagsBox) {
+      try {
+        var parsed = JSON.parse(tagsBox.dataset.tagState || '[]');
+        payload.tags = Array.isArray(parsed) ? parsed.slice(0, MAX_TAGS) : [];
+      } catch (e) {
+        payload.tags = [];
+      }
     }
 
     // Achievements: collect rows that have at least a title.

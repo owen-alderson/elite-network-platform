@@ -873,7 +873,7 @@
 
     var q = supabase
       .from('members')
-      .select('id, full_name, email, headline, primary_pillar, location_city, location_country, status, joined_at, nominated_by, last_seen_at, avatar_url, bio, current_work, linkedin_url, instagram_handle, website_url, achievements')
+      .select('id, full_name, email, headline, primary_pillar, tags, location_city, location_country, status, joined_at, nominated_by, last_seen_at, avatar_url, bio, current_work, linkedin_url, instagram_handle, website_url, achievements')
       .order('joined_at', { ascending: false });
     if (currentMemberFilter !== 'all') q = q.eq('status', currentMemberFilter);
 
@@ -937,6 +937,14 @@
     if (loc) {
       body.appendChild(text('p', 'app-section-label', 'Location'));
       body.appendChild(text('p', 'app-card-line', loc));
+    }
+    if (Array.isArray(m.tags) && m.tags.length) {
+      body.appendChild(text('p', 'app-section-label', 'Tags'));
+      var tagRow = el('div', 'admin-tag-row');
+      m.tags.forEach(function (t) {
+        tagRow.appendChild(text('span', 'admin-tag', t));
+      });
+      body.appendChild(tagRow);
     }
     article.appendChild(body);
 

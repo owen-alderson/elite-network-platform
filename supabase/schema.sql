@@ -124,6 +124,10 @@ create table public.members (
   nominated_by       uuid references public.members(id),
   joined_at          timestamptz not null default now(),
   last_seen_at       timestamptz not null default now(),
+  -- Free-form tags, capped at 5. Supplements the single primary pillar.
+  -- Per Owen's 2026-05-02 model: 1 pillar + 1 city + up to 5 tags.
+  tags               text[] not null default '{}'
+                       check (cardinality(tags) <= 5),
   created_at         timestamptz not null default now(),
   updated_at         timestamptz not null default now()
 );
@@ -131,6 +135,7 @@ create table public.members (
 create index members_primary_pillar_idx on public.members (primary_pillar);
 create index members_status_idx on public.members (status);
 create index members_last_seen_idx on public.members (last_seen_at);
+create index members_tags_idx on public.members using gin (tags);
 
 alter table public.members enable row level security;
 
@@ -195,6 +200,9 @@ create table public.applications (
   -- for applicant submissions; min 100 chars enforced at the form layer.
   applicant_signature_achievement text,
   applicant_achievements   jsonb not null default '[]',
+  -- Free-form tags, capped at 5. Supplements the single primary pillar.
+  applicant_tags           text[] not null default '{}'
+                             check (cardinality(applicant_tags) <= 5),
   applicant_linkedin_url   text,
   applicant_website_url    text,
   applicant_location       text,

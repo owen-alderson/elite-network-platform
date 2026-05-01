@@ -43,7 +43,7 @@
 
     var res = await supabase
       .from('members')
-      .select('id,full_name,headline,bio,primary_pillar,secondary_pillars,location_city,location_country,current_work,avatar_url,joined_at,last_seen_at')
+      .select('id,full_name,headline,bio,primary_pillar,secondary_pillars,tags,location_city,location_country,current_work,avatar_url,joined_at,last_seen_at')
       .eq('status', 'active')
       .order('joined_at', { ascending: false });
 
@@ -130,10 +130,10 @@
 
     var tagWrap = document.createElement('div');
     tagWrap.className = 'card-tags';
-    var tags = [];
-    if (Array.isArray(m.secondary_pillars)) tags = tags.concat(m.secondary_pillars);
-    if (m.location_city) tags.push(m.location_city);
-    tags.slice(0, 3).forEach(function (t) {
+    var displayed = [];
+    if (m.location_city) displayed.push(m.location_city);
+    if (Array.isArray(m.tags)) displayed = displayed.concat(m.tags);
+    displayed.slice(0, 3).forEach(function (t) {
       if (!t) return;
       var span = document.createElement('span');
       span.className = 'tag';
@@ -178,9 +178,7 @@
       m.location_country,
       m.current_work,
       m.primary_pillar ? m.primary_pillar.replace(/_/g, ' ') : '',
-      Array.isArray(m.secondary_pillars)
-        ? m.secondary_pillars.map(function (p) { return p.replace(/_/g, ' '); }).join(' ')
-        : ''
+      Array.isArray(m.tags) ? m.tags.join(' ') : ''
     ];
     return parts.filter(Boolean).join(' ').toLowerCase().indexOf(term) !== -1;
   }

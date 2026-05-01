@@ -154,3 +154,55 @@ textarea.profile-edit-input {
   margin: 0;
   min-height: 14px;
 }
+
+/* ── Tags (read-only display + edit chips) ───────── */
+.profile-tags-section {
+  margin-top: 24px;
+}
+.profile-tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.profile-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--gold);
+  background: rgba(201, 168, 76, 0.06);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 4px 10px;
+}
+.profile-tag-chip.is-readonly { cursor: default; }
+.profile-tag-x {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+}
+.profile-tag-x:hover { color: var(--gold); }
+
+.profile-tag-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.profile-tag-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.profile-tag-input {
+  font-size: 13px;
+}
+.profile-tag-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
