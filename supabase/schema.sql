@@ -190,6 +190,10 @@ create table public.applications (
   applicant_pillar         text,
   applicant_headline       text,
   applicant_credential     text,
+  -- Headlining application question — YC-style "describe something
+  -- impressive you've built or done." Primary selection signal. Required
+  -- for applicant submissions; min 100 chars enforced at the form layer.
+  applicant_signature_achievement text,
   applicant_achievements   jsonb not null default '[]',
   applicant_linkedin_url   text,
   applicant_website_url    text,

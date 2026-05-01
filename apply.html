@@ -175,8 +175,16 @@
         <div class="step-track" data-flow="apply" data-step="4"></div>
         <div class="flow-content">
           <p class="flow-eyebrow">Application · Step 4 of 5</p>
-          <h2 class="flow-heading-sm">Verified achievements</h2>
-          <p class="flow-sub-sm">List your three most significant achievements. Be specific — our team verifies everything. Year, title, and a brief description.</p>
+          <h2 class="flow-heading-sm">The one thing.</h2>
+          <p class="flow-sub-sm">Describe one thing you've built, made, won, or moved. The specific story that, told well, ends an argument about whether you should be on Aether. Be concrete — names, numbers, dates. We read this first.</p>
+
+          <div class="form-group">
+            <textarea class="form-textarea" rows="6" placeholder="e.g. In 2024 I led the carve-out of a $180M industrial coatings business from Henkel — sourced the asset, ran the LBO model, brought in two operating partners from BASF, closed in 9 months despite a failed first lender. Returns 3.8x net to LPs at exit." id="a-signature"></textarea>
+            <p class="form-hint" id="a-signature-counter">Minimum 100 characters. Specific beats sweeping.</p>
+          </div>
+
+          <h3 class="flow-heading-sm" style="margin-top: 36px; font-size: 20px;">Three more, briefly.</h3>
+          <p class="flow-sub-sm">A short list — year, title, brief context. Used to verify and to populate your profile.</p>
 
           <div class="achievement-entry" id="ach-1">
             <div class="ach-num">01</div>
@@ -494,8 +502,53 @@
         if (!selectedPillar) { alert('Please select a pillar.'); return; }
         showScreen('a4');
       }
-      else if (step === 4) { showScreen('a5'); buildReview(); }
+      else if (step === 4) {
+        var sig = document.getElementById('a-signature');
+        var sigVal = sig ? (sig.value || '').trim() : '';
+        if (sigVal.length < 100) {
+          alert('Tell us about one specific accomplishment — at least 100 characters. Names, numbers, dates.');
+          if (sig) sig.focus();
+          return;
+        }
+        var hasAch = false;
+        for (var i = 1; i <= 3; i++) {
+          var entry = document.getElementById('ach-' + i);
+          if (!entry) continue;
+          var titleInput = entry.querySelectorAll('input.form-input')[1];
+          if (titleInput && (titleInput.value || '').trim()) { hasAch = true; break; }
+        }
+        if (!hasAch) {
+          alert('Add at least one supporting achievement (year + title).');
+          return;
+        }
+        showScreen('a5'); buildReview();
+      }
     }
+
+    // Live character counter on the signature-achievement textarea.
+    document.addEventListener('DOMContentLoaded', function () {
+      var ta = document.getElementById('a-signature');
+      var hint = document.getElementById('a-signature-counter');
+      if (!ta || !hint) return;
+      function update() {
+        var n = (ta.value || '').trim().length;
+        if (n === 0) {
+          hint.textContent = 'Minimum 100 characters. Specific beats sweeping.';
+          hint.style.color = '';
+        } else if (n < 100) {
+          hint.textContent = (100 - n) + ' more characters before this passes.';
+          hint.style.color = 'var(--muted)';
+        } else if (n > 4000) {
+          hint.textContent = (n - 4000) + ' over the 4000-character limit.';
+          hint.style.color = '#b34c4c';
+        } else {
+          hint.textContent = 'Strong. ' + n + ' characters.';
+          hint.style.color = 'var(--gold)';
+        }
+      }
+      ta.addEventListener('input', update);
+      update();
+    });
 
     function buildReview() {
       const first  = document.getElementById('a-first')?.value      || '—';
@@ -503,9 +556,14 @@
       const role   = document.getElementById('a-role')?.value       || '—';
       const city   = document.getElementById('a-city')?.value       || '—';
       const cred   = document.getElementById('a-credential')?.value || '—';
+      const sigRaw = (document.getElementById('a-signature')?.value || '').trim();
       const pillar = selectedPillar
         ? selectedPillar.charAt(0).toUpperCase() + selectedPillar.slice(1)
         : '—';
+      const sigPreview = sigRaw.length > 180 ? sigRaw.slice(0, 180) + '…' : (sigRaw || '—');
+      const escape = (s) => s.replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      }[c]));
 
       document.getElementById('review-content').innerHTML = `
         <div class="review-row"><span class="review-key">Name</span><span class="review-val">${first} ${last}</span></div>
@@ -513,6 +571,7 @@
         <div class="review-row"><span class="review-key">Location</span><span class="review-val">${city}</span></div>
         <div class="review-row"><span class="review-key">Pillar</span><span class="review-val">${pillar}</span></div>
         <div class="review-row"><span class="review-key">Credential</span><span class="review-val">${cred}</span></div>
+        <div class="review-row"><span class="review-key">The one thing</span><span class="review-val">${escape(sigPreview)}</span></div>
       `;
     }
 

@@ -235,6 +235,15 @@
 
   function buildAppBody(app) {
     var body = el('div', 'app-card-body');
+
+    // Headlining accomplishment — the primary selection signal. Show first.
+    if (app.applicant_signature_achievement) {
+      body.appendChild(text('p', 'app-section-label', 'The one thing'));
+      var quote = el('p', 'app-endorsement');
+      quote.textContent = app.applicant_signature_achievement;
+      body.appendChild(quote);
+    }
+
     addField(body, 'Headline', app.applicant_headline);
     addField(body, 'Credential', app.applicant_credential);
     addField(body, 'Current focus', app.applicant_current_work);

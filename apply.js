@@ -89,13 +89,28 @@
     var city = val('a-city');
     var country = val('a-country');
     var credential = val('a-credential');
+    var signature = val('a-signature');
     var current = val('a-current');
     var linkedin = val('a-linkedin');
     var pillar = selectedPillarFrom('pillar-select');
+    var achievements = collectAchievements();
 
     if (!first || !last) { alert('Please enter your full name.'); return; }
     if (!email) { alert('Please enter your email address.'); return; }
     if (!pillar) { alert('Please select a pillar.'); return; }
+    if (signature.length < 100) {
+      alert('On step 4, the headlining accomplishment needs at least 100 characters. Be specific — names, numbers, dates.');
+      return;
+    }
+    if (signature.length > 4000) {
+      alert('Trim the headlining accomplishment to 4000 characters or fewer.');
+      return;
+    }
+    var hasAch = achievements.some(function (a) { return a.title; });
+    if (!hasAch) {
+      alert('Add at least one supporting achievement on step 4 (year + title).');
+      return;
+    }
 
     var location = [city, country].filter(Boolean).join(', ');
 
@@ -106,7 +121,8 @@
       applicant_pillar: pillar,
       applicant_headline: role || null,
       applicant_credential: credential || null,
-      applicant_achievements: collectAchievements(),
+      applicant_signature_achievement: signature,
+      applicant_achievements: achievements,
       applicant_linkedin_url: linkedin || null,
       applicant_location: location || null,
       applicant_current_work: current || null
