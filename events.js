@@ -5,11 +5,27 @@
   if (!window.aether || !window.aether.client) return;
   var supabase = window.aether.client;
 
+  var currentWhen = 'upcoming';
+
   (async function init() {
     var session = await window.aether.requireAuth();
     if (!session) return;
+    bindToggle();
     await loadEvents();
   })();
+
+  function bindToggle() {
+    var btns = document.querySelectorAll('.events-toggle-btn');
+    btns.forEach(function (btn) {
+      btn.addEventListener('click', async function () {
+        currentWhen = btn.dataset.when || 'upcoming';
+        btns.forEach(function (b) { b.classList.toggle('is-active', b === btn); });
+        var title = document.getElementById('events-page-title');
+        if (title) title.textContent = currentWhen === 'past' ? 'Past Events' : 'Upcoming Events';
+        await loadEvents();
+      });
+    });
+  }
 
   async function loadEvents() {
     var listEl = document.getElementById('events-list');
@@ -17,12 +33,20 @@
     listEl.innerHTML = '<p class="events-empty">Loading events…</p>';
 
     var nowIso = new Date().toISOString();
-    var res = await supabase
+    var query = supabase
       .from('events')
-      .select('id, title, description, starts_at, ends_at, location_text, capacity, pillar_focus, visibility, status')
-      .eq('status', 'upcoming')
-      .gte('starts_at', nowIso)
-      .order('starts_at', { ascending: true });
+      .select('id, title, description, starts_at, ends_at, location_text, capacity, pillar_focus, visibility, status');
+
+    if (currentWhen === 'past') {
+      query = query.or('status.eq.past,and(status.eq.upcoming,starts_at.lt.' + nowIso + ')')
+        .order('starts_at', { ascending: false });
+    } else {
+      query = query.eq('status', 'upcoming')
+        .gte('starts_at', nowIso)
+        .order('starts_at', { ascending: true });
+    }
+
+    var res = await query;
 
     listEl.innerHTML = '';
     if (res.error) {
@@ -31,7 +55,11 @@
       return;
     }
     if (!res.data || !res.data.length) {
-      listEl.innerHTML = '<p class="events-empty">No upcoming events scheduled yet. Check back soon.</p>';
+      listEl.innerHTML = '<p class="events-empty">' +
+        (currentWhen === 'past'
+          ? 'No past events yet — Aether is just getting started.'
+          : 'No upcoming events scheduled yet. Check back soon.') +
+        '</p>';
       return;
     }
 

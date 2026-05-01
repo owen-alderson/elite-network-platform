@@ -414,13 +414,13 @@
     var res = await supabase
       .from('intro_requests')
       .select(
-        'id, forwarded_at, requester_id, target_id,' +
+        'id, forwarded_at, responded_at, requester_id, target_id,' +
         'requester:members!requester_id(id,full_name,headline,primary_pillar,location_city,avatar_url),' +
         'target:members!target_id(id,full_name,headline,primary_pillar,location_city,avatar_url)'
       )
-      .eq('status', 'forwarded')
+      .eq('status', 'accepted')
       .or('requester_id.eq.' + userId + ',target_id.eq.' + userId)
-      .order('forwarded_at', { ascending: false });
+      .order('responded_at', { ascending: false });
 
     if (res.error) {
       console.error('loadConnections error:', res.error);
@@ -434,7 +434,7 @@
       var other = intro.requester_id === userId ? intro.target : intro.requester;
       if (!other || !other.id || seen[other.id]) return;
       seen[other.id] = true;
-      connections.push({ member: other, forwarded_at: intro.forwarded_at });
+      connections.push({ member: other, forwarded_at: intro.responded_at || intro.forwarded_at });
     });
 
     if (!connections.length) {
