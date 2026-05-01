@@ -83,18 +83,21 @@
 
       await injectNavSession(session);
       injectMobileSignout();
-      injectMessagesLink();
+      await injectMessagesLink(session.user.id);
       await injectAdminLink();
     });
   });
 
-  function injectMessagesLink() {
+  async function injectMessagesLink(userId) {
+    var unreadCount = await fetchUnreadMessageCount(userId);
+
     document.querySelectorAll('.nav-links').forEach(function (group) {
       if (group.querySelector('a[data-messages-link]')) return;
       var a = document.createElement('a');
       a.href = 'messages.html';
       a.dataset.messagesLink = 'true';
       a.textContent = 'Messages';
+      if (unreadCount > 0) a.appendChild(buildNavBadge(unreadCount));
       group.appendChild(a);
     });
     document.querySelectorAll('.mobile-menu').forEach(function (menu) {
@@ -103,10 +106,28 @@
       a.href = 'messages.html';
       a.dataset.messagesLink = 'true';
       a.textContent = 'Messages';
+      if (unreadCount > 0) a.appendChild(buildNavBadge(unreadCount));
       var signout = menu.querySelector('.mobile-signout');
       if (signout) menu.insertBefore(a, signout);
       else menu.appendChild(a);
     });
+  }
+
+  async function fetchUnreadMessageCount(userId) {
+    var res = await window.aether.client
+      .from('messages')
+      .select('id', { count: 'exact', head: true })
+      .neq('sender_id', userId)
+      .is('read_at', null);
+    if (res.error) return 0;
+    return res.count || 0;
+  }
+
+  function buildNavBadge(n) {
+    var b = document.createElement('span');
+    b.className = 'nav-badge';
+    b.textContent = n > 99 ? '99+' : String(n);
+    return b;
   }
 
   async function injectAdminLink() {

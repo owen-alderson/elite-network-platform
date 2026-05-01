@@ -10,6 +10,11 @@
     var session = await window.aether.requireAuth();
     if (!session) return;
     setGreetingDate();
+
+    // The since-banner needs last_seen_at BEFORE we stamp it. So fetch it
+    // first, render the banner from the previous timestamp, then stamp.
+    var lastSeenAt = await fetchLastSeenAt(session.user.id);
+
     await Promise.all([
       loadMyProfile(session.user.id, session.user.email),
       loadSuggestedConnections(session.user.id),
@@ -18,9 +23,29 @@
       loadMyRequests(session.user.id),
       loadConnections(session.user.id),
       loadUpcomingEvents(),
-      loadInbox(session.user.id)
+      loadInbox(session.user.id),
+      loadSinceBanner(session.user.id, lastSeenAt)
     ]);
+
+    // Stamp last_seen_at to "now" so the next visit computes deltas
+    // from this moment forward. Fire-and-forget; no need to block the UI.
+    supabase.from('members')
+      .update({ last_seen_at: new Date().toISOString() })
+      .eq('id', session.user.id)
+      .then(function (res) {
+        if (res.error) console.warn('last_seen_at stamp failed:', res.error);
+      });
   })();
+
+  async function fetchLastSeenAt(userId) {
+    var res = await supabase
+      .from('members')
+      .select('last_seen_at')
+      .eq('id', userId)
+      .maybeSingle();
+    if (res.error || !res.data) return null;
+    return res.data.last_seen_at;
+  }
 
   // ── Profile + greeting ──────────────────────────────────────
   async function loadMyProfile(userId, fallbackEmail) {
@@ -148,6 +173,56 @@
     row.appendChild(btn);
 
     return row;
+  }
+
+  // ── Since you were last here ────────────────────────────────
+  async function loadSinceBanner(userId, lastSeenAt) {
+    var section = document.getElementById('since-section');
+    var statsEl = document.getElementById('since-stats');
+    if (!section || !statsEl) return;
+    if (!lastSeenAt) { section.hidden = true; return; }
+
+    // Fire all the count queries in parallel.
+    var since = lastSeenAt;
+    var counts = await Promise.all([
+      // New unread messages received since last seen
+      supabase.from('messages').select('id', { count: 'exact', head: true })
+        .neq('sender_id', userId).is('read_at', null).gt('created_at', since),
+      // New intro requests where I'm the broker (broker-route, status pending)
+      supabase.from('intro_requests').select('id', { count: 'exact', head: true })
+        .eq('broker_id', userId).eq('status', 'pending').gt('created_at', since),
+      // New direct intro requests received
+      supabase.from('intro_requests').select('id', { count: 'exact', head: true })
+        .eq('target_id', userId).eq('route', 'direct').eq('status', 'pending').gt('created_at', since),
+      // Intros I requested that just got forwarded
+      supabase.from('intro_requests').select('id', { count: 'exact', head: true })
+        .eq('requester_id', userId).eq('status', 'forwarded').gt('forwarded_at', since),
+      // New connections — accepted intros where I'm a party, accepted since last seen
+      supabase.from('intro_requests').select('id', { count: 'exact', head: true })
+        .eq('status', 'accepted').gt('responded_at', since)
+        .or('requester_id.eq.' + userId + ',target_id.eq.' + userId)
+    ]);
+
+    var items = [
+      { label: 'new message',           plural: 'new messages',           count: counts[0].count || 0 },
+      { label: 'broker request',        plural: 'broker requests',        count: counts[1].count || 0 },
+      { label: 'intro request',         plural: 'intro requests',         count: counts[2].count || 0 },
+      { label: 'forwarded intro',       plural: 'forwarded intros',       count: counts[3].count || 0 },
+      { label: 'new connection',        plural: 'new connections',        count: counts[4].count || 0 }
+    ].filter(function (it) { return it.count > 0; });
+
+    if (!items.length) { section.hidden = true; return; }
+
+    section.hidden = false;
+    statsEl.innerHTML = '';
+    items.forEach(function (it) {
+      var pill = document.createElement('span');
+      pill.className = 'dash-since-pill';
+      pill.innerHTML =
+        '<strong>' + it.count + '</strong> ' +
+        (it.count === 1 ? it.label : it.plural);
+      statsEl.appendChild(pill);
+    });
   }
 
   // ── Received intro requests (direct route, I'm the target) ──
@@ -563,11 +638,69 @@
       listEl.appendChild(item);
     });
 
+    // Unread messages — group by sender, prepend each as an inbox item.
+    var msgItems = await buildUnreadMessageItems(userId);
+    msgItems.forEach(function (item) {
+      actionableCount++;
+      listEl.insertBefore(item, listEl.firstChild);
+    });
+
     if (!listEl.children.length) {
       listEl.innerHTML = '<p class="inbox-empty">Nothing new. Intros and updates will appear here.</p>';
     }
 
     if (dot) dot.style.display = actionableCount > 0 ? 'block' : 'none';
+  }
+
+  async function buildUnreadMessageItems(userId) {
+    var res = await supabase
+      .from('messages')
+      .select('id, sender_id, body, created_at, sender:members!sender_id(id,full_name,avatar_url)')
+      .neq('sender_id', userId)
+      .is('read_at', null)
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if (res.error || !res.data || !res.data.length) return [];
+
+    // Group by sender_id, keep newest message per sender.
+    var bySender = {};
+    res.data.forEach(function (m) {
+      var s = bySender[m.sender_id];
+      if (!s) {
+        bySender[m.sender_id] = { sender: m.sender, latest: m, count: 1 };
+      } else {
+        s.count++;
+        // res.data is already DESC by created_at, so first hit is newest.
+      }
+    });
+
+    var items = [];
+    Object.keys(bySender).forEach(function (sid) {
+      var entry = bySender[sid];
+      var item = el('a', 'inbox-item unread');
+      item.href = 'messages.html?with=' + sid;
+      item.dataset.unread = 'true';
+
+      var avatar = el('div', 'inbox-avatar');
+      window.aether.fillAvatar(avatar, entry.sender);
+      item.appendChild(avatar);
+
+      var content = el('div', 'inbox-content');
+      var name = entry.sender ? entry.sender.full_name : 'A connection';
+      var titleText = entry.count === 1
+        ? name + ' sent you a message'
+        : name + ' sent you ' + entry.count + ' messages';
+      content.appendChild(text('p', 'inbox-title', titleText));
+      if (entry.latest && entry.latest.body) {
+        content.appendChild(text('p', 'inbox-body', entry.latest.body));
+      }
+      content.appendChild(text('p', 'inbox-time', relativeTime(entry.latest.created_at)));
+      item.appendChild(content);
+
+      items.push(item);
+    });
+
+    return items;
   }
 
   function buildInboxItem(intro, userId) {

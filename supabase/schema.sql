@@ -123,12 +123,14 @@ create table public.members (
                        check (status in ('active','paused','removed')),
   nominated_by       uuid references public.members(id),
   joined_at          timestamptz not null default now(),
+  last_seen_at       timestamptz not null default now(),
   created_at         timestamptz not null default now(),
   updated_at         timestamptz not null default now()
 );
 
 create index members_primary_pillar_idx on public.members (primary_pillar);
 create index members_status_idx on public.members (status);
+create index members_last_seen_idx on public.members (last_seen_at);
 
 alter table public.members enable row level security;
 
