@@ -454,28 +454,16 @@ as $$
   select exists (select 1 from a_conns intersect select 1 from b_conns);
 $$;
 
--- Routing decision: broker vs direct, before insert.
-create or replace function public.intro_requests_set_route()
-returns trigger
-language plpgsql
-set search_path = ''
-as $$
-begin
-  if public.has_mutual_connection(new.requester_id, new.target_id) then
-    new.route := 'broker';
-  else
-    new.route := 'direct';
-  end if;
-  return new;
-end;
-$$;
-
-create trigger intro_requests_set_route
-before insert on public.intro_requests
-for each row execute function public.intro_requests_set_route();
-
--- Direct-route rate limit: 5 pending direct requests per requester.
-create or replace function public.intro_requests_check_direct_limit()
+-- Combined routing + rate-limit trigger.
+--
+-- These two operations were previously split across two BEFORE INSERT
+-- triggers (set_route + check_direct_limit). Postgres fires BEFORE
+-- triggers in alphabetical order, which put check_direct_limit BEFORE
+-- set_route, so the limit check read the column default ('broker') for
+-- new.route and never fired the direct-only branch. The 5-pending cap
+-- was bypassable. Combining them into one function guarantees the
+-- right order in one body.
+create or replace function public.intro_requests_route_and_limit()
 returns trigger
 language plpgsql
 set search_path = ''
@@ -483,6 +471,14 @@ as $$
 declare
   pending_count int;
 begin
+  -- 1. Decide route based on whether requester + target share a mutual.
+  if public.has_mutual_connection(new.requester_id, new.target_id) then
+    new.route := 'broker';
+  else
+    new.route := 'direct';
+  end if;
+
+  -- 2. Now that route is set, enforce the 5-pending-direct cap.
   if new.route = 'direct' and new.status = 'pending' then
     select count(*) into pending_count
     from public.intro_requests
@@ -494,13 +490,14 @@ begin
         using errcode = 'check_violation';
     end if;
   end if;
+
   return new;
 end;
 $$;
 
-create trigger intro_requests_check_direct_limit
+create trigger intro_requests_route_and_limit
 before insert on public.intro_requests
-for each row execute function public.intro_requests_check_direct_limit();
+for each row execute function public.intro_requests_route_and_limit();
 
 -- Notification triggers: fire send-intro-notification edge function on
 -- the four state transitions worth emailing about.
@@ -805,9 +802,12 @@ values ('avatars', 'avatars', true, 5242880,
         array['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif'])
 on conflict (id) do nothing;
 
-create policy "avatars_public_read" on storage.objects
-  for select to anon, authenticated
-  using (bucket_id = 'avatars');
+-- No SELECT policy on avatars. Public buckets serve files via
+-- /storage/v1/object/public/<bucket>/<path>, which bypasses RLS. A
+-- broad SELECT policy here would let clients enumerate every uploaded
+-- avatar via storage.from('avatars').list() — we don't need that
+-- listing surface, so we omit the policy entirely. <img src> rendering
+-- is unaffected.
 
 create policy "avatars_owner_write" on storage.objects
   for insert to authenticated
@@ -829,6 +829,27 @@ create policy "avatars_owner_delete" on storage.objects
     bucket_id = 'avatars'
     and (storage.foldername(name))[1] = auth.uid()::text
   );
+
+------------------------------------------------------------------------
+-- Trigger function lockdown
+--
+-- The trigger functions below are SECURITY DEFINER so they can do
+-- privileged operations regardless of who fired the trigger:
+--   • applications_send_confirmation / send_status_change → call net.http_post
+--     (anon doesn't have EXECUTE on net.http_post)
+--   • intro_requests_notify / notify_insert → same, via pg_net
+--   • intro_requests_open_conversation → INSERT into conversations
+--     bypassing the are_connected RLS gate at the moment a target accepts
+--
+-- They're called only by triggers internally, never as RPCs. Revoke
+-- EXECUTE from PUBLIC so anon + authenticated can't call them through
+-- /rest/v1/rpc/<fn>. Postgres triggers bypass EXECUTE grants.
+------------------------------------------------------------------------
+revoke execute on function public.applications_send_confirmation()        from public;
+revoke execute on function public.applications_send_status_change()       from public;
+revoke execute on function public.intro_requests_notify()                 from public;
+revoke execute on function public.intro_requests_notify_insert()          from public;
+revoke execute on function public.intro_requests_open_conversation()      from public;
 
 ------------------------------------------------------------------------
 -- pg_cron jobs
