@@ -131,19 +131,43 @@
       excludeIds[r.target_id] = true;
     });
 
+    // Need our own primary_pillar so we can weight suggestions toward
+    // *different* pillars — Aether's whole thesis is cross-pillar mixing,
+    // not "people in your industry." Joined-date order is the tiebreaker.
+    var meRes = await supabase
+      .from('members')
+      .select('primary_pillar')
+      .eq('id', currentUserId)
+      .maybeSingle();
+    var myPillar = (meRes.data && meRes.data.primary_pillar) || null;
+
     var res = await supabase
       .from('members')
       .select('id,full_name,headline,primary_pillar,location_city,avatar_url')
       .eq('status', 'active')
       .order('joined_at', { ascending: false })
-      .limit(20);
+      .limit(40);
 
     listEl.innerHTML = '';
     if (res.error) {
       listEl.innerHTML = '<p style="color:var(--muted);font-size:13px;">Could not load suggestions.</p>';
       return;
     }
-    var rows = (res.data || []).filter(function (m) { return !excludeIds[m.id]; }).slice(0, 4);
+    var pool = (res.data || []).filter(function (m) { return !excludeIds[m.id]; });
+
+    // Partition into different-pillar (preferred) + same-pillar (fallback).
+    // Within each bucket, joined_at DESC order from the upstream query is
+    // preserved.
+    var different = [];
+    var same = [];
+    pool.forEach(function (m) {
+      if (myPillar && m.primary_pillar === myPillar) same.push(m);
+      else different.push(m);
+    });
+    var rows = different.slice(0, 3).concat(same.slice(0, 1));
+    if (rows.length < 4) rows = rows.concat(different.slice(3, 4 - rows.length + 3));
+    rows = rows.slice(0, 4);
+
     if (!rows.length) {
       listEl.innerHTML = '<p style="color:var(--muted);font-size:13px;">No new members to suggest right now. Browse the directory directly.</p>';
       return;
