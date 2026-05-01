@@ -15,6 +15,12 @@
     'linkedin_url'
   ];
 
+  // Pillar list mirrors the directory + apply form. Owen is the source of truth.
+  var ALL_PILLARS = [
+    'finance', 'real_estate', 'technology', 'media',
+    'hospitality', 'arts', 'sport', 'medicine', 'law'
+  ];
+
   // Single source of truth for the loaded member record.
   var current = null;
   var isOwn = false;
@@ -147,6 +153,111 @@
     insertEditRow('headline', 'Headline', current.headline || '', 'input');
     insertEditRow('current_work', 'Currently working on', current.current_work || '', 'textarea');
     insertEditRow('linkedin_url', 'LinkedIn URL', current.linkedin_url || '', 'input');
+
+    insertSecondaryPillarsEditor(current.secondary_pillars || []);
+    insertAchievementsEditor(current.achievements || []);
+  }
+
+  function insertSecondaryPillarsEditor(selected) {
+    var anchorRow = document.querySelectorAll('.profile-edit-row');
+    var anchor = anchorRow[anchorRow.length - 1];
+    if (!anchor) return;
+
+    var row = document.createElement('div');
+    row.className = 'profile-edit-row';
+
+    var label = document.createElement('p');
+    label.className = 'profile-edit-label';
+    label.textContent = 'Secondary pillars';
+    row.appendChild(label);
+
+    var hint = document.createElement('p');
+    hint.style.cssText = 'font-size:11px;color:var(--muted);margin:0 0 8px;';
+    hint.textContent = 'Pick the other fields you operate in. Your primary (' + (current.primary_pillar ? capitalize(current.primary_pillar) : '—') + ') is excluded.';
+    row.appendChild(hint);
+
+    var chips = document.createElement('div');
+    chips.className = 'profile-pillar-chips';
+    chips.dataset.editField = 'secondary_pillars';
+    ALL_PILLARS.forEach(function (p) {
+      if (p === current.primary_pillar) return;
+      var chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'profile-pillar-chip' + (selected.indexOf(p) !== -1 ? ' selected' : '');
+      chip.dataset.pillar = p;
+      chip.textContent = capitalize(p);
+      chip.addEventListener('click', function () { chip.classList.toggle('selected'); });
+      chips.appendChild(chip);
+    });
+    row.appendChild(chips);
+
+    anchor.parentNode.insertBefore(row, anchor.nextSibling);
+  }
+
+  function insertAchievementsEditor(items) {
+    var rows = document.querySelectorAll('.profile-edit-row');
+    var anchor = rows[rows.length - 1];
+    if (!anchor) return;
+
+    var row = document.createElement('div');
+    row.className = 'profile-edit-row';
+
+    var label = document.createElement('p');
+    label.className = 'profile-edit-label';
+    label.textContent = 'Achievements';
+    row.appendChild(label);
+
+    var list = document.createElement('div');
+    list.className = 'profile-ach-list';
+    list.dataset.editField = 'achievements';
+    row.appendChild(list);
+
+    function addAchRow(a) {
+      var achRow = document.createElement('div');
+      achRow.className = 'profile-ach-row';
+
+      var year = document.createElement('input');
+      year.type = 'text';
+      year.className = 'profile-edit-input profile-ach-year';
+      year.placeholder = 'Year';
+      year.value = (a && a.year) ? String(a.year) : '';
+
+      var title = document.createElement('input');
+      title.type = 'text';
+      title.className = 'profile-edit-input profile-ach-title';
+      title.placeholder = 'Achievement (e.g. 2× Olympic Gold)';
+      title.value = (a && a.title) ? a.title : '';
+
+      var details = document.createElement('input');
+      details.type = 'text';
+      details.className = 'profile-edit-input profile-ach-details';
+      details.placeholder = 'Details (optional)';
+      details.value = (a && a.details) ? a.details : '';
+
+      var rm = document.createElement('button');
+      rm.type = 'button';
+      rm.className = 'profile-ach-remove';
+      rm.title = 'Remove';
+      rm.textContent = '✕';
+      rm.addEventListener('click', function () { achRow.remove(); });
+
+      achRow.appendChild(year);
+      achRow.appendChild(title);
+      achRow.appendChild(details);
+      achRow.appendChild(rm);
+      list.appendChild(achRow);
+    }
+
+    (items || []).forEach(addAchRow);
+
+    var addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'btn-ghost btn-sm profile-ach-add';
+    addBtn.textContent = '+ Add achievement';
+    addBtn.addEventListener('click', function () { addAchRow(null); });
+    row.appendChild(addBtn);
+
+    anchor.parentNode.insertBefore(row, anchor.nextSibling);
   }
 
   function exitEditMode() {
@@ -165,6 +276,28 @@
       var v = (input.value || '').trim();
       payload[field] = v === '' ? null : v;
     });
+
+    // Secondary pillars: collect selected chips.
+    var pillarsBox = document.querySelector('[data-edit-field="secondary_pillars"]');
+    if (pillarsBox) {
+      var selected = pillarsBox.querySelectorAll('.profile-pillar-chip.selected');
+      payload.secondary_pillars = Array.prototype.map.call(selected, function (c) {
+        return c.dataset.pillar;
+      });
+    }
+
+    // Achievements: collect rows that have at least a title.
+    var achList = document.querySelector('[data-edit-field="achievements"]');
+    if (achList) {
+      var rows = achList.querySelectorAll('.profile-ach-row');
+      payload.achievements = Array.prototype.map.call(rows, function (r) {
+        return {
+          year: (r.querySelector('.profile-ach-year').value || '').trim(),
+          title: (r.querySelector('.profile-ach-title').value || '').trim(),
+          details: (r.querySelector('.profile-ach-details').value || '').trim()
+        };
+      }).filter(function (a) { return a.title; });
+    }
 
     var res = await supabase
       .from('members')

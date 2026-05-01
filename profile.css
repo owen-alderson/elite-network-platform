@@ -57,3 +57,83 @@ textarea.profile-edit-input {
   color: var(--gold);
   margin: 0 0 6px;
 }
+
+/* ── Secondary-pillar chip selector (edit mode) ───────────── */
+.profile-pillar-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.profile-pillar-chip {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.profile-pillar-chip:hover { color: var(--white); border-color: var(--border); }
+
+.profile-pillar-chip.selected {
+  color: var(--gold);
+  border-color: var(--gold-dim);
+  background: rgba(180, 142, 71, 0.06);
+}
+
+/* ── Achievements editor ──────────────────────────────────── */
+.profile-ach-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.profile-ach-row {
+  display: grid;
+  grid-template-columns: 70px 1fr 1fr 28px;
+  gap: 8px;
+  align-items: center;
+}
+
+.profile-ach-year { padding: 8px 10px; font-size: 12px; }
+.profile-ach-title,
+.profile-ach-details { padding: 8px 10px; font-size: 13px; }
+
+.profile-ach-remove {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.profile-ach-remove:hover { color: #d97a7a; border-color: #d97a7a; }
+
+.profile-ach-add {
+  margin-top: 8px;
+  width: auto;
+}
+
+@media (max-width: 600px) {
+  .profile-ach-row {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "year remove"
+      "title title"
+      "details details";
+    gap: 6px;
+  }
+  .profile-ach-year    { grid-area: year; }
+  .profile-ach-remove  { grid-area: remove; justify-self: end; }
+  .profile-ach-title   { grid-area: title; }
+  .profile-ach-details { grid-area: details; }
+}

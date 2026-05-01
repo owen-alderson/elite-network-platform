@@ -39,6 +39,7 @@
       <button class="admin-view-btn is-active" data-view="applications">Applications</button>
       <button class="admin-view-btn" data-view="intros">Intros</button>
       <button class="admin-view-btn" data-view="events">Events</button>
+      <button class="admin-view-btn" data-view="members">Members</button>
     </div>
 
     <!-- ================== Applications view ================== -->
@@ -143,6 +144,33 @@
       </section>
 
       <section id="admin-event-list" class="admin-list" aria-live="polite" style="margin-top: 32px;">
+        <p class="admin-loading">Loading…</p>
+      </section>
+    </section>
+
+    <!-- ================== Members view ================== -->
+    <section class="admin-view-section" data-view="members" hidden>
+      <header class="admin-header">
+        <p class="admin-eyebrow">DIRECTORY</p>
+        <h1 class="admin-title">Members</h1>
+        <p class="admin-subtitle">Everyone in the network. Toggle a status if you need to pause or remove someone.</p>
+
+        <div class="admin-stats">
+          <div class="admin-stat"><strong id="member-stat-active">—</strong><span>Active</span></div>
+          <div class="admin-stat"><strong id="member-stat-paused">—</strong><span>Paused</span></div>
+          <div class="admin-stat"><strong id="member-stat-removed">—</strong><span>Removed</span></div>
+          <div class="admin-stat"><strong id="member-stat-total">—</strong><span>Total</span></div>
+        </div>
+
+        <div class="admin-tabs" id="admin-member-tabs">
+          <button class="admin-tab is-active" data-member-filter="active">Active</button>
+          <button class="admin-tab" data-member-filter="paused">Paused</button>
+          <button class="admin-tab" data-member-filter="removed">Removed</button>
+          <button class="admin-tab" data-member-filter="all">All</button>
+        </div>
+      </header>
+
+      <section id="admin-member-list" class="admin-list" aria-live="polite">
         <p class="admin-loading">Loading…</p>
       </section>
     </section>

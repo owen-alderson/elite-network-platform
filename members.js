@@ -7,8 +7,10 @@
 
   var gridEl = document.getElementById('members-grid');
   var toolbarEl = document.querySelector('.filter-list');
+  var searchEl = document.getElementById('members-search');
   var allMembers = [];
   var activeFilter = 'all';
+  var searchTerm = '';
 
   (async function init() {
     var session = await window.aether.requireAuth();
@@ -21,6 +23,13 @@
         toolbarEl.querySelectorAll('.filter-btn').forEach(function (b) { b.classList.remove('active'); });
         btn.classList.add('active');
         activeFilter = btn.dataset.pillar || 'all';
+        render();
+      });
+    }
+
+    if (searchEl) {
+      searchEl.addEventListener('input', function (e) {
+        searchTerm = (e.target.value || '').trim().toLowerCase();
         render();
       });
     }
@@ -52,16 +61,23 @@
     if (!gridEl) return;
     gridEl.innerHTML = '';
 
-    var filtered = activeFilter === 'all'
-      ? allMembers
-      : allMembers.filter(function (m) { return (m.primary_pillar || '').toLowerCase() === activeFilter; });
+    var filtered = allMembers.filter(function (m) {
+      var pillarMatch = activeFilter === 'all' ||
+        (m.primary_pillar || '').toLowerCase() === activeFilter;
+      if (!pillarMatch) return false;
+      if (!searchTerm) return true;
+      return (m.full_name || '').toLowerCase().indexOf(searchTerm) !== -1 ||
+             (m.headline || '').toLowerCase().indexOf(searchTerm) !== -1;
+    });
 
     if (!filtered.length) {
       var empty = document.createElement('p');
       empty.style.cssText = 'color:var(--muted);grid-column:1/-1;text-align:center;padding:40px 0;';
-      empty.textContent = activeFilter === 'all'
-        ? 'No members yet.'
-        : 'No members in ' + activeFilter + ' yet.';
+      empty.textContent = searchTerm
+        ? 'No members match “' + searchTerm + '”.'
+        : (activeFilter === 'all'
+            ? 'No members yet.'
+            : 'No members in ' + activeFilter + ' yet.');
       gridEl.appendChild(empty);
       return;
     }

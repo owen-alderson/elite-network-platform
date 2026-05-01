@@ -11,12 +11,15 @@
   // ── State ───────────────────────────────────────────────────
   var currentAppFilter = 'pending';
   var currentIntroFilter = 'awaiting';
+  var currentMemberFilter = 'active';
   var activeMembers = [];   // cached for the broker picker
+  var editingEventId = null;  // null = creating, uuid = updating
 
   // ── DOM refs ────────────────────────────────────────────────
   var appListEl, appTabsEl, appStatEls;
   var introListEl, introTabsEl, introStatEls;
   var eventListEl, eventCreateBtn;
+  var memberListEl, memberTabsEl, memberStatEls;
 
   // ── Boot ────────────────────────────────────────────────────
   (async function init() {
@@ -44,10 +47,20 @@
     eventListEl = document.getElementById('admin-event-list');
     eventCreateBtn = document.getElementById('evt-create-btn');
 
+    memberListEl = document.getElementById('admin-member-list');
+    memberTabsEl = document.getElementById('admin-member-tabs');
+    memberStatEls = {
+      active: document.getElementById('member-stat-active'),
+      paused: document.getElementById('member-stat-paused'),
+      removed: document.getElementById('member-stat-removed'),
+      total: document.getElementById('member-stat-total')
+    };
+
     bindViewSwitcher();
     bindAppTabs();
     bindIntroTabs();
-    if (eventCreateBtn) eventCreateBtn.addEventListener('click', createEvent);
+    bindMemberTabs();
+    if (eventCreateBtn) eventCreateBtn.addEventListener('click', saveEvent);
 
     await Promise.all([
       refreshApps(),
@@ -67,6 +80,7 @@
         if (view === 'intros') refreshIntros();
         if (view === 'applications') refreshApps();
         if (view === 'events') refreshEvents();
+        if (view === 'members') refreshMembers();
       });
     });
   }
@@ -92,6 +106,19 @@
         b.classList.toggle('is-active', b === btn);
       });
       renderIntros();
+    });
+  }
+
+  function bindMemberTabs() {
+    if (!memberTabsEl) return;
+    memberTabsEl.addEventListener('click', function (e) {
+      var btn = e.target.closest('.admin-tab');
+      if (!btn) return;
+      currentMemberFilter = btn.dataset.memberFilter;
+      memberTabsEl.querySelectorAll('.admin-tab').forEach(function (b) {
+        b.classList.toggle('is-active', b === btn);
+      });
+      renderMembers();
     });
   }
 
@@ -567,6 +594,13 @@
 
     var foot = el('footer', 'app-card-actions');
     var btnRow = el('div', 'app-action-buttons');
+
+    var editBtn = document.createElement('button');
+    editBtn.className = 'btn-ghost btn-sm';
+    editBtn.textContent = 'Edit';
+    editBtn.addEventListener('click', function () { editEvent(ev); });
+    btnRow.appendChild(editBtn);
+
     var deleteBtn = document.createElement('button');
     deleteBtn.className = 'btn-ghost btn-sm app-btn-reject';
     deleteBtn.textContent = 'Delete';
@@ -582,6 +616,7 @@
         deleteBtn.textContent = prev;
         return;
       }
+      if (editingEventId === ev.id) cancelEventEdit();
       await refreshEvents();
     });
     btnRow.appendChild(deleteBtn);
@@ -591,7 +626,59 @@
     return article;
   }
 
-  async function createEvent() {
+  function editEvent(ev) {
+    editingEventId = ev.id;
+    document.getElementById('evt-title').value = ev.title || '';
+    document.getElementById('evt-starts').value = toDatetimeLocal(ev.starts_at);
+    document.getElementById('evt-ends').value = ev.ends_at ? toDatetimeLocal(ev.ends_at) : '';
+    document.getElementById('evt-location').value = ev.location_text || '';
+    document.getElementById('evt-capacity').value = ev.capacity != null ? String(ev.capacity) : '';
+    document.getElementById('evt-description').value = ev.description || '';
+
+    if (eventCreateBtn) eventCreateBtn.textContent = 'Update event';
+    var formHeading = document.querySelector('.admin-event-form .admin-form-heading');
+    if (formHeading) formHeading.textContent = 'Edit event';
+    ensureCancelEditBtn();
+
+    var form = document.querySelector('.admin-event-form');
+    if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function cancelEventEdit() {
+    editingEventId = null;
+    ['evt-title', 'evt-starts', 'evt-ends', 'evt-location', 'evt-capacity', 'evt-description'].forEach(function (id) {
+      var node = document.getElementById(id);
+      if (node) node.value = '';
+    });
+    if (eventCreateBtn) eventCreateBtn.textContent = 'Create event';
+    var formHeading = document.querySelector('.admin-event-form .admin-form-heading');
+    if (formHeading) formHeading.textContent = 'Create event';
+    var cancelBtn = document.getElementById('evt-cancel-edit-btn');
+    if (cancelBtn) cancelBtn.remove();
+  }
+
+  function ensureCancelEditBtn() {
+    if (document.getElementById('evt-cancel-edit-btn')) return;
+    var actions = document.querySelector('.admin-event-form .form-actions');
+    if (!actions) return;
+    var btn = document.createElement('button');
+    btn.id = 'evt-cancel-edit-btn';
+    btn.className = 'btn-ghost btn-sm';
+    btn.textContent = 'Cancel edit';
+    btn.addEventListener('click', cancelEventEdit);
+    actions.insertBefore(btn, actions.firstChild);
+  }
+
+  function toDatetimeLocal(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    if (isNaN(d)) return '';
+    var pad = function (n) { return String(n).padStart(2, '0'); };
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
+      'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
+  async function saveEvent() {
     var title = (document.getElementById('evt-title').value || '').trim();
     var startsLocal = (document.getElementById('evt-starts').value || '').trim();
     var endsLocal = (document.getElementById('evt-ends').value || '').trim();
@@ -617,29 +704,31 @@
       starts_at: new Date(startsLocal).toISOString(),
       ends_at: endsLocal ? new Date(endsLocal).toISOString() : null,
       location_text: location || null,
-      capacity: capacity,
-      created_by: session.user.id
+      capacity: capacity
     };
 
     eventCreateBtn.disabled = true;
     var prev = eventCreateBtn.textContent;
-    eventCreateBtn.textContent = 'Creating…';
+    eventCreateBtn.textContent = editingEventId ? 'Updating…' : 'Creating…';
 
-    var res = await supabase.from('events').insert(payload);
+    var res;
+    if (editingEventId) {
+      res = await supabase.from('events').update(payload).eq('id', editingEventId);
+    } else {
+      payload.created_by = session.user.id;
+      res = await supabase.from('events').insert(payload);
+    }
+
     eventCreateBtn.disabled = false;
     eventCreateBtn.textContent = prev;
 
     if (res.error) {
-      console.error('Event create failed:', res.error);
-      alert('Could not create event: ' + (res.error.message || 'unknown error'));
+      console.error('Event save failed:', res.error);
+      alert('Could not save event: ' + (res.error.message || 'unknown error'));
       return;
     }
 
-    // Clear form + refresh list.
-    ['evt-title', 'evt-starts', 'evt-ends', 'evt-location', 'evt-capacity', 'evt-description'].forEach(function (id) {
-      var node = document.getElementById(id);
-      if (node) node.value = '';
-    });
+    cancelEventEdit();
     await refreshEvents();
   }
 
@@ -651,6 +740,123 @@
       weekday: 'short', month: 'short', day: 'numeric',
       hour: '2-digit', minute: '2-digit'
     });
+  }
+
+  // ── Members admin ───────────────────────────────────────────
+  async function refreshMembers() {
+    await Promise.all([loadMemberStats(), renderMembers()]);
+  }
+
+  async function loadMemberStats() {
+    var statuses = ['active', 'paused', 'removed'];
+    await Promise.all(statuses.map(async function (s) {
+      var res = await supabase
+        .from('members')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', s);
+      var elNode = memberStatEls[s];
+      if (elNode) elNode.textContent = res.error ? '?' : (res.count != null ? res.count : '0');
+    }));
+    var total = await supabase.from('members').select('id', { count: 'exact', head: true });
+    if (memberStatEls.total) memberStatEls.total.textContent = total.error ? '?' : (total.count != null ? total.count : '0');
+  }
+
+  async function renderMembers() {
+    if (!memberListEl) return;
+    memberListEl.innerHTML = '<p class="admin-loading">Loading…</p>';
+
+    var q = supabase
+      .from('members')
+      .select('id, full_name, email, headline, primary_pillar, location_city, location_country, status, joined_at, nominated_by')
+      .order('joined_at', { ascending: false });
+    if (currentMemberFilter !== 'all') q = q.eq('status', currentMemberFilter);
+
+    var res = await q;
+    memberListEl.innerHTML = '';
+
+    if (res.error) {
+      memberListEl.appendChild(emptyMsg('Could not load members: ' + res.error.message));
+      return;
+    }
+    if (!res.data || !res.data.length) {
+      memberListEl.appendChild(emptyMsg('No members in this view.'));
+      return;
+    }
+    res.data.forEach(function (m) { memberListEl.appendChild(buildMemberCard(m)); });
+  }
+
+  function buildMemberCard(m) {
+    var article = el('article', 'app-card');
+    article.dataset.id = m.id;
+
+    var head = el('header', 'app-card-head');
+    var left = el('div', 'app-card-head-left');
+    left.appendChild(text('p', 'app-card-eyebrow',
+      'MEMBER' + (m.primary_pillar ? ' · ' + m.primary_pillar.toUpperCase().replace('_', ' ') : '')
+    ));
+    var nameLink = document.createElement('a');
+    nameLink.href = 'profile.html?id=' + encodeURIComponent(m.id);
+    nameLink.style.color = 'inherit';
+    nameLink.style.textDecoration = 'none';
+    nameLink.textContent = m.full_name || '—';
+    var nameWrap = el('h2', 'app-card-name');
+    nameWrap.appendChild(nameLink);
+    left.appendChild(nameWrap);
+    if (m.email) left.appendChild(text('p', 'app-card-email', m.email));
+    head.appendChild(left);
+
+    var right = el('div', 'app-card-meta');
+    right.appendChild(text('span', 'app-status member-status-' + m.status, (m.status || '').toUpperCase()));
+    right.appendChild(text('p', 'app-card-date', m.joined_at ? 'Joined ' + new Date(m.joined_at).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : ''));
+    head.appendChild(right);
+    article.appendChild(head);
+
+    var body = el('div', 'app-card-body');
+    if (m.headline) body.appendChild(text('p', 'app-card-line', m.headline));
+    var loc = [m.location_city, m.location_country].filter(Boolean).join(', ');
+    if (loc) {
+      body.appendChild(text('p', 'app-section-label', 'Location'));
+      body.appendChild(text('p', 'app-card-line', loc));
+    }
+    article.appendChild(body);
+
+    var foot = el('footer', 'app-card-actions');
+    var btnRow = el('div', 'app-action-buttons');
+
+    if (m.status === 'active') {
+      btnRow.appendChild(memberStatusBtn('Pause', 'paused', 'btn-ghost btn-sm', m.id));
+      btnRow.appendChild(memberStatusBtn('Remove', 'removed', 'btn-ghost btn-sm app-btn-reject', m.id, 'Remove this member? They\'ll be hidden from the directory; their data stays in the DB.'));
+    } else if (m.status === 'paused') {
+      btnRow.appendChild(memberStatusBtn('Reactivate', 'active', 'btn-primary btn-sm', m.id));
+      btnRow.appendChild(memberStatusBtn('Remove', 'removed', 'btn-ghost btn-sm app-btn-reject', m.id, 'Remove this member?'));
+    } else if (m.status === 'removed') {
+      btnRow.appendChild(memberStatusBtn('Reactivate', 'active', 'btn-primary btn-sm', m.id));
+    }
+    foot.appendChild(btnRow);
+    article.appendChild(foot);
+
+    return article;
+  }
+
+  function memberStatusBtn(label, newStatus, classes, memberId, confirmMsg) {
+    var btn = document.createElement('button');
+    btn.className = classes;
+    btn.textContent = label;
+    btn.addEventListener('click', async function () {
+      if (confirmMsg && !confirm(confirmMsg)) return;
+      btn.disabled = true;
+      var prev = btn.textContent;
+      btn.textContent = 'Saving…';
+      var res = await supabase.from('members').update({ status: newStatus }).eq('id', memberId);
+      if (res.error) {
+        alert('Could not update: ' + (res.error.message || 'unknown error'));
+        btn.disabled = false;
+        btn.textContent = prev;
+        return;
+      }
+      await refreshMembers();
+    });
+    return btn;
   }
 
   // ── Tiny DOM helpers ────────────────────────────────────────

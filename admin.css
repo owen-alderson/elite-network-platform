@@ -443,3 +443,7 @@
   .admin-event-form { padding: 20px; }
   .admin-event-form .form-row { flex-direction: column; gap: 0; }
 }
+
+.member-status-active   { color: #6fbf73; border-color: #6fbf73; }
+.member-status-paused   { color: #d9b87a; border-color: #d9b87a; }
+.member-status-removed  { color: var(--muted); border-color: var(--border); }
