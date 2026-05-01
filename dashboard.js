@@ -24,7 +24,8 @@
       loadConnections(session.user.id),
       loadUpcomingEvents(),
       loadInbox(session.user.id),
-      loadSinceBanner(session.user.id, lastSeenAt)
+      loadSinceBanner(session.user.id, lastSeenAt),
+      loadOnboardPrompt(session.user.id)
     ]);
 
     // Stamp last_seen_at to "now" so the next visit computes deltas
@@ -184,6 +185,51 @@
     row.appendChild(btn);
 
     return row;
+  }
+
+  // ── Finish your profile prompt ─────────────────────────────
+  async function loadOnboardPrompt(userId) {
+    var section = document.getElementById('onboard-section');
+    if (!section) return;
+
+    var res = await supabase.from('members')
+      .select('avatar_url,bio,headline,location_city,location_country,current_work,linkedin_url,instagram_handle,website_url,achievements')
+      .eq('id', userId)
+      .maybeSingle();
+    if (res.error || !res.data) { section.hidden = true; return; }
+
+    var checks = window.aether.profileChecks(res.data);
+    if (checks.score >= checks.total) { section.hidden = true; return; }
+
+    var labelMap = {
+      0: 'photo', 1: 'short bio', 2: 'headline', 3: 'location',
+      4: 'what you\'re working on', 5: 'a link', 6: 'achievements'
+    };
+    var checksOrdered = [
+      !!res.data.avatar_url,
+      !!(res.data.bio && String(res.data.bio).trim()),
+      !!(res.data.headline && String(res.data.headline).trim()),
+      !!(res.data.location_city || res.data.location_country),
+      !!(res.data.current_work && String(res.data.current_work).trim()),
+      !!(res.data.linkedin_url || res.data.instagram_handle || res.data.website_url),
+      Array.isArray(res.data.achievements) && res.data.achievements.length > 0
+    ];
+    var missing = [];
+    checksOrdered.forEach(function (met, i) { if (!met) missing.push(labelMap[i]); });
+
+    document.getElementById('onboard-score').textContent = checks.score + ' / ' + checks.total;
+    var bodyEl = document.getElementById('onboard-missing');
+    var ready = checks.ready;
+    var lead = ready
+      ? 'You can request intros now. A few more sections sharpen the picture.'
+      : 'Add a few more sections so other members can find you — and so you can request intros.';
+    bodyEl.textContent = lead + ' Missing: ' + missing.slice(0, 3).join(', ') +
+      (missing.length > 3 ? ' and ' + (missing.length - 3) + ' more' : '') + '.';
+
+    var fill = document.getElementById('onboard-fill');
+    if (fill) fill.style.width = Math.round((checks.score / checks.total) * 100) + '%';
+
+    section.hidden = false;
   }
 
   // ── Since you were last here ────────────────────────────────

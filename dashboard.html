@@ -109,6 +109,17 @@
         </div>
       </div>
 
+      <!-- "Finish your profile" — only when score < threshold -->
+      <section class="dash-onboard" id="onboard-section" hidden>
+        <div class="dash-onboard-head">
+          <p class="dash-onboard-eyebrow">Finish setting up</p>
+          <span class="dash-onboard-score" id="onboard-score">—</span>
+        </div>
+        <p class="dash-onboard-body" id="onboard-missing">—</p>
+        <div class="dash-onboard-bar"><div class="dash-onboard-fill" id="onboard-fill"></div></div>
+        <a href="profile.html?edit=1" class="btn-primary btn-sm dash-onboard-cta">Complete profile →</a>
+      </section>
+
       <!-- "Since you were last here" — what's new since member.last_seen_at -->
       <section class="dash-since" id="since-section" hidden>
         <p class="dash-since-eyebrow">Since you were last here</p>

@@ -261,6 +261,53 @@
 }
 .dash-right-col { display: flex; flex-direction: column; }
 
+/* ── Finish your profile (onboarding) ──────────────────────── */
+.dash-onboard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--gold);
+  border-radius: 3px;
+  padding: 18px 24px;
+}
+.dash-onboard-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.dash-onboard-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.dash-onboard-score {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  color: var(--white);
+}
+.dash-onboard-body {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+.dash-onboard-bar {
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.dash-onboard-fill {
+  height: 100%;
+  background: var(--gold);
+  transition: width 0.4s ease;
+}
+.dash-onboard-cta {
+  display: inline-block;
+}
+
 /* ── Since you were last here ─────────────────────────────── */
 .dash-since {
   background: var(--surface);

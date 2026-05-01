@@ -40,6 +40,12 @@
 
     await load(targetId, session.user.email);
     await bindActions();
+
+    // ?edit=1 on own profile drops the user straight into edit mode.
+    // Used by the dashboard "finish your profile" prompt.
+    if (isOwn && current && params.get('edit') === '1') {
+      enterEditMode();
+    }
   })();
 
   async function load(targetId, fallbackEmail) {
