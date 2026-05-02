@@ -163,12 +163,25 @@
           <input class="form-input" type="file" id="evt-image" accept="image/png,image/jpeg,image/jpg,image/webp" />
           <p class="form-hint" id="evt-image-current" style="margin-top:6px;"></p>
         </div>
+
+        <div class="form-group">
+          <label class="form-label">What to expect <span class="form-label-opt">(optional — up to 4 cards. Leave blank to hide the section.)</span></label>
+          <p class="form-hint" style="margin: 0 0 10px;">Each card is a short title plus a sentence or two. Used as the "what to expect" strip on the event page.</p>
+          <div id="evt-expectations-rows"></div>
+        </div>
+
         <div class="form-actions">
           <button class="btn-primary btn-sm" id="evt-create-btn">Create event</button>
         </div>
       </section>
 
-      <section id="admin-event-list" class="admin-list" aria-live="polite" style="margin-top: 32px;">
+      <div class="admin-tabs" id="admin-event-tabs" style="margin-top: 32px;">
+        <button class="admin-tab is-active" data-event-when="upcoming">Upcoming</button>
+        <button class="admin-tab" data-event-when="past">Past</button>
+        <button class="admin-tab" data-event-when="all">All</button>
+      </div>
+
+      <section id="admin-event-list" class="admin-list" aria-live="polite" style="margin-top: 16px;">
         <p class="admin-loading">Loading…</p>
       </section>
     </section>

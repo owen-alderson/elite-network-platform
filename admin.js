@@ -15,6 +15,8 @@
   var activeMembers = [];   // cached for the broker picker
   var editingEventId = null;  // null = creating, uuid = updating
   var editingEventImageUrl = null;  // current image_url when editing — kept if no new upload
+  var currentEventWhen = 'upcoming';  // 'upcoming' | 'past' | 'all'
+  var EVT_EXPECT_MAX = 4;
   var editingSpaceId = null;
 
   var ALL_PILLARS = [
@@ -71,6 +73,8 @@
     bindAppTabs();
     bindIntroTabs();
     bindMemberTabs();
+    bindEventTabs();
+    buildEventExpectationsRows();
     if (eventCreateBtn) eventCreateBtn.addEventListener('click', saveEvent);
     if (spaceSaveBtn) spaceSaveBtn.addEventListener('click', saveSpace);
 
@@ -637,10 +641,25 @@
     if (!eventListEl) return;
     eventListEl.innerHTML = '<p class="admin-loading">Loading…</p>';
 
-    var res = await supabase
+    var nowIso = new Date().toISOString();
+    var query = supabase
       .from('events')
-      .select('id, title, description, starts_at, ends_at, location_text, capacity, status, image_url, partner_space_id')
-      .order('starts_at', { ascending: true });
+      .select('id, title, description, starts_at, ends_at, location_text, capacity, status, image_url, expectations, partner_space_id');
+
+    if (currentEventWhen === 'upcoming') {
+      // Belt-and-braces: catches events the cron hasn't archived yet.
+      query = query
+        .or('status.eq.upcoming,and(status.neq.past,starts_at.gte.' + nowIso + ')')
+        .order('starts_at', { ascending: true });
+    } else if (currentEventWhen === 'past') {
+      query = query
+        .or('status.eq.past,and(status.eq.upcoming,starts_at.lt.' + nowIso + ')')
+        .order('starts_at', { ascending: false });
+    } else {
+      query = query.order('starts_at', { ascending: false });
+    }
+
+    var res = await query;
 
     eventListEl.innerHTML = '';
     if (res.error) {
@@ -648,10 +667,73 @@
       return;
     }
     if (!res.data || !res.data.length) {
-      eventListEl.appendChild(emptyMsg('No events yet. Create one above.'));
+      var msg = currentEventWhen === 'past'
+        ? 'No past events.'
+        : currentEventWhen === 'upcoming'
+          ? 'No upcoming events. Create one above.'
+          : 'No events yet. Create one above.';
+      eventListEl.appendChild(emptyMsg(msg));
       return;
     }
     res.data.forEach(function (ev) { eventListEl.appendChild(buildEventCard(ev)); });
+  }
+
+  function bindEventTabs() {
+    var tabs = document.getElementById('admin-event-tabs');
+    if (!tabs) return;
+    tabs.addEventListener('click', function (e) {
+      var btn = e.target.closest('.admin-tab');
+      if (!btn) return;
+      tabs.querySelectorAll('.admin-tab').forEach(function (t) { t.classList.remove('is-active'); });
+      btn.classList.add('is-active');
+      currentEventWhen = btn.dataset.eventWhen || 'upcoming';
+      refreshEvents();
+    });
+  }
+
+  function buildEventExpectationsRows() {
+    var wrap = document.getElementById('evt-expectations-rows');
+    if (!wrap || wrap.children.length) return;
+    for (var i = 0; i < EVT_EXPECT_MAX; i++) {
+      var row = document.createElement('div');
+      row.className = 'evt-expect-row';
+      row.style.cssText = 'display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-bottom:8px;';
+      var titleInput = document.createElement('input');
+      titleInput.type = 'text';
+      titleInput.className = 'form-input';
+      titleInput.placeholder = (i + 1) + '. Card title (e.g. Curated room)';
+      titleInput.dataset.expectField = 'title';
+      var bodyInput = document.createElement('input');
+      bodyInput.type = 'text';
+      bodyInput.className = 'form-input';
+      bodyInput.placeholder = 'One or two sentences';
+      bodyInput.dataset.expectField = 'body';
+      row.appendChild(titleInput);
+      row.appendChild(bodyInput);
+      wrap.appendChild(row);
+    }
+  }
+
+  function readEventExpectationsFromForm() {
+    var rows = document.querySelectorAll('#evt-expectations-rows .evt-expect-row');
+    var out = [];
+    rows.forEach(function (row) {
+      var t = (row.querySelector('[data-expect-field="title"]').value || '').trim();
+      var b = (row.querySelector('[data-expect-field="body"]').value || '').trim();
+      if (t || b) out.push({ title: t, body: b });
+    });
+    return out;
+  }
+
+  function setEventExpectationsInForm(items) {
+    var rows = document.querySelectorAll('#evt-expectations-rows .evt-expect-row');
+    rows.forEach(function (row, i) {
+      var t = row.querySelector('[data-expect-field="title"]');
+      var b = row.querySelector('[data-expect-field="body"]');
+      var entry = (Array.isArray(items) && items[i]) || { title: '', body: '' };
+      if (t) t.value = entry.title || '';
+      if (b) b.value = entry.body || '';
+    });
   }
 
   function buildEventCard(ev) {
@@ -753,6 +835,7 @@
         ? 'Current image will be kept unless you upload a new one.'
         : 'No custom image — using the partner space photo as the default.';
     }
+    setEventExpectationsInForm(ev.expectations);
 
     if (eventCreateBtn) eventCreateBtn.textContent = 'Update event';
     var formHeading = document.querySelector('.admin-event-form .admin-form-heading');
@@ -774,6 +857,7 @@
     if (spaceSel) spaceSel.value = '';
     var imgHint = document.getElementById('evt-image-current');
     if (imgHint) imgHint.textContent = '';
+    setEventExpectationsInForm([]);
     if (eventCreateBtn) eventCreateBtn.textContent = 'Create event';
     var formHeading = document.querySelector('.admin-event-form .admin-form-heading');
     if (formHeading) formHeading.textContent = 'Create event';
@@ -857,7 +941,8 @@
       location_text: location || null,
       capacity: capacity,
       partner_space_id: partnerSpaceId || null,
-      image_url: imageUrl
+      image_url: imageUrl,
+      expectations: readEventExpectationsFromForm()
     };
 
     eventCreateBtn.textContent = editingEventId ? 'Updating…' : 'Creating…';

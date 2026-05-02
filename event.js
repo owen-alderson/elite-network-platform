@@ -27,7 +27,7 @@
   async function loadEvent() {
     var res = await supabase
       .from('events')
-      .select('id, title, description, starts_at, ends_at, location_text, capacity, pillar_focus, visibility, status, image_url, partner_space_id, partner_space:partner_spaces!partner_space_id(image_url, name)')
+      .select('id, title, description, starts_at, ends_at, location_text, capacity, pillar_focus, visibility, status, image_url, expectations, partner_space_id, partner_space:partner_spaces!partner_space_id(image_url, name)')
       .eq('id', currentEventId)
       .maybeSingle();
 
@@ -115,6 +115,44 @@
     // Hide "More events" sidebar block — phase 1 keeps it simple.
     var moreEventsBlock = document.querySelectorAll('.event-sidebar-tags')[1];
     if (moreEventsBlock) moreEventsBlock.style.display = 'none';
+
+    renderExpectations(ev.expectations);
+  }
+
+  function renderExpectations(items) {
+    // The grid is hardcoded with 4 fallback cards in the markup; replace
+    // with data-driven content. If the event has none, hide the section.
+    var grid = document.querySelector('.expect-grid');
+    if (!grid) return;
+    var section = grid.closest('.event-section');
+    var arr = Array.isArray(items) ? items.filter(function (e) {
+      return e && (e.title || e.body);
+    }) : [];
+
+    if (!arr.length) {
+      if (section) section.style.display = 'none';
+      return;
+    }
+
+    if (section) section.style.display = '';
+    grid.innerHTML = '';
+    arr.forEach(function (e) {
+      var item = document.createElement('div');
+      item.className = 'expect-item';
+      var icon = document.createElement('span');
+      icon.className = 'expect-icon';
+      icon.textContent = '◈';
+      var body = document.createElement('div');
+      var h = document.createElement('h4');
+      h.textContent = e.title || '';
+      var p = document.createElement('p');
+      p.textContent = e.body || '';
+      body.appendChild(h);
+      body.appendChild(p);
+      item.appendChild(icon);
+      item.appendChild(body);
+      grid.appendChild(item);
+    });
   }
 
   async function loadAttendees() {
@@ -185,8 +223,12 @@
 
     if (blurb) {
       var capacity = currentEvent.capacity;
-      blurb.textContent = rows.length + (rows.length === 1 ? ' confirmed' : ' confirmed') +
-        (capacity ? ' · ' + Math.max(0, capacity - rows.length) + ' spots remaining' : '');
+      var endIso = currentEvent.ends_at || currentEvent.starts_at;
+      var hasEnded = endIso && new Date(endIso).getTime() < Date.now();
+      var isPast = currentEvent.status === 'past' || hasEnded;
+      var attendedLabel = isPast ? ' attended' : ' confirmed';
+      blurb.textContent = rows.length + attendedLabel +
+        (!isPast && capacity ? ' · ' + Math.max(0, capacity - rows.length) + ' spots remaining' : '');
     }
   }
 
@@ -211,6 +253,10 @@
       btn.classList.add('is-disabled');
       btn.textContent = iAmGoing ? 'You attended' : 'Event has ended';
       btn.dataset.going = iAmGoing ? 'true' : 'false';
+      // Hide the "X spots remaining" sidebar block — irrelevant once the
+      // event is in the past.
+      var spotsBlock = document.querySelector('.rsvp-spots');
+      if (spotsBlock) spotsBlock.style.display = 'none';
       return;
     }
 

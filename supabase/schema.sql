@@ -663,6 +663,9 @@ create table public.events (
   -- Optional admin-uploaded event image. If null, the runtime renderers
   -- fall back to partner_spaces.image_url for the linked space.
   image_url         text,
+  -- "What to expect" cards on the public event page. Array of
+  -- { title, body }. Empty → section hidden.
+  expectations      jsonb not null default '[]'::jsonb,
   visibility        text not null default 'all_members'
                       check (visibility in ('all_members','pillar_specific','invite_only')),
   status            text not null default 'upcoming'
