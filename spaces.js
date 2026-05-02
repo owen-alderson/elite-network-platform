@@ -33,12 +33,15 @@
   })();
 
   function buildCard(s) {
-    var hasDetail = s.slug === 'spring-place-ny';
-    var node = document.createElement(hasDetail ? 'a' : 'div');
+    // Slug → detail page map. Slugs without an entry render as plain divs.
+    var detailPages = {
+      'spring-place-ny': 'venue-spring-place.html',
+      'spring-place-la': 'venue-spring-place-la.html'
+    };
+    var detailHref = detailPages[s.slug] || null;
+    var node = document.createElement(detailHref ? 'a' : 'div');
     node.className = 'space-card';
-    if (hasDetail) {
-      node.href = 'venue-spring-place.html';
-    }
+    if (detailHref) node.href = detailHref;
 
     var img = document.createElement('div');
     img.className = 'space-img';
