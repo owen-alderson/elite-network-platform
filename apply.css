@@ -84,13 +84,18 @@
 }
 
 /* ── Entry Cards ───────────────────────────────────────────── */
+/* Flex (not grid) so when authed users hide the "I've been nominated"
+   card, the surviving "Nominate someone" card stretches to fill the
+   full width instead of leaving a phantom column. */
 .entry-cards {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: row;
   gap: 16px;
   width: 100%;
   max-width: 680px;
+  margin: 0 auto;
 }
+.entry-cards .entry-card { flex: 1 1 0; min-width: 0; }
 .entry-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -371,7 +376,7 @@
     gap: 8px;
   }
   .step-dot::after { display: none; }
-  .entry-cards { grid-template-columns: 1fr; }
+  .entry-cards { flex-direction: column; }
   .form-row { flex-direction: column; gap: 0; }
   .achievement-entry { grid-template-columns: 1fr; }
   .ach-num { display: none; }
