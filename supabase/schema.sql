@@ -168,9 +168,9 @@ begin
     new.nominated_by := old.nominated_by;
     new.joined_at := old.joined_at;
     new.created_at := old.created_at;
-    -- primary_pillar is admin-only — members can't self-reclassify.
-    -- Secondary pillars stay self-editable.
-    new.primary_pillar := old.primary_pillar;
+    -- primary_pillar self-editable in pilot (Owen 2026-05-02). Later
+    -- phases may gate this behind admin approval. Tags and
+    -- secondary_pillars also stay self-editable.
   end if;
   new.updated_at := now();
   return new;
