@@ -48,11 +48,12 @@
 }
 
 .back-link {
-  display: inline-block;
+  display: block;
+  width: fit-content;
   font-size: 12px;
   color: var(--muted);
   letter-spacing: 0.08em;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
   transition: color 0.2s;
 }
 .back-link:hover { color: var(--white); }
