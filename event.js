@@ -188,8 +188,25 @@
     btn.onclick = null;
     btn.removeAttribute('onclick');
 
+    // Lock past events — server flips status to 'past' via hourly cron once
+    // ends_at (or starts_at when there's no end) is in the past. Belt-and-
+    // braces: also check the timestamp directly so a freshly-ended event
+    // locks before the cron fires.
+    var endIso = currentEvent.ends_at || currentEvent.starts_at;
+    var hasEnded = endIso && new Date(endIso).getTime() < Date.now();
+    var isPast = currentEvent.status === 'past' || hasEnded;
+
+    if (isPast) {
+      btn.disabled = true;
+      btn.classList.add('is-disabled');
+      btn.textContent = iAmGoing ? 'You attended' : 'Event has ended';
+      btn.dataset.going = iAmGoing ? 'true' : 'false';
+      return;
+    }
+
     btn.disabled = false;
     btn.style.opacity = '';
+    btn.classList.remove('is-disabled');
     btn.textContent = iAmGoing ? 'Cancel RSVP' : 'Reserve my place';
     btn.dataset.going = iAmGoing ? 'true' : 'false';
 
