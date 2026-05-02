@@ -133,19 +133,32 @@
     visibilityTag.textContent = ev.visibility === 'invite_only' ? 'Invite Only' : 'Members Only';
     tags.appendChild(visibilityTag);
 
-    var spots = document.createElement('span');
-    spots.className = 'event-spots';
-    spots.dataset.spotsFor = ev.id;
-    spots.textContent = ev.capacity ? ev.capacity + ' spots' : 'Open';
-    tags.appendChild(spots);
+    // Don't surface spots-remaining on past events — irrelevant once the
+    // event has happened, and stale capacity counts read as broken.
+    if (!isEventPast(ev)) {
+      var spots = document.createElement('span');
+      spots.className = 'event-spots';
+      spots.dataset.spotsFor = ev.id;
+      spots.textContent = ev.capacity ? ev.capacity + ' spots' : 'Open';
+      tags.appendChild(spots);
+    }
     row.appendChild(tags);
 
     return row;
   }
 
+  function isEventPast(ev) {
+    if (ev.status === 'past') return true;
+    var endIso = ev.ends_at || ev.starts_at;
+    return endIso && new Date(endIso).getTime() < Date.now();
+  }
+
   async function loadRsvpCounts(events) {
-    var ids = events.filter(function (e) { return e.capacity; }).map(function (e) { return e.id; });
-    if (!ids.length) return;
+    // Only refresh spots for events still upcoming — past events don't
+    // render a spots node at all, so there's nothing to update.
+    var live = events.filter(function (e) { return e.capacity && !isEventPast(e); });
+    if (!live.length) return;
+    var ids = live.map(function (e) { return e.id; });
     var res = await supabase
       .from('event_rsvps')
       .select('event_id')
@@ -154,8 +167,7 @@
     if (res.error) return;
     var counts = {};
     (res.data || []).forEach(function (r) { counts[r.event_id] = (counts[r.event_id] || 0) + 1; });
-    events.forEach(function (e) {
-      if (!e.capacity) return;
+    live.forEach(function (e) {
       var taken = counts[e.id] || 0;
       var remaining = Math.max(0, e.capacity - taken);
       var node = document.querySelector('[data-spots-for="' + e.id + '"]');
