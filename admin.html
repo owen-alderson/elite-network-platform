@@ -140,8 +140,10 @@
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Location</label>
-            <input class="form-input" type="text" id="evt-location" placeholder="e.g. Spring Place, Tribeca, New York" />
+            <label class="form-label">Partner space <span class="form-label-opt">(optional — fills location + image)</span></label>
+            <select class="form-input" id="evt-partner-space">
+              <option value="">— none —</option>
+            </select>
           </div>
           <div class="form-group">
             <label class="form-label">Capacity <span class="form-label-opt">(optional)</span></label>
@@ -149,8 +151,17 @@
           </div>
         </div>
         <div class="form-group">
+          <label class="form-label">Location <span class="form-label-opt">(free-text — overrides the partner-space label)</span></label>
+          <input class="form-input" type="text" id="evt-location" placeholder="e.g. Spring Place, Tribeca, New York" />
+        </div>
+        <div class="form-group">
           <label class="form-label">Description</label>
           <textarea class="form-input form-textarea" id="evt-description" rows="4" placeholder="What is this event, what's the format, who is it for."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Event image <span class="form-label-opt">(optional — falls back to the partner space's photo)</span></label>
+          <input class="form-input" type="file" id="evt-image" accept="image/png,image/jpeg,image/jpg,image/webp" />
+          <p class="form-hint" id="evt-image-current" style="margin-top:6px;"></p>
         </div>
         <div class="form-actions">
           <button class="btn-primary btn-sm" id="evt-create-btn">Create event</button>

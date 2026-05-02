@@ -14,6 +14,7 @@
   var currentMemberFilter = 'active';
   var activeMembers = [];   // cached for the broker picker
   var editingEventId = null;  // null = creating, uuid = updating
+  var editingEventImageUrl = null;  // current image_url when editing — kept if no new upload
   var editingSpaceId = null;
 
   var ALL_PILLARS = [
@@ -76,7 +77,8 @@
     await Promise.all([
       refreshApps(),
       loadActiveMembers().then(refreshIntros),
-      loadTodayOverview()
+      loadTodayOverview(),
+      loadPartnerSpaceOptions()
     ]);
   })();
 
@@ -637,7 +639,7 @@
 
     var res = await supabase
       .from('events')
-      .select('id, title, description, starts_at, ends_at, location_text, capacity, status')
+      .select('id, title, description, starts_at, ends_at, location_text, capacity, status, image_url, partner_space_id')
       .order('starts_at', { ascending: true });
 
     eventListEl.innerHTML = '';
@@ -734,12 +736,23 @@
 
   function editEvent(ev) {
     editingEventId = ev.id;
+    editingEventImageUrl = ev.image_url || null;
     document.getElementById('evt-title').value = ev.title || '';
     document.getElementById('evt-starts').value = toDatetimeLocal(ev.starts_at);
     document.getElementById('evt-ends').value = ev.ends_at ? toDatetimeLocal(ev.ends_at) : '';
     document.getElementById('evt-location').value = ev.location_text || '';
     document.getElementById('evt-capacity').value = ev.capacity != null ? String(ev.capacity) : '';
     document.getElementById('evt-description').value = ev.description || '';
+    var spaceSel = document.getElementById('evt-partner-space');
+    if (spaceSel) spaceSel.value = ev.partner_space_id || '';
+    var imgInput = document.getElementById('evt-image');
+    if (imgInput) imgInput.value = '';
+    var imgHint = document.getElementById('evt-image-current');
+    if (imgHint) {
+      imgHint.textContent = ev.image_url
+        ? 'Current image will be kept unless you upload a new one.'
+        : 'No custom image — using the partner space photo as the default.';
+    }
 
     if (eventCreateBtn) eventCreateBtn.textContent = 'Update event';
     var formHeading = document.querySelector('.admin-event-form .admin-form-heading');
@@ -752,10 +765,15 @@
 
   function cancelEventEdit() {
     editingEventId = null;
-    ['evt-title', 'evt-starts', 'evt-ends', 'evt-location', 'evt-capacity', 'evt-description'].forEach(function (id) {
+    editingEventImageUrl = null;
+    ['evt-title', 'evt-starts', 'evt-ends', 'evt-location', 'evt-capacity', 'evt-description', 'evt-image'].forEach(function (id) {
       var node = document.getElementById(id);
       if (node) node.value = '';
     });
+    var spaceSel = document.getElementById('evt-partner-space');
+    if (spaceSel) spaceSel.value = '';
+    var imgHint = document.getElementById('evt-image-current');
+    if (imgHint) imgHint.textContent = '';
     if (eventCreateBtn) eventCreateBtn.textContent = 'Create event';
     var formHeading = document.querySelector('.admin-event-form .admin-form-heading');
     if (formHeading) formHeading.textContent = 'Create event';
@@ -791,6 +809,9 @@
     var location = (document.getElementById('evt-location').value || '').trim();
     var capacityRaw = (document.getElementById('evt-capacity').value || '').trim();
     var description = (document.getElementById('evt-description').value || '').trim();
+    var partnerSpaceId = (document.getElementById('evt-partner-space').value || '').trim();
+    var imgInput = document.getElementById('evt-image');
+    var imgFile = imgInput && imgInput.files && imgInput.files[0];
 
     if (!title) { alert('Title is required.'); return; }
     if (!startsLocal) { alert('Start date/time is required.'); return; }
@@ -804,17 +825,41 @@
     var session = await window.aether.getSession();
     if (!session) { alert('Session expired. Refresh the page.'); return; }
 
+    eventCreateBtn.disabled = true;
+    var prev = eventCreateBtn.textContent;
+    eventCreateBtn.textContent = editingEventId ? 'Updating…' : 'Creating…';
+
+    // Upload image first if a new file was chosen. If editing without a new
+    // upload, keep the existing image_url. Otherwise leave null so the
+    // partner_space photo is the runtime fallback.
+    var imageUrl = editingEventId ? editingEventImageUrl : null;
+    if (imgFile) {
+      eventCreateBtn.textContent = 'Uploading image…';
+      var ext = (imgFile.name.split('.').pop() || 'jpg').toLowerCase();
+      var path = (editingEventId || 'new') + '/' + Date.now() + '.' + ext;
+      var up = await supabase.storage.from('event-images').upload(path, imgFile, { upsert: false });
+      if (up.error) {
+        console.error('Event image upload failed:', up.error);
+        alert('Image upload failed: ' + (up.error.message || 'unknown error'));
+        eventCreateBtn.disabled = false;
+        eventCreateBtn.textContent = prev;
+        return;
+      }
+      var pub = supabase.storage.from('event-images').getPublicUrl(path);
+      imageUrl = pub && pub.data ? pub.data.publicUrl : null;
+    }
+
     var payload = {
       title: title,
       description: description || null,
       starts_at: new Date(startsLocal).toISOString(),
       ends_at: endsLocal ? new Date(endsLocal).toISOString() : null,
       location_text: location || null,
-      capacity: capacity
+      capacity: capacity,
+      partner_space_id: partnerSpaceId || null,
+      image_url: imageUrl
     };
 
-    eventCreateBtn.disabled = true;
-    var prev = eventCreateBtn.textContent;
     eventCreateBtn.textContent = editingEventId ? 'Updating…' : 'Creating…';
 
     var res;
@@ -836,6 +881,27 @@
 
     cancelEventEdit();
     await refreshEvents();
+  }
+
+  // Populate the partner-space dropdown on the events form. Confirmed venues
+  // first, then prospective; inactive venues are skipped.
+  async function loadPartnerSpaceOptions() {
+    var sel = document.getElementById('evt-partner-space');
+    if (!sel) return;
+    var res = await supabase
+      .from('partner_spaces')
+      .select('id, name, city, status')
+      .neq('status', 'inactive')
+      .order('status', { ascending: true })
+      .order('city', { ascending: true });
+    if (res.error || !res.data) return;
+    res.data.forEach(function (sp) {
+      var opt = document.createElement('option');
+      opt.value = sp.id;
+      opt.textContent = sp.name + ' — ' + sp.city +
+        (sp.status === 'prospective' ? ' (prospective)' : '');
+      sel.appendChild(opt);
+    });
   }
 
   function formatDateTime(iso) {

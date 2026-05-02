@@ -35,7 +35,7 @@
     var nowIso = new Date().toISOString();
     var query = supabase
       .from('events')
-      .select('id, title, description, starts_at, ends_at, location_text, capacity, pillar_focus, visibility, status');
+      .select('id, title, description, starts_at, ends_at, location_text, capacity, pillar_focus, visibility, status, image_url, partner_space_id, partner_space:partner_spaces!partner_space_id(image_url, name)');
 
     if (currentWhen === 'past') {
       query = query.or('status.eq.past,and(status.eq.upcoming,starts_at.lt.' + nowIso + ')')
@@ -79,6 +79,17 @@
     row.dataset.eventId = ev.id;
 
     var date = new Date(ev.starts_at);
+
+    // Image-with-date overlay block. Custom event image wins; partner-space
+    // image is the fallback; if neither, the block falls back to a flat
+    // surface tone so the date stays readable.
+    var imageUrl = ev.image_url || (ev.partner_space && ev.partner_space.image_url) || null;
+    var imageBlock = document.createElement('div');
+    imageBlock.className = 'event-image-block';
+    if (imageUrl) {
+      imageBlock.style.backgroundImage = 'url(' + imageUrl + ')';
+      imageBlock.classList.add('has-image');
+    }
     var dateBlock = document.createElement('div');
     dateBlock.className = 'event-date-block';
     var day = document.createElement('div');
@@ -89,7 +100,8 @@
     month.textContent = date.toLocaleString(undefined, { month: 'short' });
     dateBlock.appendChild(day);
     dateBlock.appendChild(month);
-    row.appendChild(dateBlock);
+    imageBlock.appendChild(dateBlock);
+    row.appendChild(imageBlock);
 
     var info = document.createElement('div');
     info.className = 'event-info';

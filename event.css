@@ -3,11 +3,29 @@
    ============================================================ */
 
 .event-hero {
-  background: var(--black);
+  position: relative;
+  background-color: var(--black);
+  background-size: cover;
+  background-position: center;
   padding: calc(var(--nav-h) + 60px) 0 60px;
   border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+.event-hero.has-image::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(10,10,10,0.55) 0%,
+    rgba(10,10,10,0.78) 60%,
+    rgba(10,10,10,0.97) 100%
+  );
+  z-index: 0;
 }
 .event-hero-inner {
+  position: relative;
+  z-index: 1;
   max-width: var(--max-w);
   margin: 0 auto;
   padding: 0 32px;

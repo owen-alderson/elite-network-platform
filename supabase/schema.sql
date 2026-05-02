@@ -660,6 +660,9 @@ create table public.events (
   location_text     text,
   capacity          int check (capacity is null or capacity > 0),
   pillar_focus      text[] not null default '{}',
+  -- Optional admin-uploaded event image. If null, the runtime renderers
+  -- fall back to partner_spaces.image_url for the linked space.
+  image_url         text,
   visibility        text not null default 'all_members'
                       check (visibility in ('all_members','pillar_specific','invite_only')),
   status            text not null default 'upcoming'
@@ -939,3 +942,30 @@ select cron.schedule(
 ------------------------------------------------------------------------
 alter publication supabase_realtime add table public.messages;
 alter publication supabase_realtime add table public.intro_requests;
+
+------------------------------------------------------------------------
+-- Storage: event-images bucket
+-- Admin-uploaded event covers. Public read so the events list renders
+-- them anonymously; only admins can write/update/delete.
+------------------------------------------------------------------------
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('event-images', 'event-images', true, 5242880,
+        array['image/png','image/jpeg','image/jpg','image/webp']::text[])
+on conflict (id) do nothing;
+
+create policy "event_images_read_public" on storage.objects
+  for select to anon, authenticated
+  using (bucket_id = 'event-images');
+
+create policy "event_images_admin_insert" on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'event-images' and public.is_admin());
+
+create policy "event_images_admin_update" on storage.objects
+  for update to authenticated
+  using (bucket_id = 'event-images' and public.is_admin())
+  with check (bucket_id = 'event-images' and public.is_admin());
+
+create policy "event_images_admin_delete" on storage.objects
+  for delete to authenticated
+  using (bucket_id = 'event-images' and public.is_admin());

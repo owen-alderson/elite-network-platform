@@ -27,7 +27,7 @@
   async function loadEvent() {
     var res = await supabase
       .from('events')
-      .select('id, title, description, starts_at, ends_at, location_text, capacity, pillar_focus, visibility, status')
+      .select('id, title, description, starts_at, ends_at, location_text, capacity, pillar_focus, visibility, status, image_url, partner_space_id, partner_space:partner_spaces!partner_space_id(image_url, name)')
       .eq('id', currentEventId)
       .maybeSingle();
 
@@ -45,6 +45,16 @@
     var starts = new Date(ev.starts_at);
 
     document.title = (ev.title || 'Event') + ' · Aether';
+
+    // Hero background — explicit event image wins, partner-space image falls
+    // back, no image leaves the existing dark hero alone.
+    var hero = document.querySelector('.event-hero');
+    var imageUrl = ev.image_url || (ev.partner_space && ev.partner_space.image_url) || null;
+    if (hero && imageUrl) {
+      hero.style.backgroundImage = "url('" + imageUrl + "')";
+      hero.classList.add('has-image');
+    }
+
     setText('.event-hero-day', String(starts.getDate()));
     setText('.event-hero-month', starts.toLocaleString(undefined, { month: 'long', year: 'numeric' }));
     setHTML('.event-hero-title', escapeHtml(ev.title || ''));

@@ -901,15 +901,45 @@ a { color: inherit; text-decoration: none; }
 .event-row {
   background: var(--surface);
   display: grid;
-  grid-template-columns: 100px 1fr auto;
-  gap: 40px;
+  grid-template-columns: 140px 1fr auto;
+  gap: 32px;
   align-items: center;
-  padding: 28px 32px;
+  padding: 24px 28px;
   transition: background 0.15s;
   cursor: pointer;
 }
 .event-row:hover { background: var(--surface-2); }
-.event-date-block { text-align: center; }
+
+/* Image block on the left — partner-space photo with the date as a corner
+   overlay. Falls back to a flat dark tile + bordered date when no image. */
+.event-image-block {
+  position: relative;
+  width: 140px;
+  height: 100px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+}
+.event-image-block.has-image::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(10, 10, 10, 0.78) 0%,
+    rgba(10, 10, 10, 0.45) 55%,
+    rgba(10, 10, 10, 0.05) 100%
+  );
+}
+.event-date-block {
+  position: relative;
+  z-index: 1;
+  text-align: left;
+  padding: 12px 14px;
+}
 .event-day {
   font-family: var(--font-serif);
   font-size: 36px;
