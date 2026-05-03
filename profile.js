@@ -21,10 +21,11 @@
   // Tags: free-form, capped at 5, normalized to lowercase + trimmed.
   var MAX_TAGS = 5;
 
-  // Pillar list mirrors the directory + apply form. Owen is the source of truth.
+  // Pillar list — locked 2026-05-03 per Alessandro's revision in [[Aether - Alessandro Call 2026-05-03]].
+  // Mirrors the directory + apply form. Owen is the source of truth.
   var ALL_PILLARS = [
-    'finance', 'real_estate', 'technology', 'media',
-    'hospitality', 'arts', 'sport', 'medicine', 'law'
+    'beauty', 'entertainment', 'fashion', 'finance',
+    'hospitality', 'music', 'sport', 'wellness'
   ];
 
   // Single source of truth for the loaded member record.
