@@ -98,7 +98,7 @@
       setText('.dash-greeting-head', 'Welcome to Aether, ' + firstName + '.');
       setHTML(
         '.dash-greeting-sub',
-        'Take two minutes to complete your profile so other members can find you. ' +
+        'Take two minutes to complete your profile — what you\'ve built, and what you\'re building next. ' +
         '<a href="profile.html" style="color:var(--gold);border-bottom:1px solid var(--gold-dim);">Set it up →</a>'
       );
     } else {
@@ -255,8 +255,8 @@
     var bodyEl = document.getElementById('onboard-missing');
     var ready = checks.ready;
     var lead = ready
-      ? 'You can request intros now. A few more sections sharpen the picture.'
-      : 'Add a few more sections so other members can find you — and so you can request intros.';
+      ? 'You can request intros now. A few more sections sharpen what you\'re building.'
+      : 'Add a few more sections — what you\'ve built and what you\'re building next. That\'s how members move on Aether.';
     bodyEl.textContent = lead + ' Missing: ' + missing.slice(0, 3).join(', ') +
       (missing.length > 3 ? ' and ' + (missing.length - 3) + ' more' : '') + '.';
 
