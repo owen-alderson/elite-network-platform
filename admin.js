@@ -252,7 +252,7 @@
 
     addField(body, 'Headline', app.applicant_headline);
     addField(body, 'Credential', app.applicant_credential);
-    addField(body, 'Current focus', app.applicant_current_work);
+    addField(body, 'Building next', app.applicant_current_work);
     addField(body, 'Location', app.applicant_location);
 
     if (app.applicant_linkedin_url) {

@@ -416,7 +416,7 @@
     // Headline is currently shown in the sidebar role/tagline. We add it as a
     // dedicated edit row above the bio.
     insertEditRow('headline', 'Headline', current.headline || '', 'input');
-    insertEditRow('current_work', 'Currently working on', current.current_work || '', 'textarea');
+    insertEditRow('current_work', 'Building next', current.current_work || '', 'textarea');
     insertEditRow('linkedin_url', 'LinkedIn URL', current.linkedin_url || '', 'input');
     insertEditRow('instagram_handle', 'Instagram handle', current.instagram_handle || '', 'input');
     insertEditRow('website_url', 'Website', current.website_url || '', 'input');
