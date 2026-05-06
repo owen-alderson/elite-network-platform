@@ -67,7 +67,10 @@
   margin-bottom: 8px;
 }
 
-#login-email {
+#login-email,
+#login-password,
+#new-password,
+#confirm-password {
   background: transparent;
   border: 1px solid var(--border);
   padding: 14px 16px;
@@ -78,14 +81,54 @@
   transition: border-color 0.15s ease;
 }
 
-#login-email:focus {
+#login-email:focus,
+#login-password:focus,
+#new-password:focus,
+#confirm-password:focus {
   outline: none;
   border-color: var(--gold-dim);
 }
 
-#login-email::placeholder {
+#login-email::placeholder,
+#login-password::placeholder,
+#new-password::placeholder,
+#confirm-password::placeholder {
   color: var(--muted);
   opacity: 0.6;
+}
+
+.login-label-opt {
+  color: var(--muted);
+  letter-spacing: 0.15em;
+  font-weight: 400;
+  text-transform: none;
+  font-size: 9px;
+  margin-left: 6px;
+}
+
+.login-helper {
+  margin: 18px 0 0;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.login-helper a {
+  color: var(--gold);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s ease;
+  cursor: pointer;
+}
+
+.login-helper a:hover {
+  border-bottom-color: var(--gold-dim);
+}
+
+.login-helper-sep {
+  margin: 0 10px;
+  color: var(--border);
 }
 
 .login-submit {

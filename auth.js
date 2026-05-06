@@ -29,15 +29,41 @@
     return null;
   }
 
+  // Pages that must NOT trigger the set-password redirect, even when the
+  // session lacks user_metadata.has_password. set-password.html is the
+  // obvious one (would loop). login.html doesn't call requireAuth but
+  // listed for completeness if the API is reused.
+  var PASSWORD_GATE_EXEMPT_PATHS = ['set-password.html', 'login.html'];
+
+  function isOnExemptPath() {
+    var path = window.location.pathname || '';
+    return PASSWORD_GATE_EXEMPT_PATHS.some(function (p) {
+      return path.endsWith('/' + p) || path.endsWith(p);
+    });
+  }
+
   window.aether.requireAuth = async function () {
     var session = await window.aether.getSession();
-    if (session) return session;
+    if (!session) {
+      var here = window.location.href;
+      var loginUrl = new URL('login.html', window.location.href);
+      loginUrl.searchParams.set('redirect', here);
+      window.location.replace(loginUrl.toString());
+      return null;
+    }
 
-    var here = window.location.href;
-    var loginUrl = new URL('login.html', window.location.href);
-    loginUrl.searchParams.set('redirect', here);
-    window.location.replace(loginUrl.toString());
-    return null;
+    // First-time-sign-in gate: until the member sets a password, all
+    // requireAuth callers route them through set-password.html. The flag
+    // lives in user_metadata.has_password and is flipped by set-password.js
+    // via auth.updateUser({ data: { has_password: true } }).
+    var meta = (session.user && session.user.user_metadata) || {};
+    if (meta.has_password !== true && !isOnExemptPath()) {
+      var setUrl = new URL('set-password.html', window.location.href);
+      window.location.replace(setUrl.toString());
+      return null;
+    }
+
+    return session;
   };
 
   window.aether.requireAdmin = async function () {

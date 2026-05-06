@@ -1,11 +1,12 @@
 # Supabase Auth — Email Templates
 
-Branded HTML for Supabase Auth's two transactional emails:
+Branded HTML for Supabase Auth's three transactional emails:
 
-- **`magic-link.html`** — sent when an existing member uses the sign-in form on `login.html`. Returning users.
+- **`magic-link.html`** — sent when a member signs in by leaving the password field blank on `login.html`, or clicks "Send me a magic link instead." First sign-in + emergency fallback. Once members set a password, this fires rarely.
 - **`invite-user.html`** — sent when admin approves an application via the `invite-member` Edge Function (`auth.admin.inviteUserByEmail`). First contact for new testers.
+- **`recovery.html`** — sent when a member clicks "Forgot password?" on `login.html`. Triggers `auth.resetPasswordForEmail` with `redirectTo` pointing at `set-password.html`. Click → Supabase auto-establishes a recovery session → user lands on `set-password.html` and sets a new password.
 
-Both use the dark/gold palette + Cormorant Garamond + Inter — same shell as the Resend transactional emails (`send-application-confirmation`, `send-application-status`, `send-intro-notification`).
+All three use the dark/gold palette + Cormorant Garamond + Inter — same shell as the Resend transactional emails (`send-application-confirmation`, `send-application-status`, `send-intro-notification`).
 
 ## How to deploy
 
@@ -19,6 +20,10 @@ These templates aren't in the source pipeline. Supabase Auth templates live in t
 3. **Invite User** template:
    - **Subject:** `You're in. Welcome to Aether.`
    - **Body:** paste contents of `invite-user.html`
+   - Save
+4. **Reset Password** template:
+   - **Subject:** `Reset your Aether password`
+   - **Body:** paste contents of `recovery.html`
    - Save
 
 ## Variables

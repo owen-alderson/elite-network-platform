@@ -17,8 +17,8 @@
       <a class="login-wordmark" href="index.html">AETHER</a>
 
       <p class="login-eyebrow">MEMBER SIGN-IN</p>
-      <h1 class="login-title">Enter your registered email</h1>
-      <p class="login-subtitle">We'll send you a one-time link. Aether is invite-only.</p>
+      <h1 class="login-title">Sign in</h1>
+      <p class="login-subtitle">Aether is invite-only. First time? Leave the password blank — we'll send you a magic link to set one.</p>
 
       <form id="login-form" novalidate>
         <label for="login-email" class="login-label">Email</label>
@@ -29,10 +29,25 @@
           autocomplete="email"
           required
           placeholder="you@domain.com">
-        <button type="submit" class="btn-primary login-submit" id="login-submit">Send link</button>
+
+        <label for="login-password" class="login-label">Password <span class="login-label-opt">— blank for first sign-in</span></label>
+        <input
+          id="login-password"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          placeholder="•••••••••">
+
+        <button type="submit" class="btn-primary login-submit" id="login-submit">Sign in</button>
       </form>
 
       <p id="login-status" class="login-status" role="status" aria-live="polite"></p>
+
+      <p class="login-helper">
+        <a href="#" id="login-magic-link">Send me a magic link instead</a>
+        <span class="login-helper-sep">·</span>
+        <a href="#" id="login-forgot">Forgot password?</a>
+      </p>
 
       <p class="login-footer">
         Not a member yet? <a href="apply.html">Apply</a>.
