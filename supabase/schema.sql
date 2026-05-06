@@ -218,21 +218,43 @@ create table public.applications (
   reviewer_notes           text,
   created_member_id        uuid references public.members(id),
   -- Stamps for the two transactional emails associated with this row:
-  --   confirmation_sent_at:  send-application-confirmation (after submit)
-  --   status_email_sent_at:  send-application-status (after rejected / needs_more_info)
+  --   confirmation_sent_at:    send-application-confirmation (after submit;
+  --                            for nominator submissions this stamps the
+  --                            nominator confirmation email specifically)
+  --   status_email_sent_at:    send-application-status (after rejected /
+  --                            needs_more_info)
+  --   nominee_invite_sent_at:  the second email fired on a nominator INSERT —
+  --                            invites the nominee to complete their applicant
+  --                            submission via apply.html?code=<>&email=<>
   confirmation_sent_at     timestamptz,
-  status_email_sent_at     timestamptz
+  status_email_sent_at     timestamptz,
+  nominee_invite_sent_at   timestamptz,
+  -- Two-stage Option-A nomination linkage. nomination_code is generated
+  -- client-side at nominator submit time (32^8 ≈ 1.1 trillion space, no
+  -- ambiguous chars). The nominee's later applicant submission carries the
+  -- same code, allowing admin to pair the records. applications_validate_
+  -- nomination_pair() trigger requires (code, applicant_email) to match a
+  -- pending nomination row before allowing the applicant insert.
+  nomination_code          text
 );
 
 create index applications_status_idx on public.applications (status);
 create index applications_submitted_at_idx on public.applications (submitted_at desc);
 
 -- Block multiple pending / needs_more_info applications for the same
--- email. Once an application is closed (rejected, approved), a fresh
--- attempt is allowed.
+-- (email, submission_type) pair. Scoping by submission_type allows a
+-- pending nomination AND a pending applicant for the same email to
+-- coexist (parent + child rows in the Option-A two-stage flow). Once
+-- an application is closed (rejected, approved), a fresh attempt is allowed.
 create unique index if not exists applications_unique_open_email
-  on public.applications (lower(applicant_email))
+  on public.applications (lower(applicant_email), submission_type)
   where status in ('pending', 'needs_more_info');
+
+-- Unique index on nomination_code where present — collision protection
+-- for the 8-char codes generated at nominator submit time.
+create unique index if not exists applications_nomination_code_unique
+  on public.applications (nomination_code)
+  where nomination_code is not null;
 
 alter table public.applications enable row level security;
 
@@ -250,6 +272,9 @@ create policy "applications_delete_admin" on public.applications
   for delete to authenticated using (public.is_admin());
 
 -- Force review fields to defaults on non-admin INSERT/UPDATE.
+-- Also locks the email-stamp columns and nomination_code on UPDATE so a
+-- non-admin can't (a) spoof "already sent" timestamps to silently block
+-- the email pipeline, (b) mutate a nomination_code post-insert.
 create or replace function public.applications_force_defaults()
 returns trigger
 language plpgsql
@@ -267,6 +292,8 @@ begin
     new.created_member_id := null;
     new.confirmation_sent_at := null;
     new.status_email_sent_at := null;
+    new.nominee_invite_sent_at := null;
+    -- nomination_code is settable on INSERT (generated client-side by apply.js).
   else
     new.status := old.status;
     new.reviewed_by := old.reviewed_by;
@@ -275,6 +302,8 @@ begin
     new.created_member_id := old.created_member_id;
     new.confirmation_sent_at := old.confirmation_sent_at;
     new.status_email_sent_at := old.status_email_sent_at;
+    new.nominee_invite_sent_at := old.nominee_invite_sent_at;
+    new.nomination_code := old.nomination_code;
   end if;
   return new;
 end;
@@ -283,6 +312,67 @@ $$;
 create trigger applications_force_defaults
 before insert or update on public.applications
 for each row execute function public.applications_force_defaults();
+
+-- Auth gate: nominator submissions require nominator_member_id to equal
+-- auth.uid() (matches the JS client's session.user.id). Defends against
+-- direct API calls bypassing the apply.html JS auth check. Admin/service-
+-- role bypass for legitimate backfill / test seeds.
+create or replace function public.applications_validate_nominator()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if new.submission_type = 'nominator' and not public.is_admin() then
+    if new.nominator_member_id is null or new.nominator_member_id <> auth.uid() then
+      raise exception 'Nominations require an authenticated member as nominator_member_id (must equal auth.uid())';
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists applications_validate_nominator on public.applications;
+create trigger applications_validate_nominator
+before insert on public.applications
+for each row execute function public.applications_validate_nominator();
+
+-- Pair validation: an applicant submission carrying a nomination_code must
+-- (a) reference a real pending nomination row and (b) use the same email
+-- the nomination was issued for. Without this trigger, an attacker who
+-- learned a code (e.g. forwarded invite email) could submit an applicant
+-- row with their own email + the stolen code — and admin would see what
+-- looked like a paired record.
+create or replace function public.applications_validate_nomination_pair()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+declare
+  parent_email text;
+begin
+  if new.submission_type = 'applicant' and new.nomination_code is not null and not public.is_admin() then
+    select lower(applicant_email) into parent_email
+    from public.applications
+    where nomination_code = new.nomination_code
+      and submission_type = 'nominator'
+      and status in ('pending', 'needs_more_info')
+    limit 1;
+    if parent_email is null then
+      raise exception 'Invalid or expired nomination code';
+    end if;
+    if parent_email <> lower(new.applicant_email) then
+      raise exception 'Email does not match the nominated address';
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists applications_validate_nomination_pair on public.applications;
+create trigger applications_validate_nomination_pair
+before insert on public.applications
+for each row execute function public.applications_validate_nomination_pair();
 
 -- Email triggers (call edge functions via pg_net):
 --   on INSERT  → send-application-confirmation
