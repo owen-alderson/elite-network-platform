@@ -1379,6 +1379,40 @@ a { color: inherit; text-decoration: none; }
   border-color: var(--border);
 }
 
+/* Cities-in-development variant — muted card with no hover, distinct
+   gold-dim "Coming soon" badge. Used for cities where Aether is still
+   sourcing or finalising the local anchor partner. */
+.space-card-soon {
+  opacity: 0.6;
+  cursor: default;
+  pointer-events: none;
+}
+.space-card-soon:hover {
+  border-color: var(--border);
+}
+.space-card-soon .space-name {
+  color: var(--muted);
+  font-weight: 300;
+}
+.space-card-soon .space-img {
+  background: var(--black);
+  color: var(--gold-dim);
+  font-size: 11px;
+  letter-spacing: 0.3em;
+}
+.space-tag-soon {
+  color: var(--gold-dim);
+  border-color: var(--gold-dim);
+}
+
+/* Landing-page city-row "live" highlight — gold-bordered chip for the
+   one city that's actually live (the pilot venue). Other chips stay
+   muted to convey "in development." */
+.city-row .city-row-active {
+  color: var(--gold);
+  border-color: var(--gold-dim);
+}
+
 /* Events toggle (Upcoming / Past) */
 .events-toggle {
   display: flex;

@@ -34,9 +34,12 @@
 
   function buildCard(s) {
     // Slug → detail page map. Slugs without an entry render as plain divs.
+    // 'spring-place-la' removed 2026-05-06: the Beverly Hills building was
+    // sold and the club is being renamed (per Alessandro's call). LA is
+    // surfaced under "Cities in development" until the new local anchor is
+    // confirmed and added to partner_spaces with its proper name + slug.
     var detailPages = {
-      'spring-place-ny': 'venue-spring-place.html',
-      'spring-place-la': 'venue-spring-place-la.html'
+      'spring-place-ny': 'venue-spring-place.html'
     };
     var detailHref = detailPages[s.slug] || null;
     var node = document.createElement(detailHref ? 'a' : 'div');
