@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
     <p>${isNomination ? "Thanks" : "Thank you"}, ${escapeHtml(app.applicant_full_name?.split(" ")[0] || "there")}.</p>
     <p>${isNomination
       ? "We received your nomination and our review team will look at it within 5–10 business days. If your nominee meets the bar, we'll reach out to them directly with an invitation."
-      : "We received your application. Our review team verifies every submission against the global bar in your pillar; we typically respond within 5–10 business days. If you're approved, we'll send a sign-in link to this email."}</p>
+      : "We received your application. Our review team will read the one thing you've built — paired with what you're building or curious about next — against the global bar for your field. We typically respond within 5–10 business days. If you're approved, we'll send a sign-in link to this email."}</p>
     <p>Aether is invite-only and built around trust. We take our time — what we don't take is shortcuts.</p>
     <p class="muted">If you didn't ${isNomination ? "submit a nomination" : "apply"}, you can ignore this email. No action is required.</p>
   </div>

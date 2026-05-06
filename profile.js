@@ -173,7 +173,7 @@
     var missing = checks.filter(function (c) { return !c.met; }).map(function (c) {
       return ({
         avatar: 'photo', bio: 'bio', headline: 'headline', location: 'location',
-        work: 'what you\'re working on', links: 'a link', achievements: 'achievements'
+        work: 'what\'s next', links: 'a link', achievements: 'achievements'
       })[c.key];
     });
     var note = document.createElement('p');

@@ -128,6 +128,13 @@
       body.appendChild(title);
     }
 
+    if (m.current_work) {
+      var next = document.createElement('p');
+      next.className = 'card-next';
+      next.textContent = m.current_work;
+      body.appendChild(next);
+    }
+
     var tagWrap = document.createElement('div');
     tagWrap.className = 'card-tags';
     var displayed = [];

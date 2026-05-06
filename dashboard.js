@@ -132,8 +132,9 @@
     });
 
     // Need our own primary_pillar so we can weight suggestions toward
-    // *different* pillars — Aether's whole thesis is cross-pillar mixing,
-    // not "people in your industry." Joined-date order is the tiebreaker.
+    // *different* pillars — Aether's thesis is cross-pollination (talent
+    // moving fields), not "people in your industry." Joined-date order
+    // is the tiebreaker.
     var meRes = await supabase
       .from('members')
       .select('primary_pillar')
@@ -143,7 +144,7 @@
 
     var res = await supabase
       .from('members')
-      .select('id,full_name,headline,primary_pillar,location_city,avatar_url')
+      .select('id,full_name,headline,primary_pillar,location_city,avatar_url,current_work')
       .eq('status', 'active')
       .order('joined_at', { ascending: false })
       .limit(40);
@@ -195,6 +196,10 @@
 
     info.appendChild(text('p', 'sug-role', m.headline || ''));
 
+    if (m.current_work) {
+      info.appendChild(text('p', 'sug-next', m.current_work));
+    }
+
     var tagText = [];
     if (m.primary_pillar) tagText.push(capitalize(m.primary_pillar));
     if (m.location_city) tagText.push(m.location_city);
@@ -237,7 +242,7 @@
 
     var labelMap = {
       0: 'photo', 1: 'short bio', 2: 'headline', 3: 'location',
-      4: 'what you\'re working on', 5: 'a link', 6: 'achievements'
+      4: 'what\'s next', 5: 'a link', 6: 'achievements'
     };
     var checksOrdered = [
       !!res.data.avatar_url,

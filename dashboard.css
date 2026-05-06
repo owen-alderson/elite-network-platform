@@ -419,6 +419,19 @@
   letter-spacing: 0.1em;
   color: var(--gold);
 }
+.sug-next {
+  font-size: 11px;
+  font-style: italic;
+  color: var(--text);
+  line-height: 1.5;
+  margin: 6px 0 4px;
+  border-left: 1px solid var(--gold-dim);
+  padding-left: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 .sug-intro-btn {
   background: none;
   border: 1px solid var(--border);
