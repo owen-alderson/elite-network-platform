@@ -305,49 +305,23 @@
          NOMINATION FLOW
          ===================================================== -->
 
-    <!-- N1: Nominator details -->
+    <!-- N1: Nominate (single-screen, simplified — Option-A pilot)
+         The nominator does the bare minimum. Nominee fills the rich
+         applicant form themselves via the email link they receive. -->
     <div class="flow-screen" id="screen-n1">
       <div class="flow-inner">
-        <div class="step-track" data-flow="nominate" data-step="1"></div>
         <div class="flow-content">
-          <p class="flow-eyebrow">Nomination · Step 1 of 3</p>
-          <h2 class="flow-heading-sm">Your details</h2>
-          <p class="flow-sub-sm">We'll verify your membership before issuing a nomination code to your nominee.</p>
-          <div class="form-group">
-            <label class="form-label">Your Name</label>
-            <input class="form-input" type="text" placeholder="Full name" id="n-name" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Your Member Email</label>
-            <input class="form-input" type="email" placeholder="The email on your Aether account" id="n-email" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Member Since</label>
-            <input class="form-input" type="text" placeholder="e.g. 2024" id="n-since" />
-          </div>
-          <div class="flow-actions">
-            <button class="btn-ghost btn-sm" onclick="goEntry()">← Back</button>
-            <button class="btn-primary btn-sm" onclick="nextNominate(1)">Continue →</button>
-          </div>
-        </div>
-      </div>
-    </div>
+          <p class="flow-eyebrow">Nominate</p>
+          <h2 class="flow-heading-sm">Introduce someone exceptional</h2>
+          <p class="flow-sub-sm">We'll send them a unique link to complete their own application — pillar, credentials, what's next. You only need to point us at them and tell us why.</p>
 
-    <!-- N2: Nominee details -->
-    <div class="flow-screen" id="screen-n2">
-      <div class="flow-inner">
-        <div class="step-track" data-flow="nominate" data-step="2"></div>
-        <div class="flow-content">
-          <p class="flow-eyebrow">Nomination · Step 2 of 3</p>
-          <h2 class="flow-heading-sm">Who are you nominating?</h2>
-          <p class="flow-sub-sm">We'll send them a unique nomination code and invite them to complete their application.</p>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">First Name</label>
+              <label class="form-label">Their First Name</label>
               <input class="form-input" type="text" placeholder="First" id="n-nom-first" />
             </div>
             <div class="form-group">
-              <label class="form-label">Last Name</label>
+              <label class="form-label">Their Last Name</label>
               <input class="form-input" type="text" placeholder="Last" id="n-nom-last" />
             </div>
           </div>
@@ -356,55 +330,23 @@
             <input class="form-input" type="email" placeholder="nominee@example.com" id="n-nom-email" />
           </div>
           <div class="form-group">
-            <label class="form-label">Their Field / Pillar</label>
-            <div class="pillar-select" id="pillar-select-n">
-              <button class="pillar-opt" data-value="beauty" onclick="selectPillarN(this)">Beauty</button>
-              <button class="pillar-opt" data-value="entertainment" onclick="selectPillarN(this)">Entertainment</button>
-              <button class="pillar-opt" data-value="fashion" onclick="selectPillarN(this)">Fashion</button>
-              <button class="pillar-opt" data-value="finance" onclick="selectPillarN(this)">Finance</button>
-              <button class="pillar-opt" data-value="hospitality" onclick="selectPillarN(this)">Hospitality</button>
-              <button class="pillar-opt" data-value="music" onclick="selectPillarN(this)">Music</button>
-              <button class="pillar-opt" data-value="sport" onclick="selectPillarN(this)">Sport</button>
-              <button class="pillar-opt" data-value="wellness" onclick="selectPillarN(this)">Wellness</button>
-            </div>
+            <label class="form-label">What are they doing right now?</label>
+            <input class="form-input" type="text" placeholder="e.g. Launching a clean-beauty line off her modeling name" id="n-nom-current" maxlength="200" />
+            <p class="form-hint">One line. The current shape of their work — what makes this an interesting moment to bring them in.</p>
           </div>
           <div class="form-group">
-            <label class="form-label">Their LinkedIn or public profile <span class="form-label-opt">(optional)</span></label>
-            <input class="form-input" type="url" placeholder="https://linkedin.com/in/..." id="n-nom-linkedin" />
-          </div>
-          <div class="flow-actions">
-            <button class="btn-ghost btn-sm" onclick="goScreen('n1')">← Back</button>
-            <button class="btn-primary btn-sm" onclick="nextNominate(2)">Continue →</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- N3: Why -->
-    <div class="flow-screen" id="screen-n3">
-      <div class="flow-inner">
-        <div class="step-track" data-flow="nominate" data-step="3"></div>
-        <div class="flow-content">
-          <p class="flow-eyebrow">Nomination · Step 3 of 3</p>
-          <h2 class="flow-heading-sm">Why do they belong?</h2>
-          <p class="flow-sub-sm">This is your personal endorsement. It carries weight. Write what you'd say if someone asked you to vouch for this person in a room.</p>
-          <div class="form-group">
-            <label class="form-label">Your endorsement</label>
-            <textarea class="form-textarea" rows="6" placeholder="Describe why this person is genuinely elite in their field. What have they built, achieved, or led that puts them in the top 0.1% globally?" id="n-why"></textarea>
-            <p class="form-hint">Minimum 3 sentences. Be specific — generic endorsements are not accepted.</p>
-          </div>
-          <div class="form-group">
-            <label class="form-label">How do you know them?</label>
-            <input class="form-input" type="text" placeholder="e.g. Co-investors on two deals over 4 years" id="n-relationship" />
+            <label class="form-label">Why do you value them?</label>
+            <textarea class="form-textarea" rows="4" placeholder="Two or three sentences. Specific beats sweeping — what have they built or are building that puts them in the top of their field?" id="n-why"></textarea>
+            <p class="form-hint">Minimum 30 characters. Your endorsement carries weight in admin review.</p>
           </div>
 
           <div class="nominator-note">
-            <p>By submitting this nomination, you vouch that the one thing this individual has built — paired with what they're building or curious about next — clears the global bar for their field. Your name will be visible to our review team as the nominating member.</p>
+            <p>Submitting sends them a unique application link. They complete the rest themselves — pillar, credentials, "what's next." Our review team weighs your endorsement alongside their submission.</p>
           </div>
 
           <div class="flow-actions">
-            <button class="btn-ghost btn-sm" onclick="goScreen('n2')">← Back</button>
-            <button class="btn-primary btn-sm" onclick="submitNomination()">Submit Nomination →</button>
+            <button class="btn-ghost btn-sm" onclick="goEntry()">← Back</button>
+            <button class="btn-primary btn-sm" onclick="submitNomination()">Send Nomination →</button>
           </div>
         </div>
       </div>
@@ -415,9 +357,9 @@
       <div class="flow-center">
         <div class="confirm-icon">◇</div>
         <p class="flow-eyebrow">Nomination Submitted</p>
-        <h2 class="flow-heading">Nomination received.</h2>
-        <p class="flow-sub">We'll verify your membership and send your nominee a unique invitation code within 24 hours. Once they complete their application, our team will review the one thing they've built — paired with what they're building or curious about next — against the global bar for their field.</p>
-        <p class="flow-sub" style="margin-top: 12px; font-size: 13px;">You'll receive a confirmation once a decision has been made. Thank you for keeping the network exceptional.</p>
+        <h2 class="flow-heading">Nomination sent.</h2>
+        <p class="flow-sub">We've emailed your nominee a unique link to complete their application. Once they do, our review team weighs your endorsement alongside their submission against the global bar for their field.</p>
+        <p class="flow-sub" style="margin-top: 12px; font-size: 13px;">You'll hear from us when there's a decision. Thank you for keeping the network exceptional.</p>
         <a href="index.html" class="btn-ghost" style="margin-top: 40px; display: inline-block;">Return to Aether</a>
       </div>
     </div>
@@ -427,7 +369,8 @@
   <script>
     // ── State ──────────────────────────────────────────────
     let selectedPillar  = null;
-    let selectedPillarN = null;
+    // selectedPillarN removed — nominator no longer picks pillar (nominee
+    // chooses their own when they fill the applicant form).
 
     const APPLY_STEPS = [
       'Verify nomination',
@@ -436,11 +379,7 @@
       'Achievements',
       'Review & submit'
     ];
-    const NOMINATE_STEPS = [
-      'Your details',
-      'Nominee details',
-      'Endorsement'
-    ];
+    // NOMINATE_STEPS removed — single-screen nominator form, no tracker.
 
     // ── Step tracker builder ────────────────────────────────
     function buildStepTrack(trackEl, labels, currentStep) {
@@ -469,7 +408,6 @@
         const flow = track.dataset.flow;
         const step = parseInt(track.dataset.step, 10);
         if (flow === 'apply')    buildStepTrack(track, APPLY_STEPS, step);
-        if (flow === 'nominate') buildStepTrack(track, NOMINATE_STEPS, step);
       }
     }
 
@@ -486,11 +424,7 @@
       btn.classList.add('selected');
       selectedPillar = btn.dataset.value;
     }
-    function selectPillarN(btn) {
-      document.querySelectorAll('#pillar-select-n .pillar-opt').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-      selectedPillarN = btn.dataset.value;
-    }
+    // selectPillarN removed — nominator no longer picks pillar.
 
     // ── Apply flow ─────────────────────────────────────────
     function nextApply(step) {
@@ -578,13 +512,9 @@
     function submitApplication() { showScreen('a-confirm'); }
 
     // ── Nominate flow ──────────────────────────────────────
-    function nextNominate(step) {
-      if (step === 1) { showScreen('n2'); }
-      else if (step === 2) {
-        if (!selectedPillarN) { alert('Please select a pillar for your nominee.'); return; }
-        showScreen('n3');
-      }
-    }
+    // Single-screen nominator form — no nextNominate routing needed.
+    // submitNomination is overridden by apply.js; this fallback shows the
+    // confirm screen if Supabase fails to load.
     function submitNomination() { showScreen('n-confirm'); }
   </script>
 
