@@ -3,11 +3,11 @@
 // Requires supabase.js to be loaded first.
 
 (function () {
-  if (!window.aether || !window.aether.client) {
+  if (!window.maia || !window.maia.client) {
     console.error('intro.js: supabase.js must load first');
     return;
   }
-  var supabase = window.aether.client;
+  var supabase = window.maia.client;
 
   function el(id) { return document.getElementById(id); }
 
@@ -23,8 +23,8 @@
     // Profile-completeness gate: members with thin profiles shouldn't be
     // reaching out — there's nothing for the target to evaluate. Surface a
     // dedicated panel inside the same modal frame instead of opening the form.
-    if (window.aether.canIntroNow) {
-      var status = await window.aether.canIntroNow();
+    if (window.maia.canIntroNow) {
+      var status = await window.maia.canIntroNow();
       if (!status.ready) {
         showCompletenessGate(modal, status);
         modal.style.display = 'flex';
@@ -49,7 +49,7 @@
     setBodyLocked(true);
 
     if (targetId) {
-      var session = await window.aether.getSession();
+      var session = await window.maia.getSession();
       if (!session) return;
       var rpc = await supabase.rpc('has_mutual_connection', { a: session.user.id, b: targetId });
       if (!rpc.error) {
@@ -150,7 +150,7 @@
       hint.textContent = 'You share a mutual connection with this member. A peer will broker the introduction off-platform.';
       hint.style.display = '';
     } else if (route === 'direct') {
-      hint.textContent = 'No mutual connection on Aether yet. This request will go directly to the member; they\'ll see your note and decide whether to accept.';
+      hint.textContent = 'No mutual connection on Maia yet. This request will go directly to the member; they\'ll see your note and decide whether to accept.';
       hint.style.display = '';
     } else {
       hint.textContent = '';
@@ -189,7 +189,7 @@
       return;
     }
 
-    var session = await window.aether.getSession();
+    var session = await window.maia.getSession();
     if (!session) { alert('Your session has expired. Please sign in again.'); return; }
 
     if (session.user.id === targetId) {
@@ -233,9 +233,9 @@
   window.closeModal = close;
   window.closeConfirm = closeConfirm;
 
-  // Also expose under the aether namespace for direct invocation
+  // Also expose under the maia namespace for direct invocation
   // from generated JS (dashboard.js, profile.js).
-  window.aetherIntro = {
+  window.maiaIntro = {
     open: open,
     close: close,
     submit: submit

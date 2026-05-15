@@ -1,4 +1,4 @@
-# CLAUDE.md — Aether Demo
+# CLAUDE.md — Maia Demo
 
 Behavioral guidelines for working in this repo. Based on Karpathy-inspired coding principles.
 
@@ -85,7 +85,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ## Project Context
 
-**What this is:** Static HTML/CSS/JS demo site for Aether — an invite-only elite professional network. No build system, no framework, no backend.
+**What this is:** Static HTML/CSS/JS demo site for Maia — an invite-only elite professional network. No build system, no framework, no backend.
 
 **Stack:**
 - Pure HTML, CSS, JavaScript

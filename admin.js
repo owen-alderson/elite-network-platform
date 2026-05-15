@@ -2,11 +2,11 @@
 // Requires supabase.js + auth.js loaded first.
 
 (function () {
-  if (!window.aether || !window.aether.client) {
+  if (!window.maia || !window.maia.client) {
     console.error('admin.js: supabase.js must load first');
     return;
   }
-  var supabase = window.aether.client;
+  var supabase = window.maia.client;
 
   // ── State ───────────────────────────────────────────────────
   var currentAppFilter = 'pending';
@@ -33,7 +33,7 @@
 
   // ── Boot ────────────────────────────────────────────────────
   (async function init() {
-    var session = await window.aether.requireAdmin();
+    var session = await window.maia.requireAdmin();
     if (!session) return;
 
     appListEl = document.getElementById('admin-list');
@@ -358,7 +358,7 @@
   }
 
   async function reviewApplication(id, status, notes) {
-    var session = await window.aether.getSession();
+    var session = await window.maia.getSession();
     if (!session) return { message: 'No session' };
     var res = await supabase.from('applications').update({
       status: status,
@@ -906,7 +906,7 @@
       return;
     }
 
-    var session = await window.aether.getSession();
+    var session = await window.maia.getSession();
     if (!session) { alert('Session expired. Refresh the page.'); return; }
 
     eventCreateBtn.disabled = true;
@@ -1068,7 +1068,7 @@
 
     // Tester-engagement signal: completeness score + last activity. Lets
     // Owen scan who's actually using the platform vs sitting cold.
-    var checks = window.aether.profileChecks ? window.aether.profileChecks(m) : null;
+    var checks = window.maia.profileChecks ? window.maia.profileChecks(m) : null;
     if (checks) {
       var compClass = 'admin-engagement-pill ' + (checks.ready ? 'is-ready' : 'is-thin');
       right.appendChild(text('span', compClass, 'Profile ' + checks.score + '/' + checks.total));

@@ -7,7 +7,7 @@
 // UPDATE. Idempotent on a stamp column status_email_sent_at so a double-
 // fire doesn't double-email.
 //
-// Requires the same RESEND_API_KEY + AETHER_FROM_EMAIL secrets as the
+// Requires the same RESEND_API_KEY + MAIA_FROM_EMAIL secrets as the
 // other email functions. Graceful no-op without the key.
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
@@ -16,7 +16,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-const FROM_EMAIL = Deno.env.get("AETHER_FROM_EMAIL") || "Aether <onboarding@resend.dev>";
+const FROM_EMAIL = Deno.env.get("MAIA_FROM_EMAIL") || "Maia <onboarding@resend.dev>";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -69,10 +69,10 @@ Deno.serve(async (req) => {
   let html = "";
 
   if (app.status === "needs_more_info") {
-    subject = "We need a bit more information — Aether";
+    subject = "We need a bit more information — Maia";
     html = needsMoreInfoHtml(firstName, app.reviewer_notes);
   } else if (app.status === "rejected") {
-    subject = "An update on your Aether application";
+    subject = "An update on your Maia application";
     html = rejectedHtml(firstName, app.reviewer_notes);
   }
 
@@ -116,9 +116,9 @@ function shellHtml(inner: string): string {
 </head>
 <body>
   <div class="card">
-    <div class="wordmark">AETHER</div>
+    <div class="wordmark">MAIA</div>
     ${inner}
-    <p class="muted">If you didn't apply to Aether, you can ignore this email.</p>
+    <p class="muted">If you didn't apply to Maia, you can ignore this email.</p>
   </div>
 </body>
 </html>`;
@@ -144,7 +144,7 @@ function rejectedHtml(firstName: string, reviewerNotes: string | null): string {
     <h1>An update on your application.</h1>
     <p>Thank you for applying, ${escapeHtml(firstName)}. After careful review, we won't be moving forward with your membership at this time.</p>
     ${notesBlock}
-    <p>Aether maintains a deliberately narrow standard, and a decision today doesn't reflect on what comes next. Many candidates apply more than once as their work develops.</p>
+    <p>Maia maintains a deliberately narrow standard, and a decision today doesn't reflect on what comes next. Many candidates apply more than once as their work develops.</p>
   `);
 }
 

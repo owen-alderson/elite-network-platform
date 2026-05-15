@@ -2,8 +2,8 @@
 // Requires supabase.js + auth.js + intro.js loaded first.
 
 (function () {
-  if (!window.aether || !window.aether.client) return;
-  var supabase = window.aether.client;
+  if (!window.maia || !window.maia.client) return;
+  var supabase = window.maia.client;
 
   var EDITABLE_FIELDS = [
     'full_name',
@@ -21,7 +21,7 @@
   // Tags: free-form, capped at 5, normalized to lowercase + trimmed.
   var MAX_TAGS = 5;
 
-  // Pillar list — locked 2026-05-03 per Alessandro's revision in [[Aether - Alessandro Call 2026-05-03]].
+  // Pillar list — locked 2026-05-03 per Alessandro's revision in [[Maia - Alessandro Call 2026-05-03]].
   // Mirrors the directory + apply form. Owen is the source of truth.
   var ALL_PILLARS = [
     'beauty', 'entertainment', 'fashion', 'finance',
@@ -35,7 +35,7 @@
   var isEditing = false;
 
   (async function init() {
-    var session = await window.aether.requireAuth();
+    var session = await window.maia.requireAuth();
     if (!session) return;
     sessionUserId = session.user.id;
 
@@ -85,7 +85,7 @@
     setTitle(m.full_name || 'Member');
 
     var photoEl = document.getElementById('profile-photo');
-    if (photoEl) window.aether.fillAvatar(photoEl, m);
+    if (photoEl) window.maia.fillAvatar(photoEl, m);
     setText('#profile-name', formatName(m.full_name));
     setText('#profile-tagline', m.bio || m.headline || '');
     setText('#profile-pillar-badge', m.primary_pillar ? '◈ ' + capitalize(m.primary_pillar) : '');
@@ -305,7 +305,7 @@
           introBtn.style.opacity = '0.55';
           introBtn.style.cursor = 'default';
         } else {
-          var canIntro = await window.aether.canIntroNow();
+          var canIntro = await window.maia.canIntroNow();
           if (!canIntro.ready) {
             // Soft gate — replace with a link to profile-edit. The hard gate
             // in intro.js still catches any leak past this.
@@ -317,7 +317,7 @@
             introBtn.parentNode.replaceChild(lockedLink, introBtn);
           } else {
             introBtn.addEventListener('click', function () {
-              window.aetherIntro.open(current.full_name || 'Member', current.id);
+              window.maiaIntro.open(current.full_name || 'Member', current.id);
             });
           }
         }
@@ -325,7 +325,7 @@
     } else if (introBtn) {
       introBtn.addEventListener('click', function () {
         if (!current) return;
-        window.aetherIntro.open(current.full_name || 'Member', current.id);
+        window.maiaIntro.open(current.full_name || 'Member', current.id);
       });
     }
   }
@@ -603,7 +603,7 @@
       btn.textContent = 'Uploading…';
       status.textContent = '';
 
-      var url = await window.aether.uploadAvatar(sessionUserId, file);
+      var url = await window.maia.uploadAvatar(sessionUserId, file);
       btn.disabled = false;
 
       if (!url) {
@@ -616,11 +616,11 @@
       // Refresh local state + re-render the photo immediately.
       current.avatar_url = url;
       var photoEl = document.getElementById('profile-photo');
-      if (photoEl) window.aether.fillAvatar(photoEl, current);
+      if (photoEl) window.maia.fillAvatar(photoEl, current);
       btn.textContent = 'Replace photo';
       status.textContent = 'Photo updated.';
       status.style.color = 'var(--gold)';
-      if (window.aether.invalidateIntroCache) window.aether.invalidateIntroCache();
+      if (window.maia.invalidateIntroCache) window.maia.invalidateIntroCache();
     });
 
     wrap.appendChild(btn);
@@ -792,7 +792,7 @@
     }
 
     current = res.data || Object.assign({}, current, payload);
-    if (window.aether.invalidateIntroCache) window.aether.invalidateIntroCache();
+    if (window.maia.invalidateIntroCache) window.maia.invalidateIntroCache();
     // Clean DOM reset — see exitEditMode for the same reasoning.
     isEditing = false;
     window.location.href = 'profile.html';
@@ -877,7 +877,7 @@
     if (el) el.textContent = text == null ? '' : String(text);
   }
   function setTitle(name) {
-    document.title = name + ' — Aether';
+    document.title = name + ' — Maia';
   }
   function initial(s) {
     return (s || '?').trim().charAt(0).toUpperCase();

@@ -2,16 +2,16 @@
 // Requires supabase.js to be loaded first.
 //
 // Usage on a member page:
-//   <script>aether.requireAuth();</script>
+//   <script>maia.requireAuth();</script>
 // Usage on an admin page:
-//   <script>aether.requireAdmin();</script>
+//   <script>maia.requireAdmin();</script>
 //
 // Both functions return a Promise that resolves to the session (or null if
 // the page is being redirected). They redirect via window.location.replace
 // so the broken page never appears in the history.
 
 (function () {
-  if (!window.aether) {
+  if (!window.maia) {
     console.error('auth.js loaded before supabase.js — include supabase.js first');
     return;
   }
@@ -42,8 +42,8 @@
     });
   }
 
-  window.aether.requireAuth = async function () {
-    var session = await window.aether.getSession();
+  window.maia.requireAuth = async function () {
+    var session = await window.maia.getSession();
     if (!session) {
       var here = window.location.href;
       var loginUrl = new URL('login.html', window.location.href);
@@ -66,10 +66,10 @@
     return session;
   };
 
-  window.aether.requireAdmin = async function () {
-    var session = await window.aether.requireAuth();
+  window.maia.requireAdmin = async function () {
+    var session = await window.maia.requireAuth();
     if (!session) return null;
-    var ok = await window.aether.isAdmin();
+    var ok = await window.maia.isAdmin();
     if (!ok) {
       var dashboard = new URL('dashboard.html', window.location.href);
       window.location.replace(dashboard.toString());
@@ -79,7 +79,7 @@
   };
 
   // Exported in case a page needs to validate a redirect param itself.
-  window.aether.sameOriginUrl = sameOriginUrl;
+  window.maia.sameOriginUrl = sameOriginUrl;
 
   // Auth-aware UI: every page that loads auth.js gets a consistent visible
   // signal of whether the visitor is signed in.
@@ -88,7 +88,7 @@
   //   • Logged in: CTA hidden, wordmark routes to dashboard, a session chip
   //     [name · Sign out] is injected into the nav.
   document.addEventListener('DOMContentLoaded', function () {
-    window.aether.getSession().then(async function (session) {
+    window.maia.getSession().then(async function (session) {
       if (!session) return;
 
       document.querySelectorAll('.nav-cta, .mobile-cta, .nav-signin, .mobile-signin').forEach(function (el) {
@@ -119,7 +119,7 @@
   // and any inbox-aware page can react without a page reload. RLS filters
   // the realtime payloads to rows the user is allowed to see.
   function subscribeToUnreadUpdates(userId) {
-    var client = window.aether.client;
+    var client = window.maia.client;
     return client
       .channel('inbox-realtime-' + userId)
       .on('postgres_changes',
@@ -127,17 +127,17 @@
         function (payload) {
           if (!payload.new || payload.new.sender_id === userId) return;
           refreshMessagesBadge(userId);
-          window.dispatchEvent(new CustomEvent('aether:unread-changed'));
+          window.dispatchEvent(new CustomEvent('maia:unread-changed'));
         })
       .on('postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'intro_requests' },
         function () {
-          window.dispatchEvent(new CustomEvent('aether:unread-changed'));
+          window.dispatchEvent(new CustomEvent('maia:unread-changed'));
         })
       .on('postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'intro_requests' },
         function () {
-          window.dispatchEvent(new CustomEvent('aether:unread-changed'));
+          window.dispatchEvent(new CustomEvent('maia:unread-changed'));
         })
       .subscribe();
   }
@@ -181,7 +181,7 @@
   }
 
   async function fetchUnreadMessageCount(userId) {
-    var res = await window.aether.client
+    var res = await window.maia.client
       .from('messages')
       .select('id', { count: 'exact', head: true })
       .neq('sender_id', userId)
@@ -198,7 +198,7 @@
   }
 
   async function injectAdminLink() {
-    var ok = await window.aether.isAdmin();
+    var ok = await window.maia.isAdmin();
     if (!ok) return;
 
     // Desktop nav: append "Admin" to .nav-links if not already present.
@@ -238,7 +238,7 @@
       a.textContent = 'Sign out';
       a.addEventListener('click', async function (e) {
         e.preventDefault();
-        try { await window.aether.signOut(); } catch (err) { /* fall through */ }
+        try { await window.maia.signOut(); } catch (err) { /* fall through */ }
         window.location.replace('login.html');
       });
       menu.appendChild(a);
@@ -254,7 +254,7 @@
     var firstName = (session.user.email || 'M').split('@')[0].split('.')[0];
     firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
     try {
-      var res = await window.aether.client
+      var res = await window.maia.client
         .from('members')
         .select('full_name')
         .eq('id', session.user.id)
@@ -317,7 +317,7 @@
     a.addEventListener('click', async function (e) {
       e.preventDefault();
       e.stopPropagation();
-      try { await window.aether.signOut(); } catch (err) { /* fall through */ }
+      try { await window.maia.signOut(); } catch (err) { /* fall through */ }
       window.location.replace('login.html');
     });
     return a;

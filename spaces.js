@@ -3,8 +3,8 @@
 // it's pure marketing content).
 
 (function () {
-  if (!window.aether || !window.aether.client) return;
-  var supabase = window.aether.client;
+  if (!window.maia || !window.maia.client) return;
+  var supabase = window.maia.client;
 
   (async function init() {
     var grid = document.getElementById('spaces-grid');
@@ -54,7 +54,7 @@
       img.style.backgroundPosition = 'center';
       img.textContent = '';
     } else {
-      img.textContent = (s.name || 'AETHER').toUpperCase();
+      img.textContent = (s.name || 'MAIA').toUpperCase();
     }
     node.appendChild(img);
 

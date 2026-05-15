@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Reset your Aether password</title>
+<title>Reset your Maia password</title>
 <style>
   body {
     background: #0a0a0a;
@@ -69,14 +69,14 @@
 </head>
 <body>
   <div class="card">
-    <div class="wordmark">AETHER</div>
+    <div class="wordmark">MAIA</div>
     <h1>Reset your password.</h1>
     <p>Click below to set a new password for {{ .Email }}. The link is good for one use; if you didn't ask for it, ignore this email.</p>
     <div class="cta-wrap">
       <a class="cta" href="{{ .ConfirmationURL }}">Set a new password</a>
     </div>
     <p class="fallback">Or paste this into your browser:<br />{{ .ConfirmationURL }}</p>
-    <p class="muted">Aether is invite-only. Recovery links are personal — never share them.</p>
+    <p class="muted">Maia is invite-only. Recovery links are personal — never share them.</p>
   </div>
 </body>
 </html>

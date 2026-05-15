@@ -1,5 +1,5 @@
 /* ============================================================
-   AETHER — Venue Detail Page
+   MAIA — Venue Detail Page
    ============================================================ */
 
 /* ── Hero ──────────────────────────────────────────────────── */
@@ -124,7 +124,7 @@
 }
 .venue-desc:last-child { margin-bottom: 0; }
 
-/* ── Aether connection callout ─────────────────────────────── */
+/* ── Maia connection callout ─────────────────────────────── */
 .connection-callout {
   display: flex;
   gap: 20px;

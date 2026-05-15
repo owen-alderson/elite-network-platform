@@ -2,13 +2,13 @@
 // Requires supabase.js + auth.js loaded first.
 
 (function () {
-  if (!window.aether || !window.aether.client) return;
-  var supabase = window.aether.client;
+  if (!window.maia || !window.maia.client) return;
+  var supabase = window.maia.client;
 
   var currentWhen = 'upcoming';
 
   (async function init() {
-    var session = await window.aether.requireAuth();
+    var session = await window.maia.requireAuth();
     if (!session) return;
     bindToggle();
     await loadEvents();
@@ -57,7 +57,7 @@
     if (!res.data || !res.data.length) {
       listEl.innerHTML = '<p class="events-empty">' +
         (currentWhen === 'past'
-          ? 'No past events yet — Aether is just getting started.'
+          ? 'No past events yet — Maia is just getting started.'
           : 'No upcoming events scheduled yet. Check back soon.') +
         '</p>';
       return;

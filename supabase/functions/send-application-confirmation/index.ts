@@ -8,7 +8,7 @@
 //       (a) nominator_email gets "We received your nomination" — confirms
 //           the vouch landed. Stamps confirmation_sent_at.
 //       (b) applicant_email (the nominee) gets "[Nominator] nominated you
-//           for Aether" with a unique link to complete the applicant flow:
+//           for Maia" with a unique link to complete the applicant flow:
 //             apply.html?code=<nomination_code>&email=<nominee_email>
 //           Stamps nominee_invite_sent_at.
 //
@@ -16,10 +16,10 @@
 //
 // Setup (one-time, by Owen):
 //   1. Sign up for Resend (https://resend.com), grab an API key.
-//   2. Verify a sending domain so Aether can send from hello@<domain>.
+//   2. Verify a sending domain so Maia can send from hello@<domain>.
 //   3. In the Supabase Dashboard → Edge Functions → secrets, set:
 //        RESEND_API_KEY      <your_resend_key>
-//        AETHER_FROM_EMAIL   "Aether <hello@yourdomain.com>"
+//        MAIA_FROM_EMAIL   "Maia <hello@yourdomain.com>"
 //   4. Redeploy this function (or restart it) so it picks up the secret.
 //
 // If RESEND_API_KEY is missing, the function logs a warning and returns
@@ -32,11 +32,11 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-const FROM_EMAIL = Deno.env.get("AETHER_FROM_EMAIL") || "Aether <onboarding@resend.dev>";
+const FROM_EMAIL = Deno.env.get("MAIA_FROM_EMAIL") || "Maia <onboarding@resend.dev>";
 
 // Public site URL — used to build the nominee invite link. Mirrors the
 // constant in invite-member/index.ts.
-const SITE_URL = "https://owen-alderson.github.io/elite-network-platform";
+const SITE_URL = "https://maiacircle.com";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -95,7 +95,7 @@ async function handleApplicant(admin: any, app: any): Promise<Response> {
   }
 
   const firstName = (app.applicant_full_name?.split(" ")[0]) || "there";
-  const subject = "We received your application — Aether";
+  const subject = "We received your application — Maia";
   const html = applicantConfirmationHtml(firstName);
 
   const ok = await sendEmail({ to: [app.applicant_email], subject, html });
@@ -128,7 +128,7 @@ async function handleNominator(admin: any, app: any): Promise<Response> {
       const nomineeName = app.applicant_full_name || "your nominee";
       const ok = await sendEmail({
         to: [app.nominator_email],
-        subject: "We received your nomination — Aether",
+        subject: "We received your nomination — Maia",
         html: nominatorConfirmationHtml(nominatorFirst, nomineeName),
       });
       if (ok.ok) {
@@ -150,12 +150,12 @@ async function handleNominator(admin: any, app: any): Promise<Response> {
       results.nominee_invite = { sent: false, reason: "missing_email_or_code" };
     } else {
       const nomineeFirst = (app.applicant_full_name?.split(" ")[0]) || "there";
-      const nominatorName = app.nominator_full_name || "An Aether member";
+      const nominatorName = app.nominator_full_name || "An Maia member";
       const inviteUrl = SITE_URL + "/apply.html?code=" + encodeURIComponent(app.nomination_code) +
         "&email=" + encodeURIComponent(app.applicant_email);
       const ok = await sendEmail({
         to: [app.applicant_email],
-        subject: nominatorName + " nominated you for Aether",
+        subject: nominatorName + " nominated you for Maia",
         html: nomineeInviteHtml(nomineeFirst, nominatorName, app.nominator_note, inviteUrl),
       });
       if (ok.ok) {
@@ -222,7 +222,7 @@ function shell(inner: string): string {
 </head>
 <body>
   <div class="card">
-    <div class="wordmark">AETHER</div>
+    <div class="wordmark">MAIA</div>
     ${inner}
   </div>
 </body>
@@ -234,7 +234,7 @@ function applicantConfirmationHtml(firstName: string): string {
     <h1>Your application is in.</h1>
     <p>Thank you, ${escapeHtml(firstName)}.</p>
     <p>We received your application. Our review team will read the one thing you've built — paired with what you're building or curious about next — against the global bar for your field. We typically respond within 5–10 business days. If you're approved, we'll send a sign-in link to this email.</p>
-    <p>Aether is invite-only and built around trust. We take our time — what we don't take is shortcuts.</p>
+    <p>Maia is invite-only and built around trust. We take our time — what we don't take is shortcuts.</p>
     <p class="muted">If you didn't apply, you can ignore this email. No action is required.</p>
   `);
 }
@@ -254,16 +254,16 @@ function nomineeInviteHtml(nomineeFirst: string, nominatorName: string, nominato
     ? `<p>What ${escapeHtml(nominatorName)} said about you:</p><div class="quote">${escapeHtml(nominatorNote)}</div>`
     : '';
   return shell(`
-    <h1>You've been nominated for Aether.</h1>
+    <h1>You've been nominated for Maia.</h1>
     <p>Hi ${escapeHtml(nomineeFirst)} —</p>
-    <p><strong>${escapeHtml(nominatorName)}</strong> nominated you for membership at Aether — an invite-only network for proven talent in one field, and the adjacent ventures they're already building, or about to discover.</p>
+    <p><strong>${escapeHtml(nominatorName)}</strong> nominated you for membership at Maia — an invite-only network for proven talent in one field, and the adjacent ventures they're already building, or about to discover.</p>
     ${noteBlock}
     <p>Click below to complete your application. It takes about 8 minutes — we ask about the one thing you've built, what you're building or curious about next, and the credentials behind both.</p>
     <div class="cta-wrap">
       <a class="cta" href="${escapeHtml(inviteUrl)}">Complete your application</a>
     </div>
     <p class="fallback">Or paste this into your browser:<br />${escapeHtml(inviteUrl)}</p>
-    <p class="muted">This link is unique to you. Aether is invite-only — please don't forward it.</p>
+    <p class="muted">This link is unique to you. Maia is invite-only — please don't forward it.</p>
   `);
 }
 

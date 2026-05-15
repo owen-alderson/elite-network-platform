@@ -1,4 +1,4 @@
-# Architecture — Aether (Phase 1 Pilot)
+# Architecture — Maia (Phase 1 Pilot)
 
 This document is the canonical reference for what's running in production. It's updated whenever something material changes. Everything below reflects state through **2026-05-01**.
 
@@ -140,7 +140,7 @@ All deployed at the project URL `https://emlresxklixzcsammste.supabase.co/functi
 Admin-only. Takes `{ application_id }`, validates caller is on `ADMIN_EMAILS`, finds-or-invites the auth user via `auth.admin.inviteUserByEmail`, upserts the `members` row from application data, stamps `applications.created_member_id`. Idempotent. Used by the admin's "Approve" action on the applications queue.
 
 ### `send-application-confirmation` (verify_jwt: false)
-Fires on every application INSERT via the `applications_send_confirmation` trigger. Idempotent on `applications.confirmation_sent_at`. Subject: "We received your application — Aether".
+Fires on every application INSERT via the `applications_send_confirmation` trigger. Idempotent on `applications.confirmation_sent_at`. Subject: "We received your application — Maia".
 
 ### `send-application-status` (verify_jwt: false)
 Fires on application UPDATE when status flips to `rejected` or `needs_more_info`. Idempotent on `applications.status_email_sent_at`. Includes reviewer notes inline. Branched copy per status.
@@ -156,7 +156,7 @@ Fires on intro INSERT (direct route → emails target) and intro UPDATE (broker 
 | `SUPABASE_ANON_KEY` | auto-injected | |
 | `SUPABASE_SERVICE_ROLE_KEY` | auto-injected | |
 | `RESEND_API_KEY` | yes | Set 2026-05-01. Without this, all email functions gracefully no-op. |
-| `AETHER_FROM_EMAIL` | optional | Defaults to `Aether <onboarding@resend.dev>` (sandbox). Set to `Aether <hello@yourdomain.com>` once domain is verified on Resend. |
+| `MAIA_FROM_EMAIL` | optional | Defaults to `Maia <onboarding@resend.dev>` (sandbox). Set to `Maia <hello@yourdomain.com>` once domain is verified on Resend. |
 
 ---
 
@@ -191,10 +191,10 @@ Fires on intro INSERT (direct route → emails target) and intro UPDATE (broker 
 |---|---|
 | `style.css` | Global styles. Modal + nav + buttons + form elements + member cards + inbox panel + connections grid + dashboard event rows + status badges + spaces grid + members search + events toggle + avatar img + nav-session chip + sign-in/sign-out links |
 | `nav.js` | Hamburger toggle. Mobile menu open/close. |
-| `supabase.js` | Supabase client init. Exports `aether.{client, getSession, getUser, signInWithMagicLink, signOut, isAdmin, onAuthStateChange, fillAvatar, uploadAvatar, ADMIN_EMAILS}`. |
+| `supabase.js` | Supabase client init. Exports `maia.{client, getSession, getUser, signInWithMagicLink, signOut, isAdmin, onAuthStateChange, fillAvatar, uploadAvatar, ADMIN_EMAILS}`. |
 | `auth.js` | Page guards (`requireAuth`, `requireAdmin`). DOMContentLoaded hook: hides `.nav-cta` / `.mobile-cta` / `.nav-signin` / `.mobile-signin` when session exists; rewrites wordmark to dashboard; injects nav session chip + Messages link + Admin link (the latter only for admins); injects mobile sign-out. |
 | `intro.js` | Request Introduction modal. Shows route hint (broker vs direct) before submit via `has_mutual_connection()` RPC. Surfaces specific copy for unique-violation + rate-limit errors. |
-| `favicon.svg` | Aether wordmark glyph |
+| `favicon.svg` | Maia wordmark glyph |
 
 ### Backend (in repo, deployed via MCP)
 
@@ -212,11 +212,11 @@ Fires on intro INSERT (direct route → emails target) and intro UPDATE (broker 
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <script src="supabase.js"></script>
 <script src="auth.js"></script>
-<script>aether.requireAuth();</script>
+<script>maia.requireAuth();</script>
 <!-- page-specific JS below -->
 ```
 
-For admin-only pages, call `aether.requireAdmin()` instead. Public pages skip the `requireAuth` line but still load supabase.js + auth.js so the nav chip / wordmark / CTAs reflect session state.
+For admin-only pages, call `maia.requireAdmin()` instead. Public pages skip the `requireAuth` line but still load supabase.js + auth.js so the nav chip / wordmark / CTAs reflect session state.
 
 ---
 
@@ -227,7 +227,7 @@ For admin-only pages, call `aether.requireAdmin()` instead. Public pages skip th
 3. Supabase emails a magic link (Supabase's own SMTP — separate from Resend; this works without a verified domain)
 4. Visitor clicks link → returns with `?type=magiclink&access_token=...&refresh_token=...` → Supabase JS client `detectSessionInUrl: true` consumes it and stores session in localStorage
 5. Page redirects to `dashboard.html` (or wherever `?redirect=...` says)
-6. `aether.requireAuth()` confirms session, page renders
+6. `maia.requireAuth()` confirms session, page renders
 
 `shouldCreateUser: false` is critical — it means only invited users (i.e. members created via `invite-member`) can sign in. Random emails get a generic "we'll be in touch" response, no account created.
 
@@ -334,11 +334,11 @@ Admin nav link is auto-injected for the sole admin (Owen) via `auth.js` on every
 These are dashboard configurations the SQL alone cannot set:
 
 1. **Email auth enabled** (default).
-2. **Site URL** — `https://owen-alderson.github.io/elite-network-platform/` (will become `https://yourdomain.com/` once domain lands).
-3. **Redirect URL allowlist** — `https://owen-alderson.github.io/elite-network-platform/**` and any local dev URLs.
+2. **Site URL** — `https://maiacircle.com/`.
+3. **Redirect URL allowlist** — `https://maiacircle.com/**` and any local dev URLs.
 4. **Email template** — magic-link template can be customized in the dashboard. Currently uses Supabase default; on-brand customization is a nice-to-have before sending invites to non-Owen testers.
 5. **Apply `supabase/schema.sql`** if deploying to a fresh project. Non-idempotent — single-shot.
-6. **Edge Function secrets** — `RESEND_API_KEY` + (optionally) `AETHER_FROM_EMAIL`. See `supabase/functions/<each>/index.ts` headers for setup notes.
+6. **Edge Function secrets** — `RESEND_API_KEY` + (optionally) `MAIA_FROM_EMAIL`. See `supabase/functions/<each>/index.ts` headers for setup notes.
 
 ---
 
@@ -346,9 +346,9 @@ These are dashboard configurations the SQL alone cannot set:
 
 | Issue | Status | Blocker for |
 |---|---|---|
-| **No verified domain on Resend** | Active blocker | All transactional emails to non-Owen recipients (Resend sandbox limit). See vault note `Aether - Domain & Email Setup.md`. Pending cofounder agreement on platform name before registering. |
+| **No verified domain on Resend** | Active blocker | All transactional emails to non-Owen recipients (Resend sandbox limit). See vault note `Maia - Domain & Email Setup.md`. Pending cofounder agreement on platform name before registering. |
 | **GitHub Pages cache** | Mitigated | Files served with `Cache-Control: max-age=600`. After a JS deploy, append `?v=N` to the script tag in HTML to force fresh fetch. Currently only `members.js?v=2` is busted — others use whatever the browser cached. |
-| **No deliverability dashboard inside Aether** | Acceptable phase 1 | Resend's own dashboard (https://resend.com/emails) is the source of truth. |
+| **No deliverability dashboard inside Maia** | Acceptable phase 1 | Resend's own dashboard (https://resend.com/emails) is the source of truth. |
 | **No retry on email send failure** | Acceptable phase 1 | If Resend is down, that single email is lost. The `*_sent_at` columns are only stamped on success; theoretically retriable, but no automation for it. |
 
 ---

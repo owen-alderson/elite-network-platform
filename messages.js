@@ -4,8 +4,8 @@
 // Requires supabase.js + auth.js loaded first.
 
 (function () {
-  if (!window.aether || !window.aether.client) return;
-  var supabase = window.aether.client;
+  if (!window.maia || !window.maia.client) return;
+  var supabase = window.maia.client;
 
   var sessionUserId = null;
   var conversations = [];        // [{ id, other, last_message_at, intro_id, unread }]
@@ -13,7 +13,7 @@
   var activeChannel = null;
 
   (async function init() {
-    var session = await window.aether.requireAuth();
+    var session = await window.maia.requireAuth();
     if (!session) return;
     sessionUserId = session.user.id;
 
@@ -138,7 +138,7 @@
 
     var avatar = document.createElement('div');
     avatar.className = 'msg-list-avatar';
-    window.aether.fillAvatar(avatar, c.other);
+    window.maia.fillAvatar(avatar, c.other);
     row.appendChild(avatar);
 
     var info = document.createElement('div');
@@ -192,7 +192,7 @@
     var conv = conversations.find(function (c) { return c.id === convId; });
     if (conv && conv.other) {
       var avatarEl = document.getElementById('msg-thread-avatar');
-      window.aether.fillAvatar(avatarEl, conv.other);
+      window.maia.fillAvatar(avatarEl, conv.other);
       var nameEl = document.getElementById('msg-thread-name');
       nameEl.textContent = conv.other.full_name || '—';
       nameEl.href = 'profile.html?id=' + encodeURIComponent(conv.other.id);

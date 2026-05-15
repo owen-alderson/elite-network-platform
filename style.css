@@ -1,5 +1,5 @@
 /* ============================================================
-   AETHER — Global Styles
+   MAIA — Global Styles
    ============================================================ */
 
 :root {
@@ -424,9 +424,9 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ============================================================
-   WHY AETHER
+   WHY MAIA
    ============================================================ */
-.why-aether {
+.why-maia {
   background: var(--black);
   border-top: 1px solid var(--border);
 }
@@ -1343,7 +1343,7 @@ a { color: inherit; text-decoration: none; }
 /* ── Avatar image fill ───────────────────────────────
    When a member has an uploaded photo, the existing circular avatar
    container gets <img class="avatar-img"> dropped in via
-   aether.fillAvatar(). The img inherits the parent's circular shape
+   maia.fillAvatar(). The img inherits the parent's circular shape
    and fills it. */
 .avatar-img {
   width: 100%;
@@ -1380,7 +1380,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* Cities-in-development variant — muted card with no hover, distinct
-   gold-dim "Coming soon" badge. Used for cities where Aether is still
+   gold-dim "Coming soon" badge. Used for cities where Maia is still
    sourcing or finalising the local anchor partner. */
 .space-card-soon {
   opacity: 0.6;

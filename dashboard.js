@@ -3,11 +3,11 @@
 // Requires supabase.js + auth.js + intro.js loaded first.
 
 (function () {
-  if (!window.aether || !window.aether.client) return;
-  var supabase = window.aether.client;
+  if (!window.maia || !window.maia.client) return;
+  var supabase = window.maia.client;
 
   (async function init() {
-    var session = await window.aether.requireAuth();
+    var session = await window.maia.requireAuth();
     if (!session) return;
     setGreetingDate();
 
@@ -40,7 +40,7 @@
     // Refresh the inbox surface when a message or intro arrives in realtime.
     // auth.js subscribes and dispatches; we just react.
     var refreshTimer = null;
-    window.addEventListener('aether:unread-changed', function () {
+    window.addEventListener('maia:unread-changed', function () {
       if (refreshTimer) return; // Coalesce rapid bursts.
       refreshTimer = setTimeout(function () {
         refreshTimer = null;
@@ -77,10 +77,10 @@
 
     setText('.nav-member-name', firstName + '.');
     var navAvatar = document.querySelector('.nav-avatar');
-    if (navAvatar) window.aether.fillAvatar(navAvatar, member || { full_name: firstName });
+    if (navAvatar) window.maia.fillAvatar(navAvatar, member || { full_name: firstName });
 
     var dashAvatar = document.querySelector('.dash-avatar');
-    if (dashAvatar) window.aether.fillAvatar(dashAvatar, member || { full_name: firstName });
+    if (dashAvatar) window.maia.fillAvatar(dashAvatar, member || { full_name: firstName });
 
     setText('.dash-profile-name', name);
     setHTML('.dash-profile-role', escapeText(headline) || '<span style="color:var(--muted);font-style:italic;">Headline not set</span>');
@@ -95,7 +95,7 @@
     // assume they just landed and nudge them toward profile completion.
     var profileSparse = !!member && !member.bio && !member.avatar_url;
     if (profileSparse) {
-      setText('.dash-greeting-head', 'Welcome to Aether, ' + firstName + '.');
+      setText('.dash-greeting-head', 'Welcome to Maia, ' + firstName + '.');
       setHTML(
         '.dash-greeting-sub',
         'Take two minutes to complete your profile — what you\'ve built, and what you\'re building next. ' +
@@ -132,7 +132,7 @@
     });
 
     // Need our own primary_pillar so we can weight suggestions toward
-    // *different* pillars — Aether's thesis is cross-pollination (talent
+    // *different* pillars — Maia's thesis is cross-pollination (talent
     // moving fields), not "people in your industry." Joined-date order
     // is the tiebreaker.
     var meRes = await supabase
@@ -173,14 +173,14 @@
       listEl.innerHTML = '<p style="color:var(--muted);font-size:13px;">No new members to suggest right now. Browse the directory directly.</p>';
       return;
     }
-    var canIntro = await window.aether.canIntroNow();
+    var canIntro = await window.maia.canIntroNow();
     rows.forEach(function (m) { listEl.appendChild(buildSuggestionRow(m, canIntro.ready)); });
   }
 
   function buildSuggestionRow(m, canIntro) {
     var row = el('div', 'suggestion-row');
     var avatar = el('div', 'sug-avatar');
-    window.aether.fillAvatar(avatar, m);
+    window.maia.fillAvatar(avatar, m);
     row.appendChild(avatar);
 
     var info = el('div', 'sug-info');
@@ -212,7 +212,7 @@
       btn.className = 'sug-intro-btn';
       btn.textContent = 'Request intro';
       btn.addEventListener('click', function () {
-        window.aetherIntro.open(m.full_name || 'Member', m.id);
+        window.maiaIntro.open(m.full_name || 'Member', m.id);
       });
     } else {
       btn = document.createElement('a');
@@ -237,7 +237,7 @@
       .maybeSingle();
     if (res.error || !res.data) { section.hidden = true; return; }
 
-    var checks = window.aether.profileChecks(res.data);
+    var checks = window.maia.profileChecks(res.data);
     if (checks.score >= checks.total) { section.hidden = true; return; }
 
     var labelMap = {
@@ -261,7 +261,7 @@
     var ready = checks.ready;
     var lead = ready
       ? 'You can request intros now. A few more sections sharpen what you\'re building.'
-      : 'Add a few more sections — what you\'ve built and what you\'re building next. That\'s how members move on Aether.';
+      : 'Add a few more sections — what you\'ve built and what you\'re building next. That\'s how members move on Maia.';
     bodyEl.textContent = lead + ' Missing: ' + missing.slice(0, 3).join(', ') +
       (missing.length > 3 ? ' and ' + (missing.length - 3) + ' more' : '') + '.';
 
@@ -628,7 +628,7 @@
     leftLink.href = 'profile.html?id=' + encodeURIComponent(m.id);
 
     var avatar = el('div', 'connection-avatar');
-    window.aether.fillAvatar(avatar, m);
+    window.maia.fillAvatar(avatar, m);
     leftLink.appendChild(avatar);
 
     var info = el('div', 'connection-info');
@@ -805,7 +805,7 @@
       item.dataset.unread = 'true';
 
       var avatar = el('div', 'inbox-avatar');
-      window.aether.fillAvatar(avatar, entry.sender);
+      window.maia.fillAvatar(avatar, entry.sender);
       item.appendChild(avatar);
 
       var content = el('div', 'inbox-content');
@@ -846,7 +846,7 @@
           ' would like to be introduced to you';
         unread = true;
       } else if (intro.status === 'accepted') {
-        title = 'You met ' + (intro.requester ? intro.requester.full_name : '?') + ' through Aether';
+        title = 'You met ' + (intro.requester ? intro.requester.full_name : '?') + ' through Maia';
         body = '';
         when = intro.responded_at || intro.created_at;
       } else if (intro.status === 'declined') {
@@ -898,7 +898,7 @@
         body = '';
         when = intro.responded_at || intro.created_at;
       } else if (intro.status === 'accepted') {
-        title = 'You met ' + (intro.target ? intro.target.full_name : '—') + ' through Aether';
+        title = 'You met ' + (intro.target ? intro.target.full_name : '—') + ' through Maia';
         when = intro.responded_at || intro.created_at;
       } else {
         return null;
@@ -909,7 +909,7 @@
     item.dataset.unread = unread ? 'true' : 'false';
 
     var avatar = el('div', 'inbox-avatar');
-    window.aether.fillAvatar(avatar, avatarMember);
+    window.maia.fillAvatar(avatar, avatarMember);
     item.appendChild(avatar);
 
     var content = el('div', 'inbox-content');
@@ -945,7 +945,7 @@
         return;
       }
       // Refresh the dashboard intro surfaces.
-      var session = await window.aether.getSession();
+      var session = await window.maia.getSession();
       if (!session) { window.location.reload(); return; }
       await Promise.all([
         loadReceivedRequests(session.user.id),
@@ -972,7 +972,7 @@
   function buildAvatar(memberOrName) {
     var a = el('div', 'intro-mini-avatar');
     if (memberOrName && typeof memberOrName === 'object') {
-      window.aether.fillAvatar(a, memberOrName);
+      window.maia.fillAvatar(a, memberOrName);
     } else {
       a.textContent = (memberOrName || '?').toString().charAt(0).toUpperCase();
     }

@@ -23,12 +23,12 @@
 // Requires supabase.js to be loaded first.
 
 (function () {
-  if (!window.aether || !window.aether.client) {
+  if (!window.maia || !window.maia.client) {
     console.error('apply.js: supabase.js must load first');
     return;
   }
 
-  var supabase = window.aether.client;
+  var supabase = window.maia.client;
 
   // Holds the nomination code/email pulled from URL params on load. When set,
   // submitApplication includes nomination_code in the payload so admin can
@@ -72,7 +72,7 @@
   function setupEntryGate() {
     if (nominationContext) return; // already routed past entry picker
 
-    window.aether.getSession().then(function (session) {
+    window.maia.getSession().then(function (session) {
       var applyCard = document.querySelector('.entry-card[data-flow="apply"]');
       var nominateCard = document.querySelector('.entry-card[data-flow="nominate"]');
       var heading = document.getElementById('entry-heading');
@@ -81,7 +81,7 @@
       if (session) {
         if (applyCard) applyCard.style.display = 'none';
         if (heading) heading.innerHTML = 'Nominate<br>a peer';
-        if (sub) sub.textContent = 'Introduce someone exceptional. Aether grows through members vouching for the next cohort.';
+        if (sub) sub.textContent = 'Introduce someone exceptional. Maia grows through members vouching for the next cohort.';
       } else {
         if (nominateCard) nominateCard.style.display = 'none';
         if (heading) heading.innerHTML = 'Begin your<br>application';
@@ -221,7 +221,7 @@
       if (isDuplicateError(res.error)) {
         alert('We already have an application from this email under review. You\'ll hear from us by email when there\'s an update.');
       } else {
-        alert('Submission failed. Please try again — if it keeps happening, email hello@aether.network.');
+        alert('Submission failed. Please try again — if it keeps happening, email hello@maiacircle.com.');
       }
       return;
     }
@@ -247,7 +247,7 @@
     // Auth gate (client-side) — server-side trigger enforces this too, but
     // bouncing an unauthenticated visitor here gives a cleaner UX than a
     // 23xxx Postgres error.
-    var session = await window.aether.getSession();
+    var session = await window.maia.getSession();
     if (!session) {
       alert('You need to be signed in as a member to nominate. Redirecting you to sign-in.');
       var loginUrl = new URL('login.html', window.location.href);
@@ -304,7 +304,7 @@
         // applications_validate_nominator trigger fired — treat as auth issue
         alert('Your member session has expired. Please sign in again to nominate.');
       } else {
-        alert('Submission failed. Please try again — if it keeps happening, email hello@aether.network.');
+        alert('Submission failed. Please try again — if it keeps happening, email hello@maiacircle.com.');
       }
       return;
     }

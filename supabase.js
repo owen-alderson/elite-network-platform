@@ -1,4 +1,4 @@
-// supabase.js — Aether Supabase client + session helpers.
+// supabase.js — Maia Supabase client + session helpers.
 //
 // Load order (in every page that needs auth or data):
 //   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -10,8 +10,8 @@
 // client-side code, never be committed, never be deployed to GitHub Pages.
 // See ARCHITECTURE.md.
 
-window.aether = (function () {
-  // Live Aether Supabase project. Both values are safe to commit — RLS in
+window.maia = (function () {
+  // Live Maia Supabase project. Both values are safe to commit — RLS in
   // supabase/schema.sql enforces row-level access.
   var SUPABASE_URL = 'https://emlresxklixzcsammste.supabase.co';
   var SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_-uC-5RkQSuaNJAaKHqpw8g_5oAiuTFY';

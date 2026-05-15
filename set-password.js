@@ -28,7 +28,7 @@
   // Gate: must be authenticated. Don't use requireAuth() — it would loop us
   // back here. We just need the session.
   (async function gate() {
-    var session = await window.aether.getSession();
+    var session = await window.maia.getSession();
     if (!session) {
       // No session — the recovery / magic link probably expired or this page
       // was opened directly. Bounce to login.
@@ -63,7 +63,7 @@
     submit.disabled = true;
     submit.textContent = 'Saving...';
 
-    var res = await window.aether.client.auth.updateUser({
+    var res = await window.maia.client.auth.updateUser({
       password: pw,
       data: { has_password: true }
     });

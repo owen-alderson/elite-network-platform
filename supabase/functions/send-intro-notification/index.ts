@@ -9,7 +9,7 @@
 //   forwarded        → email the requester. "Z forwarded your request."
 //
 // Setup is shared with send-application-confirmation: relies on the
-// same RESEND_API_KEY and AETHER_FROM_EMAIL secrets in the project.
+// same RESEND_API_KEY and MAIA_FROM_EMAIL secrets in the project.
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -17,8 +17,8 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
-const FROM_EMAIL = Deno.env.get("AETHER_FROM_EMAIL") || "Aether <onboarding@resend.dev>";
-const SITE_URL = "https://owen-alderson.github.io/elite-network-platform";
+const FROM_EMAIL = Deno.env.get("MAIA_FROM_EMAIL") || "Maia <onboarding@resend.dev>";
+const SITE_URL = "https://maiacircle.com";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -78,19 +78,19 @@ Deno.serve(async (req) => {
 
   if (event === "broker_assigned") {
     to = intro.broker?.email;
-    subject = `${requesterName} asked you to broker an intro — Aether`;
+    subject = `${requesterName} asked you to broker an intro — Maia`;
     html = brokerEmailHtml(requesterName, targetName, intro.note);
   } else if (event === "forwarded") {
     to = intro.requester?.email;
-    subject = `Your intro to ${targetName} was forwarded — Aether`;
+    subject = `Your intro to ${targetName} was forwarded — Maia`;
     html = forwardedEmailHtml(targetName, brokerName);
   } else if (event === "direct_received") {
     to = intro.target?.email;
-    subject = `${requesterName} would like to be introduced — Aether`;
+    subject = `${requesterName} would like to be introduced — Maia`;
     html = directReceivedEmailHtml(requesterName, intro.note);
   } else if (event === "direct_accepted") {
     to = intro.requester?.email;
-    subject = `${targetName} accepted your introduction — Aether`;
+    subject = `${targetName} accepted your introduction — Maia`;
     html = directAcceptedEmailHtml(targetName);
   } else {
     return json({ error: "unknown event" }, 400);
@@ -134,9 +134,9 @@ function shellHtml(inner: string): string {
 </head>
 <body>
   <div class="card">
-    <div class="wordmark">AETHER</div>
+    <div class="wordmark">MAIA</div>
     ${inner}
-    <p class="muted">Aether is invite-only. You're receiving this because you're a member.</p>
+    <p class="muted">Maia is invite-only. You're receiving this because you're a member.</p>
   </div>
 </body>
 </html>`;
@@ -150,7 +150,7 @@ function brokerEmailHtml(requesterName: string, targetName: string, note: string
     <p>Their note:</p>
     <div class="quote">${safeNote}</div>
     <p>Make the introduction off-platform (email, message, in person), then mark it forwarded on your dashboard.</p>
-    <a class="btn" href="${SITE_URL}/dashboard.html">Open Aether</a>
+    <a class="btn" href="${SITE_URL}/dashboard.html">Open Maia</a>
   `);
 }
 
@@ -159,7 +159,7 @@ function forwardedEmailHtml(targetName: string, brokerName: string): string {
     <h1>Your introduction is on its way.</h1>
     <p><strong style="color:#f5f0e8;">${escapeHtml(brokerName)}</strong> has made the introduction to <strong style="color:#f5f0e8;">${escapeHtml(targetName)}</strong>. Watch for an email or message — the conversation continues off-platform.</p>
     <p>Once you've connected, mark the intro as accepted on your dashboard so it shows up in your network.</p>
-    <a class="btn" href="${SITE_URL}/dashboard.html">Open Aether</a>
+    <a class="btn" href="${SITE_URL}/dashboard.html">Open Maia</a>
   `);
 }
 
@@ -167,10 +167,10 @@ function directReceivedEmailHtml(requesterName: string, note: string | null): st
   const safeNote = (note || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   return shellHtml(`
     <h1>${escapeHtml(requesterName)} would like to meet you.</h1>
-    <p>You don't have a mutual connection on Aether yet, so this request is coming straight to you. They wrote:</p>
+    <p>You don't have a mutual connection on Maia yet, so this request is coming straight to you. They wrote:</p>
     <div class="quote">${safeNote}</div>
-    <p>Open Aether to see their profile and accept or decline. If you accept, a private conversation opens between the two of you.</p>
-    <a class="btn" href="${SITE_URL}/dashboard.html">Open Aether</a>
+    <p>Open Maia to see their profile and accept or decline. If you accept, a private conversation opens between the two of you.</p>
+    <a class="btn" href="${SITE_URL}/dashboard.html">Open Maia</a>
   `);
 }
 
@@ -178,7 +178,7 @@ function directAcceptedEmailHtml(targetName: string): string {
   return shellHtml(`
     <h1>${escapeHtml(targetName)} accepted your introduction.</h1>
     <p>A private conversation has opened between the two of you. Pick up where the request left off — your note is already there as the first message.</p>
-    <a class="btn" href="${SITE_URL}/dashboard.html">Open Aether</a>
+    <a class="btn" href="${SITE_URL}/dashboard.html">Open Maia</a>
   `);
 }
 

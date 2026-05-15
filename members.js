@@ -2,8 +2,8 @@
 // Requires supabase.js + auth.js loaded first.
 
 (function () {
-  if (!window.aether || !window.aether.client) return;
-  var supabase = window.aether.client;
+  if (!window.maia || !window.maia.client) return;
+  var supabase = window.maia.client;
 
   var gridEl = document.getElementById('members-grid');
   var toolbarEl = document.querySelector('.filter-list');
@@ -13,7 +13,7 @@
   var searchTerm = '';
 
   (async function init() {
-    var session = await window.aether.requireAuth();
+    var session = await window.maia.requireAuth();
     if (!session) return;
 
     if (toolbarEl) {
@@ -94,7 +94,7 @@
 
     var avatar = document.createElement('div');
     avatar.className = 'card-avatar';
-    window.aether.fillAvatar(avatar, m);
+    window.maia.fillAvatar(avatar, m);
     link.appendChild(avatar);
 
     var body = document.createElement('div');

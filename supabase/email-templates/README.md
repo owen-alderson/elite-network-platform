@@ -14,15 +14,15 @@ These templates aren't in the source pipeline. Supabase Auth templates live in t
 
 1. Open https://supabase.com/dashboard/project/emlresxklixzcsammste/auth/templates
 2. **Magic Link** template:
-   - **Subject:** `Your sign-in link to Aether`
+   - **Subject:** `Your sign-in link to Maia`
    - **Body:** paste contents of `magic-link.html`
    - Save
 3. **Invite User** template:
-   - **Subject:** `You're in. Welcome to Aether.`
+   - **Subject:** `You're in. Welcome to Maia.`
    - **Body:** paste contents of `invite-user.html`
    - Save
 4. **Reset Password** template:
-   - **Subject:** `Reset your Aether password`
+   - **Subject:** `Reset your Maia password`
    - **Body:** paste contents of `recovery.html`
    - Save
 
@@ -35,7 +35,7 @@ Supabase Auth templates use Go-template syntax. Available in both:
 | `{{ .ConfirmationURL }}` | The signed magic-link URL — what the CTA button + fallback paragraph link to |
 | `{{ .Email }}` | The recipient's email — used in the invite copy to make it feel personal |
 | `{{ .Token }}` | The 6-digit OTP, if you ever switch to OTP-based flow (not used today) |
-| `{{ .SiteURL }}` | The configured site URL (`https://owen-alderson.github.io/elite-network-platform/`) |
+| `{{ .SiteURL }}` | The configured site URL (`https://maiacircle.com/`) |
 
 There is **no first-name variable** in these templates — Supabase Auth doesn't have access to the `members` table at send time. The invite copy is intentionally email-shaped, not name-shaped, to work around this.
 
@@ -46,7 +46,7 @@ After pasting:
 1. **Magic link:** sign in via `login.html` with your own admin email → check inbox.
 2. **Invite user:** create a test application via `apply.html` → approve it from `admin.html` → check the test inbox.
 
-Both should land with the AETHER wordmark up top, the Cormorant headline, and a gold CTA. If they render with generic Supabase chrome, the paste didn't take.
+Both should land with the MAIA wordmark up top, the Cormorant headline, and a gold CTA. If they render with generic Supabase chrome, the paste didn't take.
 
 ## Known caveats
 

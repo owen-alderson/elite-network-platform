@@ -1,4 +1,4 @@
--- Aether — Phase 1 schema (canonical)
+-- Maia — Phase 1 schema (canonical)
 -- Reflects every migration applied through 2026-05-01. This file is
 -- non-idempotent on a fresh project — run as a single shot via the
 -- Supabase SQL editor or apply piece-by-piece via mcp__supabase__apply_migration.

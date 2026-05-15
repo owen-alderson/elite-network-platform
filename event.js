@@ -2,15 +2,15 @@
 // Requires supabase.js + auth.js loaded first.
 
 (function () {
-  if (!window.aether || !window.aether.client) return;
-  var supabase = window.aether.client;
+  if (!window.maia || !window.maia.client) return;
+  var supabase = window.maia.client;
 
   var currentEventId = null;
   var currentEvent = null;
   var sessionUserId = null;
 
   (async function init() {
-    var session = await window.aether.requireAuth();
+    var session = await window.maia.requireAuth();
     if (!session) return;
     sessionUserId = session.user.id;
 
@@ -44,7 +44,7 @@
     var ev = currentEvent;
     var starts = new Date(ev.starts_at);
 
-    document.title = (ev.title || 'Event') + ' · Aether';
+    document.title = (ev.title || 'Event') + ' · Maia';
 
     // Hero background — explicit event image wins, partner-space image falls
     // back, no image leaves the existing dark hero alone.
@@ -192,7 +192,7 @@
 
           var av = document.createElement('div');
           av.className = 'att-avatar-lg';
-          window.aether.fillAvatar(av, m);
+          window.maia.fillAvatar(av, m);
           card.appendChild(av);
 
           var name = document.createElement('p');
