@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Join — Maia</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="apply.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <span class="wordmark">MAIA</span>
+      <div class="nav-links">
+        <a href="members.html">Members</a>
+        <a href="events.html">Events</a>
+        <a href="spaces.html">Spaces</a>
+        <a href="login.html" class="nav-signin">Sign in</a>
+      </div>
+    </div>
+      <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="members.html">Members</a>
+    <a href="events.html">Events</a>
+    <a href="spaces.html">Spaces</a>
+    <a href="partners.html">Partners</a>
+    <a href="login.html" class="mobile-signin">Sign in</a>
+    <a href="apply.html" class="mobile-cta">Request Access</a>
+  </div>
+
+  <div class="flow-wrap">
+
+    <!-- =====================================================
+         ENTRY — Choose path
+         ===================================================== -->
+    <div class="flow-screen active" id="screen-entry">
+      <div class="flow-center">
+        <p class="flow-eyebrow" id="entry-eyebrow">Membership</p>
+        <h1 class="flow-heading" id="entry-heading">How would you<br>like to proceed?</h1>
+        <p class="flow-sub" id="entry-sub">Maia is built on trusted nominations. Every member is vouched for by someone already inside. Membership is for life — there's no aging out, no cohort, no expiry.</p>
+        <div class="entry-cards">
+          <button class="entry-card" data-flow="apply" onclick="startFlow('apply')">
+            <span class="entry-card-icon">◈</span>
+            <h3>I've been nominated</h3>
+            <p>You received a nomination from a Maia member. Complete your application here.</p>
+            <span class="entry-card-cta">Begin Application →</span>
+          </button>
+          <button class="entry-card" data-flow="nominate" onclick="startFlow('nominate')">
+            <span class="entry-card-icon">◇</span>
+            <h3>I want to nominate someone</h3>
+            <p>You're a current member and want to introduce an exceptional peer to Maia.</p>
+            <span class="entry-card-cta">Submit a Nomination →</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =====================================================
+         APPLICATION FLOW
+         ===================================================== -->
+
+    <!-- A1: Confirm email -->
+    <div class="flow-screen" id="screen-a1">
+      <div class="flow-inner">
+        <div class="step-track" data-flow="apply" data-step="1"></div>
+        <div class="flow-content">
+          <p class="flow-eyebrow">Application · Step 1 of 5</p>
+          <h2 class="flow-heading-sm">Confirm your email</h2>
+          <p class="flow-sub-sm">Use the same address your nominator submitted with you. Our reviewers match applications to nominations by email.</p>
+          <div class="form-group">
+            <label class="form-label">Your Email Address</label>
+            <input class="form-input" type="email" placeholder="you@example.com" id="a-email" />
+            <p class="form-hint">If you weren't nominated, you'll need a nomination from a current member before you can apply.</p>
+          </div>
+          <div class="flow-actions">
+            <button class="btn-ghost btn-sm" onclick="goEntry()">← Back</button>
+            <button class="btn-primary btn-sm" onclick="nextApply(1)">Continue →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- A2: Personal details -->
+    <div class="flow-screen" id="screen-a2">
+      <div class="flow-inner">
+        <div class="step-track" data-flow="apply" data-step="2"></div>
+        <div class="flow-content">
+          <p class="flow-eyebrow">Application · Step 2 of 5</p>
+          <h2 class="flow-heading-sm">About you</h2>
+          <p class="flow-sub-sm">The basics. Keep your title tight — this appears on your public profile.</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">First Name</label>
+              <input class="form-input" type="text" placeholder="First" id="a-first" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Last Name</label>
+              <input class="form-input" type="text" placeholder="Last" id="a-last" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Current Role & Organisation</label>
+            <input class="form-input" type="text" placeholder="e.g. Managing Partner — Veil Capital" id="a-role" />
+            <p class="form-hint">One line. This is your headline on Maia.</p>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">City</label>
+              <input class="form-input" type="text" placeholder="e.g. London" id="a-city" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Country</label>
+              <input class="form-input" type="text" placeholder="e.g. United Kingdom" id="a-country" />
+            </div>
+          </div>
+          <div class="flow-actions">
+            <button class="btn-ghost btn-sm" onclick="goScreen('a1')">← Back</button>
+            <button class="btn-primary btn-sm" onclick="nextApply(2)">Continue →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- A3: Pillar + headline -->
+    <div class="flow-screen" id="screen-a3">
+      <div class="flow-inner">
+        <div class="step-track" data-flow="apply" data-step="3"></div>
+        <div class="flow-content">
+          <p class="flow-eyebrow">Application · Step 3 of 5</p>
+          <h2 class="flow-heading-sm">Your field</h2>
+          <p class="flow-sub-sm">Select the pillar that best describes your primary domain. You'll be evaluated against the global bar in that field.</p>
+
+          <div class="form-group">
+            <label class="form-label">Pillar</label>
+            <div class="pillar-select" id="pillar-select">
+              <button class="pillar-opt" data-value="beauty" onclick="selectPillar(this)">Beauty</button>
+              <button class="pillar-opt" data-value="entertainment" onclick="selectPillar(this)">Entertainment</button>
+              <button class="pillar-opt" data-value="fashion" onclick="selectPillar(this)">Fashion</button>
+              <button class="pillar-opt" data-value="finance" onclick="selectPillar(this)">Finance</button>
+              <button class="pillar-opt" data-value="hospitality" onclick="selectPillar(this)">Hospitality</button>
+              <button class="pillar-opt" data-value="music" onclick="selectPillar(this)">Music</button>
+              <button class="pillar-opt" data-value="sport" onclick="selectPillar(this)">Sport</button>
+              <button class="pillar-opt" data-value="wellness" onclick="selectPillar(this)">Wellness</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">One-line credential</label>
+            <input class="form-input" type="text" placeholder="e.g. 2x Olympic Gold Medalist · Freestyle Skiing" id="a-credential" />
+            <p class="form-hint">The single strongest signal of your elite status in this field. Not a job title.</p>
+          </div>
+
+          <div class="flow-actions">
+            <button class="btn-ghost btn-sm" onclick="goScreen('a2')">← Back</button>
+            <button class="btn-primary btn-sm" onclick="nextApply(3)">Continue →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- A4: Achievements -->
+    <div class="flow-screen" id="screen-a4">
+      <div class="flow-inner">
+        <div class="step-track" data-flow="apply" data-step="4"></div>
+        <div class="flow-content">
+          <p class="flow-eyebrow">Application · Step 4 of 5</p>
+          <h2 class="flow-heading-sm">The one thing.</h2>
+          <p class="flow-sub-sm">Describe one thing you've built, made, won, or moved. The specific story that, told well, ends an argument about whether you should be on Maia. Be concrete — names, numbers, dates. We read this first.</p>
+
+          <div class="form-group">
+            <textarea class="form-textarea" rows="6" placeholder="e.g. In 2024 I led the carve-out of a $180M industrial coatings business from Henkel — sourced the asset, ran the LBO model, brought in two operating partners from BASF, closed in 9 months despite a failed first lender. Returns 3.8x net to LPs at exit." id="a-signature"></textarea>
+            <p class="form-hint" id="a-signature-counter">Minimum 100 characters. Specific beats sweeping.</p>
+          </div>
+
+          <h3 class="flow-heading-sm" style="margin-top: 36px; font-size: 20px;">Three more, briefly.</h3>
+          <p class="flow-sub-sm">A short list — year, title, brief context. Used to verify and to populate your profile.</p>
+
+          <div class="achievement-entry" id="ach-1">
+            <div class="ach-num">01</div>
+            <div class="ach-fields">
+              <div class="form-row">
+                <div class="form-group form-group-sm">
+                  <label class="form-label">Year</label>
+                  <input class="form-input" type="text" placeholder="2023" />
+                </div>
+                <div class="form-group form-group-grow">
+                  <label class="form-label">Achievement</label>
+                  <input class="form-input" type="text" placeholder="e.g. Closed €840M Fund IV — Veil Capital" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Details <span class="form-label-opt">(optional)</span></label>
+                <input class="form-input" type="text" placeholder="Brief context — publication, organisation, or scale" />
+              </div>
+            </div>
+          </div>
+
+          <div class="achievement-entry" id="ach-2">
+            <div class="ach-num">02</div>
+            <div class="ach-fields">
+              <div class="form-row">
+                <div class="form-group form-group-sm">
+                  <label class="form-label">Year</label>
+                  <input class="form-input" type="text" placeholder="2021" />
+                </div>
+                <div class="form-group form-group-grow">
+                  <label class="form-label">Achievement</label>
+                  <input class="form-input" type="text" placeholder="e.g. Forbes PE Power List — Ranked #12" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Details <span class="form-label-opt">(optional)</span></label>
+                <input class="form-input" type="text" placeholder="Brief context" />
+              </div>
+            </div>
+          </div>
+
+          <div class="achievement-entry" id="ach-3">
+            <div class="ach-num">03</div>
+            <div class="ach-fields">
+              <div class="form-row">
+                <div class="form-group form-group-sm">
+                  <label class="form-label">Year</label>
+                  <input class="form-input" type="text" placeholder="2019" />
+                </div>
+                <div class="form-group form-group-grow">
+                  <label class="form-label">Achievement</label>
+                  <input class="form-input" type="text" placeholder="e.g. Exit: Meridian Logistics — 4.2x return" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Details <span class="form-label-opt">(optional)</span></label>
+                <input class="form-input" type="text" placeholder="Brief context" />
+              </div>
+            </div>
+          </div>
+
+          <div class="flow-actions">
+            <button class="btn-ghost btn-sm" onclick="goScreen('a3')">← Back</button>
+            <button class="btn-primary btn-sm" onclick="nextApply(4)">Continue →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- A5: What's next + review -->
+    <div class="flow-screen" id="screen-a5">
+      <div class="flow-inner">
+        <div class="step-track" data-flow="apply" data-step="5"></div>
+        <div class="flow-content">
+          <p class="flow-eyebrow">Application · Step 5 of 5</p>
+          <h2 class="flow-heading-sm">What's next.</h2>
+          <p class="flow-sub-sm">Maia is for what comes after the first thing. If you're already building a venture in an adjacent industry, describe it. If you're exploring — looking for collaborations, partners, or ideas — say what you're curious about. Both are valid. Reviewers read this paired with "the one thing" you described above.</p>
+
+          <div class="form-group">
+            <label class="form-label">What's next <span class="form-label-opt">(optional)</span></label>
+            <textarea class="form-textarea" rows="4" placeholder="Already building: Spinning a clean-beauty line off my modeling name. Q1 2027 launch; raising $1.2M from operators. Co-founder is a former Estée Lauder formulator.&#10;&#10;Or exploring: Looking for cross-disciplinary collaborations in fashion. My art has shown at Frieze; I want to take it onto wearable surfaces and find the right partner." id="a-current"></textarea>
+            <p class="form-hint">Optional but recommended. Concrete is more credible than ambitious. If you're still finding it, say so — that's a valid answer.</p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">LinkedIn or public profile URL <span class="form-label-opt">(optional — speeds up verification)</span></label>
+            <input class="form-input" type="url" placeholder="https://linkedin.com/in/..." id="a-linkedin" />
+          </div>
+
+          <div class="review-box" id="review-box">
+            <p class="review-label">Review before submitting</p>
+            <div class="review-grid" id="review-content">
+              <!-- populated by JS -->
+            </div>
+          </div>
+
+          <div class="flow-actions">
+            <button class="btn-ghost btn-sm" onclick="goScreen('a4')">← Back</button>
+            <button class="btn-primary btn-sm" onclick="submitApplication()">Submit Application →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- A-CONFIRM -->
+    <div class="flow-screen" id="screen-a-confirm">
+      <div class="flow-center">
+        <div class="confirm-icon">◈</div>
+        <p class="flow-eyebrow">Application Received</p>
+        <h2 class="flow-heading">Under review.</h2>
+        <p class="flow-sub">Our team will read the one thing you've built — paired with what you're building or curious about next — against the global bar for your field. This typically takes 5–10 business days. You will hear from us by email.</p>
+        <p class="flow-sub" style="margin-top: 12px; font-size: 13px;">In the meantime, your nominator has been notified that you've completed your application.</p>
+        <a href="index.html" class="btn-ghost" style="margin-top: 40px; display: inline-block;">Return to Maia</a>
+      </div>
+    </div>
+
+
+    <!-- =====================================================
+         NOMINATION FLOW
+         ===================================================== -->
+
+    <!-- N1: Nominate (single-screen, simplified — Option-A pilot)
+         The nominator does the bare minimum. Nominee fills the rich
+         applicant form themselves via the email link they receive. -->
+    <div class="flow-screen" id="screen-n1">
+      <div class="flow-inner">
+        <div class="flow-content">
+          <p class="flow-eyebrow">Nominate</p>
+          <h2 class="flow-heading-sm">Introduce someone exceptional</h2>
+          <p class="flow-sub-sm">We'll send them a unique link to complete their own application — pillar, credentials, what's next. You only need to point us at them and tell us why.</p>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Their First Name</label>
+              <input class="form-input" type="text" placeholder="First" id="n-nom-first" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Their Last Name</label>
+              <input class="form-input" type="text" placeholder="Last" id="n-nom-last" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Their Email Address</label>
+            <input class="form-input" type="email" placeholder="nominee@example.com" id="n-nom-email" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">What are they doing right now?</label>
+            <input class="form-input" type="text" placeholder="e.g. Launching a clean-beauty line off her modeling name" id="n-nom-current" maxlength="200" />
+            <p class="form-hint">One line. The current shape of their work — what makes this an interesting moment to bring them in.</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Why do you value them?</label>
+            <textarea class="form-textarea" rows="4" placeholder="Two or three sentences. Specific beats sweeping — what have they built or are building that puts them in the top of their field?" id="n-why"></textarea>
+            <p class="form-hint">Minimum 30 characters. Your endorsement carries weight in admin review.</p>
+          </div>
+
+          <div class="nominator-note">
+            <p>Submitting sends them a unique application link. They complete the rest themselves — pillar, credentials, "what's next." Our review team weighs your endorsement alongside their submission.</p>
+          </div>
+
+          <div class="flow-actions">
+            <button class="btn-ghost btn-sm" onclick="goEntry()">← Back</button>
+            <button class="btn-primary btn-sm" onclick="submitNomination()">Send Nomination →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- N-CONFIRM -->
+    <div class="flow-screen" id="screen-n-confirm">
+      <div class="flow-center">
+        <div class="confirm-icon">◇</div>
+        <p class="flow-eyebrow">Nomination Submitted</p>
+        <h2 class="flow-heading">Nomination sent.</h2>
+        <p class="flow-sub">We've emailed your nominee a unique link to complete their application. Once they do, our review team weighs your endorsement alongside their submission against the global bar for their field.</p>
+        <p class="flow-sub" style="margin-top: 12px; font-size: 13px;">You'll hear from us when there's a decision. Thank you for keeping the network exceptional.</p>
+        <a href="index.html" class="btn-ghost" style="margin-top: 40px; display: inline-block;">Return to Maia</a>
+      </div>
+    </div>
+
+  </div><!-- /flow-wrap -->
+
+  <script>
+    // ── State ──────────────────────────────────────────────
+    let selectedPillar  = null;
+    // selectedPillarN removed — nominator no longer picks pillar (nominee
+    // chooses their own when they fill the applicant form).
+
+    const APPLY_STEPS = [
+      'Verify nomination',
+      'Personal details',
+      'Field & credential',
+      'Achievements',
+      'Review & submit'
+    ];
+    // NOMINATE_STEPS removed — single-screen nominator form, no tracker.
+
+    // ── Step tracker builder ────────────────────────────────
+    function buildStepTrack(trackEl, labels, currentStep) {
+      trackEl.innerHTML = '';
+      labels.forEach((label, i) => {
+        const div = document.createElement('div');
+        div.className = 'step-dot';
+        if (i + 1 < currentStep)  div.classList.add('done');
+        if (i + 1 === currentStep) div.classList.add('active');
+        div.innerHTML = `<span class="step-dot-label">${label}</span>`;
+        trackEl.appendChild(div);
+      });
+    }
+
+    // ── Screen routing ─────────────────────────────────────
+    function showScreen(id) {
+      document.querySelectorAll('.flow-screen').forEach(s => s.classList.remove('active'));
+      const el = document.getElementById('screen-' + id);
+      if (!el) return;
+      el.classList.add('active');
+      window.scrollTo(0, 0);
+
+      // Populate step tracks
+      const track = el.querySelector('.step-track');
+      if (track) {
+        const flow = track.dataset.flow;
+        const step = parseInt(track.dataset.step, 10);
+        if (flow === 'apply')    buildStepTrack(track, APPLY_STEPS, step);
+      }
+    }
+
+    function goEntry()    { showScreen('entry'); }
+    function goScreen(id) { showScreen(id); }
+
+    function startFlow(type) {
+      showScreen(type === 'apply' ? 'a1' : 'n1');
+    }
+
+    // ── Pillar selectors ───────────────────────────────────
+    function selectPillar(btn) {
+      document.querySelectorAll('#pillar-select .pillar-opt').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedPillar = btn.dataset.value;
+    }
+    // selectPillarN removed — nominator no longer picks pillar.
+
+    // ── Apply flow ─────────────────────────────────────────
+    function nextApply(step) {
+      if      (step === 1) { showScreen('a2'); }
+      else if (step === 2) { showScreen('a3'); }
+      else if (step === 3) {
+        if (!selectedPillar) { alert('Please select a pillar.'); return; }
+        showScreen('a4');
+      }
+      else if (step === 4) {
+        var sig = document.getElementById('a-signature');
+        var sigVal = sig ? (sig.value || '').trim() : '';
+        if (sigVal.length < 100) {
+          alert('Tell us about one specific accomplishment — at least 100 characters. Names, numbers, dates.');
+          if (sig) sig.focus();
+          return;
+        }
+        var hasAch = false;
+        for (var i = 1; i <= 3; i++) {
+          var entry = document.getElementById('ach-' + i);
+          if (!entry) continue;
+          var titleInput = entry.querySelectorAll('input.form-input')[1];
+          if (titleInput && (titleInput.value || '').trim()) { hasAch = true; break; }
+        }
+        if (!hasAch) {
+          alert('Add at least one supporting achievement (year + title).');
+          return;
+        }
+        showScreen('a5'); buildReview();
+      }
+    }
+
+    // Live character counter on the signature-achievement textarea.
+    document.addEventListener('DOMContentLoaded', function () {
+      var ta = document.getElementById('a-signature');
+      var hint = document.getElementById('a-signature-counter');
+      if (!ta || !hint) return;
+      function update() {
+        var n = (ta.value || '').trim().length;
+        if (n === 0) {
+          hint.textContent = 'Minimum 100 characters. Specific beats sweeping.';
+          hint.style.color = '';
+        } else if (n < 100) {
+          hint.textContent = (100 - n) + ' more characters before this passes.';
+          hint.style.color = 'var(--muted)';
+        } else if (n > 4000) {
+          hint.textContent = (n - 4000) + ' over the 4000-character limit.';
+          hint.style.color = '#b34c4c';
+        } else {
+          hint.textContent = 'Strong. ' + n + ' characters.';
+          hint.style.color = 'var(--gold)';
+        }
+      }
+      ta.addEventListener('input', update);
+      update();
+    });
+
+    function buildReview() {
+      const first  = document.getElementById('a-first')?.value      || '—';
+      const last   = document.getElementById('a-last')?.value       || '—';
+      const role   = document.getElementById('a-role')?.value       || '—';
+      const city   = document.getElementById('a-city')?.value       || '—';
+      const cred   = document.getElementById('a-credential')?.value || '—';
+      const sigRaw = (document.getElementById('a-signature')?.value || '').trim();
+      const pillar = selectedPillar
+        ? selectedPillar.charAt(0).toUpperCase() + selectedPillar.slice(1)
+        : '—';
+      const sigPreview = sigRaw.length > 180 ? sigRaw.slice(0, 180) + '…' : (sigRaw || '—');
+      const escape = (s) => s.replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      }[c]));
+
+      document.getElementById('review-content').innerHTML = `
+        <div class="review-row"><span class="review-key">Name</span><span class="review-val">${first} ${last}</span></div>
+        <div class="review-row"><span class="review-key">Role</span><span class="review-val">${role}</span></div>
+        <div class="review-row"><span class="review-key">Location</span><span class="review-val">${city}</span></div>
+        <div class="review-row"><span class="review-key">Pillar</span><span class="review-val">${pillar}</span></div>
+        <div class="review-row"><span class="review-key">Credential</span><span class="review-val">${cred}</span></div>
+        <div class="review-row"><span class="review-key">The one thing</span><span class="review-val">${escape(sigPreview)}</span></div>
+      `;
+    }
+
+    // submitApplication() and submitNomination() are overridden in apply.js
+    // (loaded below). The fallbacks below run only if Supabase fails to load.
+    function submitApplication() { showScreen('a-confirm'); }
+
+    // ── Nominate flow ──────────────────────────────────────
+    // Single-screen nominator form — no nextNominate routing needed.
+    // submitNomination is overridden by apply.js; this fallback shows the
+    // confirm screen if Supabase fails to load.
+    function submitNomination() { showScreen('n-confirm'); }
+  </script>
+
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+  <script src="auth.js"></script>
+  <script src="apply.js"></script>
+
+  <script src="nav.js"></script>
+</body>
+</html>
