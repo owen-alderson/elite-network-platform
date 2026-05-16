@@ -150,7 +150,7 @@ async function handleNominator(admin: any, app: any): Promise<Response> {
       results.nominee_invite = { sent: false, reason: "missing_email_or_code" };
     } else {
       const nomineeFirst = (app.applicant_full_name?.split(" ")[0]) || "there";
-      const nominatorName = app.nominator_full_name || "An Maia member";
+      const nominatorName = app.nominator_full_name || "A Maia member";
       const inviteUrl = SITE_URL + "/apply.html?code=" + encodeURIComponent(app.nomination_code) +
         "&email=" + encodeURIComponent(app.applicant_email);
       const ok = await sendEmail({

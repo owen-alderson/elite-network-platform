@@ -108,7 +108,7 @@
       console.warn('Password-reset request error:', res.error.message);
     }
 
-    setStatus('If you have an Maia account, a password-reset link is on its way to your inbox.', 'success');
+    setStatus('If you have a Maia account, a password-reset link is on its way to your inbox.', 'success');
   }
 
   // ── Form submit: branches on whether the password field is filled ──
