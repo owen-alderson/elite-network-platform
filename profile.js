@@ -21,11 +21,11 @@
   // Tags: free-form, capped at 5, normalized to lowercase + trimmed.
   var MAX_TAGS = 5;
 
-  // Pillar list — locked 2026-05-03 per Alessandro's revision in [[Maia - Alessandro Call 2026-05-03]].
-  // Mirrors the directory + apply form. Owen is the source of truth.
+  // Pillar list. Mirrors the directory filter + apply form — keep in sync.
+  // Investor + Entrepreneurship added 2026-05-17 (cofounder call).
   var ALL_PILLARS = [
-    'beauty', 'entertainment', 'fashion', 'finance',
-    'hospitality', 'music', 'sport', 'wellness'
+    'beauty', 'entertainment', 'entrepreneurship', 'fashion', 'finance',
+    'hospitality', 'investor', 'music', 'sport', 'wellness'
   ];
 
   // Single source of truth for the loaded member record.

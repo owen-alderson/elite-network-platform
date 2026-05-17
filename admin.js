@@ -20,8 +20,8 @@
   var editingSpaceId = null;
 
   var ALL_PILLARS = [
-    'beauty', 'entertainment', 'fashion', 'finance',
-    'hospitality', 'music', 'sport', 'wellness'
+    'beauty', 'entertainment', 'entrepreneurship', 'fashion', 'finance',
+    'hospitality', 'investor', 'music', 'sport', 'wellness'
   ];
 
   // ── DOM refs ────────────────────────────────────────────────
