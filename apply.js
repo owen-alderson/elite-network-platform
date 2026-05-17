@@ -35,7 +35,17 @@
   // pair the applicant row with the parent nomination row.
   var nominationContext = null;
 
+  // Holds {applicationId, token} when the page is opened from a "needs more
+  // info" email (apply.html?edit=...&token=...). When set, submitApplication
+  // updates the existing row via RPC instead of inserting a new one.
+  var editContext = null;
+
   document.addEventListener('DOMContentLoaded', function () {
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('edit') && params.get('token')) {
+      handleEditFromUrl(params.get('edit'), params.get('token'));
+      return; // revision mode — skip the nomination-code + entry-gate paths
+    }
     handleNominationCodeFromUrl();
     setupEntryGate();
   });
@@ -63,6 +73,96 @@
     if (typeof window.showScreen === 'function') {
       window.showScreen('a1');
     }
+  }
+
+  // ── Revision arrival: ?edit=<id>&token=<token> ──────────────
+  // Opened from a "needs more info" email. Loads the existing application
+  // via a token-gated RPC, prefills the applicant flow, and flips
+  // submitApplication into update-mode.
+  async function handleEditFromUrl(applicationId, token) {
+    var res = await supabase.rpc('get_application_for_edit', {
+      p_application_id: applicationId,
+      p_edit_token: token
+    });
+    var app = res && res.data ? (Array.isArray(res.data) ? res.data[0] : res.data) : null;
+    if (res.error || !app) {
+      alert('This edit link is invalid or has already been used. If you think that\'s a mistake, email hello@maiacircle.com.');
+      window.location.replace('index.html');
+      return;
+    }
+    editContext = { applicationId: applicationId, token: token };
+    prefillApplicantForm(app);
+    if (typeof window.showScreen === 'function') window.showScreen('a1');
+  }
+
+  // Populate the applicant flow from an existing application row.
+  function prefillApplicantForm(app) {
+    function set(id, value) {
+      var el = document.getElementById(id);
+      if (el && value != null) el.value = value;
+    }
+    var nameParts = (app.applicant_full_name || '').trim().split(/\s+/);
+    set('a-first', nameParts.shift() || '');
+    set('a-last', nameParts.join(' '));
+    set('a-role', app.applicant_headline);
+    set('a-credential', app.applicant_credential);
+    set('a-signature', app.applicant_signature_achievement);
+    set('a-current', app.applicant_current_work);
+    set('a-linkedin', app.applicant_linkedin_url);
+
+    var loc = (app.applicant_location || '').split(',');
+    set('a-city', (loc[0] || '').trim());
+    set('a-country', (loc[1] || '').trim());
+
+    // Email — prefilled and locked, like the nominee invite flow.
+    var emailInput = document.getElementById('a-email');
+    if (emailInput) {
+      emailInput.value = app.applicant_email || '';
+      emailInput.readOnly = true;
+      emailInput.style.opacity = '0.7';
+      emailInput.style.cursor = 'not-allowed';
+    }
+
+    // Pillar — selectPillar() (defined in apply.html) sets both the
+    // .selected class and the inline-script global the step gate reads.
+    if (app.applicant_pillar) {
+      var pillarBtn = document.querySelector('#pillar-select .pillar-opt[data-value="' + app.applicant_pillar + '"]');
+      if (pillarBtn && typeof window.selectPillar === 'function') window.selectPillar(pillarBtn);
+    }
+
+    // Achievements → ach-1 / ach-2 / ach-3 (year, title, details inputs).
+    var achievements = Array.isArray(app.applicant_achievements) ? app.applicant_achievements : [];
+    for (var i = 1; i <= 3; i++) {
+      var entry = document.getElementById('ach-' + i);
+      var a = achievements[i - 1];
+      if (!entry || !a) continue;
+      var inputs = entry.querySelectorAll('input.form-input');
+      if (inputs[0]) inputs[0].value = a.year || '';
+      if (inputs[1]) inputs[1].value = a.title || '';
+      if (inputs[2]) inputs[2].value = a.details || '';
+    }
+
+    // Refresh the signature character counter — prefilling .value doesn't
+    // fire the input event it listens on.
+    var sig = document.getElementById('a-signature');
+    if (sig) sig.dispatchEvent(new Event('input'));
+
+    // Surface the reviewer's note at the top of the flow.
+    if (app.reviewer_notes) {
+      var content = document.querySelector('#screen-a1 .flow-content');
+      if (content) {
+        var note = document.createElement('div');
+        note.className = 'nominator-note';
+        note.innerHTML = '<p><strong style="color:var(--gold);">A reviewer asked for an update:</strong><br>' +
+          escapeHtmlLite(app.reviewer_notes) + '</p>';
+        content.insertBefore(note, content.firstChild);
+      }
+    }
+  }
+
+  function escapeHtmlLite(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
   // ── Entry-card gate by auth state ───────────────────────────
@@ -214,11 +314,23 @@
     var btn = activeButton();
     setSubmitting(btn);
 
-    var res = await supabase.from('applications').insert(payload);
+    var res;
+    if (editContext) {
+      // Revision mode — update the existing row via the token-gated RPC.
+      res = await supabase.rpc('submit_application_revision', {
+        p_application_id: editContext.applicationId,
+        p_edit_token: editContext.token,
+        p_payload: payload
+      });
+    } else {
+      res = await supabase.from('applications').insert(payload);
+    }
     if (res.error) {
-      console.error('Application insert failed:', res.error);
+      console.error(editContext ? 'Application revision failed:' : 'Application insert failed:', res.error);
       clearSubmitting(btn);
-      if (isDuplicateError(res.error)) {
+      if (editContext) {
+        alert('Could not save your changes — this edit link may have expired. Email hello@maiacircle.com if it keeps happening.');
+      } else if (isDuplicateError(res.error)) {
         alert('We already have an application from this email under review. You\'ll hear from us by email when there\'s an update.');
       } else {
         alert('Submission failed. Please try again — if it keeps happening, email hello@maiacircle.com.');
@@ -226,8 +338,8 @@
       return;
     }
 
-    // Confirmation email is dispatched server-side by a postgres trigger
-    // that calls the send-application-confirmation edge function.
+    // Applicant confirmation email is dispatched server-side by a postgres
+    // trigger; a revision simply re-enters the review queue as 'pending'.
     go('a-confirm');
   };
 

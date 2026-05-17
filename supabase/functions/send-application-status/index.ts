@@ -7,6 +7,9 @@
 // UPDATE. Idempotent on a stamp column status_email_sent_at so a double-
 // fire doesn't double-email.
 //
+// 'needs_more_info' emails carry a tokenised apply.html?edit=... link so
+// the applicant can revise & resubmit their application in-app.
+//
 // Requires the same RESEND_API_KEY + MAIA_FROM_EMAIL secrets as the
 // other email functions. Graceful no-op without the key.
 
@@ -17,6 +20,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const FROM_EMAIL = Deno.env.get("MAIA_FROM_EMAIL") || "Maia <onboarding@resend.dev>";
+const SITE_URL = "https://maiacircle.com";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -46,7 +50,7 @@ Deno.serve(async (req) => {
 
   const { data: app, error: appErr } = await admin
     .from("applications")
-    .select("id, applicant_full_name, applicant_email, status, reviewer_notes, status_email_sent_at")
+    .select("id, applicant_full_name, applicant_email, status, reviewer_notes, status_email_sent_at, edit_token")
     .eq("id", applicationId)
     .maybeSingle();
   if (appErr) return json({ error: appErr.message }, 500);
@@ -69,8 +73,10 @@ Deno.serve(async (req) => {
   let html = "";
 
   if (app.status === "needs_more_info") {
+    const editUrl = SITE_URL + "/apply.html?edit=" + app.id +
+      "&token=" + encodeURIComponent(app.edit_token || "");
     subject = "We need a bit more information — Maia";
-    html = needsMoreInfoHtml(firstName, app.reviewer_notes);
+    html = needsMoreInfoHtml(firstName, app.reviewer_notes, editUrl);
   } else if (app.status === "rejected") {
     subject = "An update on your Maia application";
     html = rejectedHtml(firstName, app.reviewer_notes);
@@ -111,7 +117,11 @@ function shellHtml(inner: string): string {
   h1 { color:#f5f0e8; font-family: 'Cormorant Garamond', Georgia, serif; font-weight:300; font-size:32px; line-height:1.15; margin:0 0 18px; }
   p { font-size:14px; line-height:1.7; color:#d8d0c0; margin:0 0 14px; }
   .quote { background:#0a0a0a; border-left:2px solid #8a6d2f; padding:14px 18px; font-size:13px; line-height:1.6; margin:14px 0; white-space:pre-wrap; color:#d8d0c0; }
+  .cta-wrap { margin: 28px 0 24px; }
+  .cta { display:inline-block; background:#c9a84c; color:#0a0a0a !important; text-decoration:none; font-weight:500; letter-spacing:0.05em; padding:14px 30px; border-radius:2px; font-size:13px; }
+  .fallback { word-break:break-all; font-size:11px; color:#888888; margin-top:6px; line-height:1.6; }
   .muted { color:#888888; font-size:12px; margin-top:36px; }
+  a { color:#c9a84c; }
 </style>
 </head>
 <body>
@@ -124,15 +134,17 @@ function shellHtml(inner: string): string {
 </html>`;
 }
 
-function needsMoreInfoHtml(firstName: string, reviewerNotes: string | null): string {
+function needsMoreInfoHtml(firstName: string, reviewerNotes: string | null, editUrl: string): string {
   const notesBlock = reviewerNotes
-    ? `<p>Reviewer's note:</p><div class="quote">${escapeHtml(reviewerNotes)}</div>`
+    ? `<p>What we'd like you to add or revise:</p><div class="quote">${escapeHtml(reviewerNotes)}</div>`
     : '';
   return shellHtml(`
     <h1>We're considering your application — but need a bit more.</h1>
-    <p>Thank you, ${escapeHtml(firstName)}. Our review team has read your submission and would like additional context before making a decision.</p>
+    <p>Thank you, ${escapeHtml(firstName)}. Our review team has read your submission and would like a little more before making a decision.</p>
     ${notesBlock}
-    <p>Reply to this email with the requested information and we'll resume review.</p>
+    <p>Click below to update your application — it opens pre-filled with your answers, so you only need to change what's needed.</p>
+    <div class="cta-wrap"><a class="cta" href="${escapeHtml(editUrl)}">Update your application</a></div>
+    <p class="fallback">Or paste this into your browser:<br />${escapeHtml(editUrl)}</p>
   `);
 }
 
