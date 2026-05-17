@@ -1,18 +1,18 @@
 // send-application-confirmation — fires when a row is INSERTed into
-// public.applications (postgres trigger applications_send_confirmation).
+// public.applications (postgres trigger applications_send_confirmation),
+// and is also invoked directly by the admin queue.
 //
-// Routes by submission_type:
-//   • applicant — one email to the applicant_email confirming we received
-//     their submission. Stamps confirmation_sent_at.
-//   • nominator — TWO emails:
-//       (a) nominator_email gets "We received your nomination" — confirms
-//           the vouch landed. Stamps confirmation_sent_at.
-//       (b) applicant_email (the nominee) gets "[Nominator] nominated you
-//           for Maia" with a unique link to complete the applicant flow:
-//             apply.html?code=<nomination_code>&email=<nominee_email>
-//           Stamps nominee_invite_sent_at.
+// Trigger path (body: { application_id }):
+//   • applicant — one email to applicant_email confirming receipt.
+//     Stamps confirmation_sent_at.
+//   • nominator — ONE email to nominator_email confirming the nomination
+//     landed. Stamps confirmation_sent_at. The nominee is NOT emailed here.
 //
-// Both stamps are checked at the top so retries / replays are no-ops.
+// Admin path (body: { application_id, action: "nominee_invite" }):
+//   • Sends the nominee the "complete your application" email with their
+//     unique apply.html?code=... link. Triggered when an admin chooses to
+//     request a nominee's full application. Stamps nominee_invite_sent_at.
+//     Always sends, so an admin can re-send a lost invite.
 //
 // Setup (one-time, by Owen):
 //   1. Sign up for Resend (https://resend.com), grab an API key.
@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   if (req.method !== "POST") return json({ error: "method not allowed" }, 405);
 
-  let body: { application_id?: string };
+  let body: { application_id?: string; action?: string };
   try { body = await req.json(); } catch { return json({ error: "invalid json" }, 400); }
   const applicationId = body.application_id;
   if (!applicationId) return json({ error: "application_id required" }, 400);
@@ -77,12 +77,18 @@ Deno.serve(async (req) => {
     return json({ sent: false, reason: "resend_not_configured" }, 200);
   }
 
-  // Branch by submission_type. Each branch is responsible for stamping
-  // its own _sent_at column(s) and reporting what was actually sent.
+  // Admin-triggered: send the nominee their application link. A deliberate
+  // admin action, so it always sends (an admin may re-send a lost invite).
+  if (body.action === "nominee_invite") {
+    return await sendNomineeInvite(admin, app);
+  }
+
+  // Trigger path (fires on INSERT). Each branch stamps its own _sent_at
+  // column so trigger retries / replays are no-ops.
   if (app.submission_type === "applicant") {
     return await handleApplicant(admin, app);
   } else if (app.submission_type === "nominator") {
-    return await handleNominator(admin, app);
+    return await sendNominatorConfirmation(admin, app);
   } else {
     return json({ error: "unknown submission_type: " + app.submission_type }, 400);
   }
@@ -109,80 +115,63 @@ async function handleApplicant(admin: any, app: any): Promise<Response> {
   return json({ sent: true, kind: "applicant_confirmation" }, 200);
 }
 
-// ── Nominator: two emails ──────────────────────────────────────────
-//   (1) confirmation to nominator_email
-//   (2) nominee invite to applicant_email (which holds the nominee's email)
-// Each is sent independently and stamped independently — if one fails, the
-// other can still succeed. Idempotent: a retry only sends the missing one(s).
-async function handleNominator(admin: any, app: any): Promise<Response> {
-  const results: Record<string, unknown> = {};
-  const updates: Record<string, string> = {};
-
-  // ── (1) Nominator confirmation ─────────────────────────────
-  if (!app.confirmation_sent_at) {
-    if (!app.nominator_email) {
-      console.warn("Nomination", app.id, "has no nominator_email; skipping confirmation.");
-      results.nominator_confirmation = { sent: false, reason: "no_nominator_email" };
-    } else {
-      const nominatorFirst = (app.nominator_full_name?.split(" ")[0]) || "there";
-      const nomineeName = app.applicant_full_name || "your nominee";
-      const ok = await sendEmail({
-        to: [app.nominator_email],
-        subject: "We received your nomination — Maia",
-        html: nominatorConfirmationHtml(nominatorFirst, nomineeName),
-      });
-      if (ok.ok) {
-        updates.confirmation_sent_at = new Date().toISOString();
-        results.nominator_confirmation = { sent: true };
-      } else {
-        console.error("Nominator confirmation send failed:", ok.status, ok.detail);
-        results.nominator_confirmation = { sent: false, error: ok.detail };
-      }
-    }
-  } else {
-    results.nominator_confirmation = { sent: false, reason: "already_sent" };
+// ── Nominator confirmation — "we received your nomination" ──────────
+// Fires on INSERT of a nominator row. Confirms the vouch landed. Does NOT
+// email the nominee — that is admin-triggered (sendNomineeInvite).
+async function sendNominatorConfirmation(admin: any, app: any): Promise<Response> {
+  if (app.confirmation_sent_at) {
+    return json({ sent: false, reason: "already_sent" }, 200);
+  }
+  if (!app.nominator_email) {
+    console.warn("Nomination", app.id, "has no nominator_email; skipping confirmation.");
+    return json({ sent: false, reason: "no_nominator_email" }, 200);
   }
 
-  // ── (2) Nominee invite ─────────────────────────────────────
-  if (!app.nominee_invite_sent_at) {
-    if (!app.applicant_email || !app.nomination_code) {
-      console.warn("Nomination", app.id, "missing applicant_email or nomination_code; skipping nominee invite.");
-      results.nominee_invite = { sent: false, reason: "missing_email_or_code" };
-    } else {
-      const nomineeFirst = (app.applicant_full_name?.split(" ")[0]) || "there";
-      const nominatorName = app.nominator_full_name || "A Maia member";
-      const inviteUrl = SITE_URL + "/apply.html?code=" + encodeURIComponent(app.nomination_code) +
-        "&email=" + encodeURIComponent(app.applicant_email);
-      const ok = await sendEmail({
-        to: [app.applicant_email],
-        subject: nominatorName + " nominated you for Maia",
-        html: nomineeInviteHtml(nomineeFirst, nominatorName, app.nominator_note, inviteUrl),
-      });
-      if (ok.ok) {
-        updates.nominee_invite_sent_at = new Date().toISOString();
-        results.nominee_invite = { sent: true };
-      } else {
-        console.error("Nominee invite send failed:", ok.status, ok.detail);
-        results.nominee_invite = { sent: false, error: ok.detail };
-      }
-    }
-  } else {
-    results.nominee_invite = { sent: false, reason: "already_sent" };
+  const nominatorFirst = (app.nominator_full_name?.split(" ")[0]) || "there";
+  const nomineeName = app.applicant_full_name || "your nominee";
+  const ok = await sendEmail({
+    to: [app.nominator_email],
+    subject: "We received your nomination — Maia",
+    html: nominatorConfirmationHtml(nominatorFirst, nomineeName),
+  });
+  if (!ok.ok) return json({ error: "resend_failed", detail: ok.detail, status: ok.status }, 500);
+
+  await admin
+    .from("applications")
+    .update({ confirmation_sent_at: new Date().toISOString() })
+    .eq("id", app.id);
+
+  return json({ sent: true, kind: "nominator_confirmation" }, 200);
+}
+
+// ── Nominee invite — admin-triggered "complete your application" ────
+// Sent when an admin requests the nominee's full application. Always
+// sends (re-send safe). Stamps nominee_invite_sent_at for admin-queue UI.
+async function sendNomineeInvite(admin: any, app: any): Promise<Response> {
+  if (app.submission_type !== "nominator") {
+    return json({ error: "not a nomination" }, 400);
+  }
+  if (!app.applicant_email || !app.nomination_code) {
+    return json({ error: "nomination missing nominee email or code" }, 400);
   }
 
-  // Stamp whatever succeeded.
-  if (Object.keys(updates).length > 0) {
-    const { error: stampErr } = await admin
-      .from("applications")
-      .update(updates)
-      .eq("id", app.id);
-    if (stampErr) {
-      console.error("Failed to stamp nomination email timestamps:", stampErr);
-      // Emails already went out; don't fail the response.
-    }
-  }
+  const nomineeFirst = (app.applicant_full_name?.split(" ")[0]) || "there";
+  const nominatorName = app.nominator_full_name || "A Maia member";
+  const inviteUrl = SITE_URL + "/apply.html?code=" + encodeURIComponent(app.nomination_code) +
+    "&email=" + encodeURIComponent(app.applicant_email);
+  const ok = await sendEmail({
+    to: [app.applicant_email],
+    subject: nominatorName + " nominated you for Maia",
+    html: nomineeInviteHtml(nomineeFirst, nominatorName, app.nominator_note, inviteUrl),
+  });
+  if (!ok.ok) return json({ error: "resend_failed", detail: ok.detail, status: ok.status }, 500);
 
-  return json(results, 200);
+  await admin
+    .from("applications")
+    .update({ nominee_invite_sent_at: new Date().toISOString() })
+    .eq("id", app.id);
+
+  return json({ sent: true, kind: "nominee_invite" }, 200);
 }
 
 // ── Resend wrapper ──────────────────────────────────────────────────
@@ -243,8 +232,8 @@ function nominatorConfirmationHtml(nominatorFirst: string, nomineeName: string):
   return shell(`
     <h1>Your nomination is in.</h1>
     <p>Thanks, ${escapeHtml(nominatorFirst)}.</p>
-    <p>We received your nomination of ${escapeHtml(nomineeName)}. We've sent them a unique link to complete their application — pillar, credentials, what's next. Our review team will weigh your endorsement alongside their submission against the global bar for their field.</p>
-    <p>You'll hear from us when there's a decision — typically 5–10 business days after they complete their application. If they don't, we'll let you know that too.</p>
+    <p>We received your nomination of ${escapeHtml(nomineeName)}. Our review team will weigh your endorsement against the global bar for their field. If it's a fit, we'll invite them to complete a full application.</p>
+    <p>You'll hear from us when there's a decision. Thank you for helping keep the network exceptional.</p>
     <p class="muted">If you didn't submit a nomination, you can ignore this email.</p>
   `);
 }

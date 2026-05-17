@@ -315,11 +315,47 @@
     foot.appendChild(notes);
 
     var btnRow = el('div', 'app-action-buttons');
-    btnRow.appendChild(appActionBtn('Needs info', 'needs_more_info', 'btn-ghost btn-sm', app.id, notes));
+    // A nomination's first action emails the nominee their application link
+    // (admin-triggered, not automatic on submit). An applicant's first
+    // action is the "Needs info" status change.
+    if (app.submission_type === 'nominator') {
+      btnRow.appendChild(nomineeInviteBtn(app));
+    } else {
+      btnRow.appendChild(appActionBtn('Needs info', 'needs_more_info', 'btn-ghost btn-sm', app.id, notes));
+    }
     btnRow.appendChild(appActionBtn('Reject', 'rejected', 'btn-ghost btn-sm app-btn-reject', app.id, notes));
     btnRow.appendChild(appActionBtn('Approve', 'approved', 'btn-primary btn-sm', app.id, notes));
     foot.appendChild(btnRow);
     return foot;
+  }
+
+  // "Request application" — emails the nominee their unique apply.html link
+  // via send-application-confirmation (action: nominee_invite). Unlike
+  // appActionBtn it invokes an edge function and does not change app status;
+  // an admin can re-send, so the label flips once an invite has gone out.
+  function nomineeInviteBtn(app) {
+    var label = app.nominee_invite_sent_at ? 'Resend application link' : 'Request application';
+    var btn = document.createElement('button');
+    btn.className = 'btn-ghost btn-sm';
+    btn.textContent = label;
+    btn.addEventListener('click', async function () {
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+      var res = await supabase.functions.invoke('send-application-confirmation', {
+        body: { application_id: app.id, action: 'nominee_invite' }
+      });
+      var err = res.error || (res.data && res.data.error);
+      if (err) {
+        console.error('Nominee invite failed:', err);
+        alert('Could not send the application link: ' + (err.message || err));
+        btn.disabled = false;
+        btn.textContent = label;
+        return;
+      }
+      alert('Application link sent to ' + app.applicant_email + '.');
+      await refreshApps();
+    });
+    return btn;
   }
 
   function appActionBtn(label, status, classes, appId, notesEl) {

@@ -16,9 +16,9 @@
 //      own applicant submission.
 //
 // Email plumbing: a postgres trigger (applications_send_confirmation) fires
-// after every INSERT. The send-application-confirmation Edge Function sends
-// one email for applicant rows and TWO emails for nominator rows (nominator
-// confirmation + nominee invite with the code link).
+// after every INSERT and emails a confirmation to the submitter (applicant
+// or nominator). The nominee's "complete your application" invite is NOT
+// automatic — an admin sends it from the review queue ("Request application").
 //
 // Requires supabase.js to be loaded first.
 
