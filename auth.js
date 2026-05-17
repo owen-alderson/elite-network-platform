@@ -52,12 +52,13 @@
       return null;
     }
 
-    // First-time-sign-in gate: until the member sets a password, all
-    // requireAuth callers route them through set-password.html. The flag
-    // lives in user_metadata.has_password and is flipped by set-password.js
-    // via auth.updateUser({ data: { has_password: true } }).
+    // First-time-sign-in gate: a member who has neither set a password nor
+    // explicitly skipped the prompt is routed once through set-password.html.
+    // Both flags live in user_metadata and are set by set-password.js. The
+    // skip flag is what guarantees the gate can never trap a member — if the
+    // password write ever drifts from the flag, "Skip for now" still escapes.
     var meta = (session.user && session.user.user_metadata) || {};
-    if (meta.has_password !== true && !isOnExemptPath()) {
+    if (meta.has_password !== true && meta.password_setup_skipped !== true && !isOnExemptPath()) {
       var setUrl = new URL('set-password.html', window.location.href);
       window.location.replace(setUrl.toString());
       return null;

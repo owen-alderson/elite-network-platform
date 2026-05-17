@@ -37,12 +37,37 @@
     }
 
     // If we got here from a recovery click, the URL hash will include
-    // type=recovery. Adjust copy so the user knows this is a reset.
+    // type=recovery. Adjust copy so the user knows this is a reset, and hide
+    // "Skip for now" — a recovery visit must end in a new password.
     if (window.location.hash && window.location.hash.indexOf('type=recovery') !== -1) {
       title.textContent = 'Set a new password';
       subtitle.textContent = "Pick something memorable. We'll sign you in with this from now on.";
+      var skipWrap = document.getElementById('set-password-skip-wrap');
+      if (skipWrap) skipWrap.style.display = 'none';
     }
   })();
+
+  // "Skip for now" — member opts out of setting a password. We record the
+  // choice in user_metadata.password_setup_skipped so auth.js stops routing
+  // them here; they keep signing in with email sign-in links. This is the
+  // escape hatch that makes the first-sign-in gate impossible to get stuck in.
+  var skip = document.getElementById('set-password-skip');
+  if (skip) {
+    skip.addEventListener('click', async function (event) {
+      event.preventDefault();
+      skip.textContent = 'One moment…';
+      var res = await window.maia.client.auth.updateUser({
+        data: { password_setup_skipped: true }
+      });
+      if (res.error) {
+        console.warn('skip updateUser error:', res.error.message);
+        setStatus("Couldn't skip — try again, or set a password above.", 'error');
+        skip.textContent = "Skip for now — I'll use a sign-in link";
+        return;
+      }
+      window.location.replace('dashboard.html');
+    });
+  }
 
   form.addEventListener('submit', async function (event) {
     event.preventDefault();
