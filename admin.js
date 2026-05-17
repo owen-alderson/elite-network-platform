@@ -310,7 +310,7 @@
     var foot = el('footer', 'app-card-actions');
     var notes = document.createElement('textarea');
     notes.className = 'app-notes';
-    notes.placeholder = 'Reviewer notes (optional, visible only to admins)…';
+    notes.placeholder = 'Note for the applicant — sent with Reject / Needs-info (ignored on Approve)…';
     notes.value = app.reviewer_notes || '';
     foot.appendChild(notes);
 
@@ -329,6 +329,10 @@
     btn.addEventListener('click', async function () {
       if (status === 'rejected' && !confirm('Reject this application?')) return;
       if (status === 'approved' && !confirm('Approve this application? This sends an invite email and creates a member row.')) return;
+      if (status === 'needs_more_info' && !notesEl.value.trim()) {
+        alert('Add a note saying what information is missing — it is emailed to the applicant.');
+        return;
+      }
       btn.disabled = true;
       var original = btn.textContent;
       btn.textContent = 'Saving…';

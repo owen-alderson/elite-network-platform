@@ -31,7 +31,7 @@
   justify-content: center;
 }
 
-/* Split layout (form screens) */
+/* Split layout (applicant form screens — step track + content) */
 .flow-inner {
   width: 100%;
   max-width: var(--max-w);
@@ -41,6 +41,14 @@
   grid-template-columns: 200px 1fr;
   gap: 80px;
   align-items: start;
+}
+
+/* Single-column form layout (nominator screen — no step track) */
+.flow-solo {
+  width: 100%;
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 60px 32px 80px;
 }
 
 /* ── Typography ────────────────────────────────────────────── */
