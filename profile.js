@@ -283,6 +283,9 @@
     if (cancelBtn) cancelBtn.addEventListener('click', exitEditMode);
     if (saveBtn) saveBtn.addEventListener('click', saveEdits);
 
+    var passwordBtn = document.getElementById('profile-password-btn');
+    if (passwordBtn) passwordBtn.addEventListener('click', sendPasswordReset);
+
     // For other members' profiles, the action button takes one of three
     // forms depending on relationship:
     //   already connected            → "Send message" (links to thread)
@@ -865,6 +868,34 @@
     var actions = document.getElementById('profile-actions');
     if (!actions) return;
     actions.dataset.state = mode; // 'self' | 'other' | 'editing'
+  }
+
+  // "Change Password" (own profile only) — sends a password-reset email,
+  // the same flow as login.html's "Forgot password". The link lands on
+  // set-password.html in recovery mode, where the member sets a new one.
+  async function sendPasswordReset() {
+    var btn = document.getElementById('profile-password-btn');
+    var user = await window.maia.getUser();
+    if (!user || !user.email) {
+      alert('Could not read your account email — try signing in again.');
+      return;
+    }
+    if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+    var setPasswordUrl = new URL('set-password.html', window.location.href).toString();
+    var res = await window.maia.client.auth.resetPasswordForEmail(user.email, {
+      redirectTo: setPasswordUrl
+    });
+    if (res && res.error) {
+      console.warn('Password-reset request error:', res.error.message);
+      if (btn) { btn.disabled = false; btn.textContent = 'Change Password'; }
+      alert('Could not send the reset link — please try again in a moment.');
+      return;
+    }
+    if (btn) {
+      btn.textContent = 'Reset link sent — check your inbox';
+      btn.style.opacity = '0.7';
+      btn.style.cursor = 'default';
+    }
   }
 
   // ── small helpers ──────────────────────────────────────────
