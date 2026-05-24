@@ -1,0 +1,12 @@
+# Edge function deploy flags.
+#
+# verify_jwt = false here because the postgres trigger
+# applications_send_confirmation calls this function via pg_net.http_post
+# with no Authorization header — under the default verify_jwt = true the
+# function 401s and confirmation_sent_at never populates. Matches the
+# other two trigger-fired functions (send-intro-notification,
+# send-application-status). M3 in the security backlog tracks moving to
+# a shared-secret model before broader-than-pilot rollout.
+
+[functions.send-application-confirmation]
+verify_jwt = false

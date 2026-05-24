@@ -141,15 +141,15 @@ alter table public.members enable row level security;
 
 create policy "members_select_active_or_self_or_admin" on public.members
   for select to authenticated
-  using (status = 'active' or id = auth.uid() or public.is_admin());
+  using (status = 'active' or id = (select auth.uid()) or public.is_admin());
 
 create policy "members_insert_admin" on public.members
   for insert to authenticated with check (public.is_admin());
 
 create policy "members_update_self_or_admin" on public.members
   for update to authenticated
-  using (id = auth.uid() or public.is_admin())
-  with check (id = auth.uid() or public.is_admin());
+  using (id = (select auth.uid()) or public.is_admin())
+  with check (id = (select auth.uid()) or public.is_admin());
 
 create policy "members_delete_admin" on public.members
   for delete to authenticated using (public.is_admin());
@@ -250,11 +250,16 @@ create unique index if not exists applications_unique_open_email
   on public.applications (lower(applicant_email), submission_type)
   where status in ('pending', 'needs_more_info');
 
--- Unique index on nomination_code where present — collision protection
--- for the 8-char codes generated at nominator submit time.
-create unique index if not exists applications_nomination_code_unique
+-- Unique index on nomination_code, scoped to nominator rows only.
+-- Codes stay globally unique among nominators (each email-link points to
+-- one nomination); the paired applicant row carries the same code as a
+-- reference, so a global-unique index would block the pair INSERT. Pair
+-- integrity is enforced by applications_validate_nomination_pair + the
+-- applications_unique_open_email partial index above.
+drop index if exists public.applications_nomination_code_unique;
+create unique index applications_nomination_code_unique
   on public.applications (nomination_code)
-  where nomination_code is not null;
+  where nomination_code is not null and submission_type = 'nominator';
 
 alter table public.applications enable row level security;
 
@@ -337,6 +342,30 @@ create trigger applications_validate_nominator
 before insert on public.applications
 for each row execute function public.applications_validate_nominator();
 
+-- Helper for applications_validate_nomination_pair. SECURITY DEFINER so the
+-- bounded lookup against applications succeeds for anon nominee inserts
+-- (the applications_select_admin policy would otherwise return 0 rows and
+-- every paired insert would raise "Invalid or expired nomination code").
+-- Surface is minimal: one parameter, one bounded SELECT, no dynamic SQL.
+-- The trigger that calls this stays SECURITY INVOKER so is_admin() still
+-- reflects the actual caller (an aborted DEFINER-on-trigger attempt silently
+-- skipped the validation block because is_admin() evaluated as postgres).
+create or replace function public.find_pending_nomination_email(p_code text)
+returns text language sql stable security definer set search_path = '' as $$
+  select lower(applicant_email)
+  from public.applications
+  where nomination_code = p_code
+    and submission_type = 'nominator'
+    and status in ('pending', 'needs_more_info')
+  limit 1;
+$$;
+-- Lock down REST RPC exposure. Public-schema functions are auto-exposed at
+-- /rest/v1/rpc/<name>; without the explicit anon/authenticated revoke an
+-- attacker could brute-force 8-char codes to enumerate nominee emails.
+revoke all on function public.find_pending_nomination_email(text) from public;
+revoke execute on function public.find_pending_nomination_email(text) from anon, authenticated;
+grant execute on function public.find_pending_nomination_email(text) to postgres, service_role;
+
 -- Pair validation: an applicant submission carrying a nomination_code must
 -- (a) reference a real pending nomination row and (b) use the same email
 -- the nomination was issued for. Without this trigger, an attacker who
@@ -352,12 +381,7 @@ declare
   parent_email text;
 begin
   if new.submission_type = 'applicant' and new.nomination_code is not null and not public.is_admin() then
-    select lower(applicant_email) into parent_email
-    from public.applications
-    where nomination_code = new.nomination_code
-      and submission_type = 'nominator'
-      and status in ('pending', 'needs_more_info')
-    limit 1;
+    parent_email := public.find_pending_nomination_email(new.nomination_code);
     if parent_email is null then
       raise exception 'Invalid or expired nomination code';
     end if;
@@ -463,15 +487,15 @@ alter table public.intro_requests enable row level security;
 
 create policy "intro_requests_insert_self" on public.intro_requests
   for insert to authenticated
-  with check (requester_id = auth.uid());
+  with check (requester_id = (select auth.uid()));
 
 -- SELECT: requester always; broker if assigned; target only on direct route; admin always.
 create policy "intro_requests_select_party" on public.intro_requests
   for select to authenticated
   using (
-    requester_id = auth.uid()
-    or broker_id = auth.uid()
-    or (target_id = auth.uid() and route = 'direct')
+    requester_id = (select auth.uid())
+    or broker_id = (select auth.uid())
+    or (target_id = (select auth.uid()) and route = 'direct')
     or public.is_admin()
   );
 
@@ -479,15 +503,15 @@ create policy "intro_requests_select_party" on public.intro_requests
 create policy "intro_requests_update_party_or_admin" on public.intro_requests
   for update to authenticated
   using (
-    broker_id = auth.uid()
-    or requester_id = auth.uid()
-    or (target_id = auth.uid() and route = 'direct')
+    broker_id = (select auth.uid())
+    or requester_id = (select auth.uid())
+    or (target_id = (select auth.uid()) and route = 'direct')
     or public.is_admin()
   )
   with check (
-    broker_id = auth.uid()
-    or requester_id = auth.uid()
-    or (target_id = auth.uid() and route = 'direct')
+    broker_id = (select auth.uid())
+    or requester_id = (select auth.uid())
+    or (target_id = (select auth.uid()) and route = 'direct')
     or public.is_admin()
   );
 
@@ -804,16 +828,16 @@ create policy "rsvps_select_authed" on public.event_rsvps
 
 create policy "rsvps_insert_self" on public.event_rsvps
   for insert to authenticated
-  with check (member_id = auth.uid());
+  with check (member_id = (select auth.uid()));
 
 create policy "rsvps_update_self_or_admin" on public.event_rsvps
   for update to authenticated
-  using (member_id = auth.uid() or public.is_admin())
-  with check (member_id = auth.uid() or public.is_admin());
+  using (member_id = (select auth.uid()) or public.is_admin())
+  with check (member_id = (select auth.uid()) or public.is_admin());
 
 create policy "rsvps_delete_self_or_admin" on public.event_rsvps
   for delete to authenticated
-  using (member_id = auth.uid() or public.is_admin());
+  using (member_id = (select auth.uid()) or public.is_admin());
 
 ------------------------------------------------------------------------
 -- conversations + messages
@@ -841,12 +865,12 @@ alter table public.conversations enable row level security;
 
 create policy "conversations_select_party" on public.conversations
   for select to authenticated
-  using (member_a = auth.uid() or member_b = auth.uid());
+  using (member_a = (select auth.uid()) or member_b = (select auth.uid()));
 
 create policy "conversations_insert_connected_party" on public.conversations
   for insert to authenticated
   with check (
-    (member_a = auth.uid() or member_b = auth.uid())
+    (member_a = (select auth.uid()) or member_b = (select auth.uid()))
     and public.are_connected(member_a, member_b)
   );
 
@@ -872,18 +896,18 @@ create policy "messages_select_party" on public.messages
     exists (
       select 1 from public.conversations c
       where c.id = conversation_id
-        and (c.member_a = auth.uid() or c.member_b = auth.uid())
+        and (c.member_a = (select auth.uid()) or c.member_b = (select auth.uid()))
     )
   );
 
 create policy "messages_insert_party" on public.messages
   for insert to authenticated
   with check (
-    sender_id = auth.uid()
+    sender_id = (select auth.uid())
     and exists (
       select 1 from public.conversations c
       where c.id = conversation_id
-        and (c.member_a = auth.uid() or c.member_b = auth.uid())
+        and (c.member_a = (select auth.uid()) or c.member_b = (select auth.uid()))
     )
   );
 
@@ -891,19 +915,19 @@ create policy "messages_insert_party" on public.messages
 create policy "messages_update_recipient_read" on public.messages
   for update to authenticated
   using (
-    sender_id <> auth.uid()
+    sender_id <> (select auth.uid())
     and exists (
       select 1 from public.conversations c
       where c.id = conversation_id
-        and (c.member_a = auth.uid() or c.member_b = auth.uid())
+        and (c.member_a = (select auth.uid()) or c.member_b = (select auth.uid()))
     )
   )
   with check (
-    sender_id <> auth.uid()
+    sender_id <> (select auth.uid())
     and exists (
       select 1 from public.conversations c
       where c.id = conversation_id
-        and (c.member_a = auth.uid() or c.member_b = auth.uid())
+        and (c.member_a = (select auth.uid()) or c.member_b = (select auth.uid()))
     )
   );
 

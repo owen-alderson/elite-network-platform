@@ -1,3 +1,11 @@
+// Deploy flag: verify_jwt = false (see supabase/config.toml).
+// Intentionally unauthenticated — the postgres trigger
+// applications_send_confirmation calls this via pg_net.http_post with no
+// Authorization header, so verify_jwt = true would 401 every invocation.
+// Matches send-intro-notification + send-application-status. Tracked as
+// M3 in the security backlog (webhook-secret hardening required before
+// broader-than-pilot rollout — accepted-risk for hand-curated pilot).
+
 // send-application-confirmation — fires when a row is INSERTed into
 // public.applications (postgres trigger applications_send_confirmation),
 // and is also invoked directly by the admin queue.
