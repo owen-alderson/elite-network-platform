@@ -653,15 +653,34 @@ as $$
 declare
   pending_count int;
 begin
-  -- 1. Decide route based on whether requester + target share a mutual.
-  if public.has_mutual_connection(new.requester_id, new.target_id) then
+  -- Seed connections (e.g. nominator → new member at admin-approval
+  -- time) are inserted with status='accepted' from the start. They are
+  -- not real requests — skip routing + rate limit so they land silently.
+  if new.status <> 'pending' then
+    return new;
+  end if;
+
+  -- The CLIENT now picks broker_id (intro.js modal). We respect that
+  -- choice but validate that the chosen broker is actually a mutual —
+  -- otherwise a hostile client could nominate any member as broker and
+  -- trigger broker_assigned emails to people who never met the parties.
+  -- The previous behaviour auto-decided route from has_mutual_connection,
+  -- which over-routed: a stranger Lisa had met once on Maia could become
+  -- the only "mutual" between her and her actual target and get roped in
+  -- to brokering an intro she has no real context for.
+  if new.broker_id is not null then
+    if not (public.are_connected(new.requester_id, new.broker_id)
+            and public.are_connected(new.broker_id, new.target_id)) then
+      raise exception 'Selected introducer is not a mutual connection.'
+        using errcode = 'check_violation';
+    end if;
     new.route := 'broker';
   else
     new.route := 'direct';
   end if;
 
-  -- 2. Now that route is set, enforce the 5-pending-direct cap.
-  if new.route = 'direct' and new.status = 'pending' then
+  -- 5-pending-direct cap on the direct route.
+  if new.route = 'direct' then
     select count(*) into pending_count
     from public.intro_requests
     where requester_id = new.requester_id
@@ -692,11 +711,27 @@ as $$
 declare
   fn_url text := 'https://emlresxklixzcsammste.supabase.co/functions/v1/send-intro-notification';
 begin
-  if new.route = 'direct' and new.status = 'pending' then
+  -- Seeded connections (status<>'pending' at insert time) are silent —
+  -- they represent existing real-world relationships, not new intros.
+  if new.status <> 'pending' then
+    return new;
+  end if;
+
+  if new.route = 'direct' then
     perform net.http_post(
       url := fn_url,
       headers := jsonb_build_object('Content-Type', 'application/json'),
       body := jsonb_build_object('intro_id', new.id, 'event', 'direct_received')
+    );
+  elsif new.route = 'broker' and new.broker_id is not null then
+    -- broker_assigned previously only fired from the UPDATE trigger
+    -- (when an admin picked a broker after the fact). With clients
+    -- choosing the broker upfront, the email also needs to fire at
+    -- INSERT time. The UPDATE path is preserved for admin reassignment.
+    perform net.http_post(
+      url := fn_url,
+      headers := jsonb_build_object('Content-Type', 'application/json'),
+      body := jsonb_build_object('intro_id', new.id, 'event', 'broker_assigned')
     );
   end if;
   return new;

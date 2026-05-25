@@ -238,7 +238,7 @@
       <button class="modal-close" onclick="closeModal()">✕</button>
       <p class="flow-eyebrow" style="margin-bottom:12px;">Request Introduction</p>
       <h3 class="modal-title" id="modal-name"></h3>
-      <p class="modal-body">Write a brief note about why this introduction matters — what's next for you, and why this person specifically. A mutual member will make the introduction. Genuine and specific beats polished.</p>
+      <p class="modal-body">Write a brief note about why this introduction matters — what's next for you, and why this person specifically. You'll choose below whether to send directly or have a mutual connection introduce you. Genuine and specific beats polished.</p>
       <p style="font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:8px;">Your note</p>
       <textarea class="form-input form-textarea intro-textarea" rows="5" placeholder="e.g. I'm spinning a wellness line off my modeling name — your work scaling Goop's category strategy is the closest precedent. Would value 20 minutes over coffee at Spring Place."></textarea>
       <p style="font-size:11px; color:#444; margin-top:6px; line-height:1.5;">2–4 sentences. Specific beats flattering.</p>
@@ -253,17 +253,17 @@
     <div class="modal" onclick="event.stopPropagation()" style="text-align:center;">
       <div style="font-size:32px; color:var(--gold); margin-bottom:16px;">◈</div>
       <h3 class="modal-title">Request sent.</h3>
-      <p class="modal-body">A mutual member will reach out to make the introduction. You'll hear back within a few days.</p>
+      <p class="modal-body">If you chose an introducer, they'll be notified. Otherwise the request goes directly to the member. You'll hear back within a few days.</p>
       <button class="btn-primary btn-sm" style="margin-top:8px;" onclick="closeConfirm()">Done</button>
     </div>
   </div>
 
   <script src="nav.js"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <script src="supabase.js?v=20260525c"></script>
-  <script src="auth.js?v=20260525c"></script>
-  <script src="intro.js?v=20260525c"></script>
-  <script src="dashboard.js?v=20260525c"></script>
+  <script src="supabase.js?v=20260525d"></script>
+  <script src="auth.js?v=20260525d"></script>
+  <script src="intro.js?v=20260525d"></script>
+  <script src="dashboard.js?v=20260525d"></script>
   <script>
     function toggleInbox() {
       const panel   = document.getElementById('inbox-panel');

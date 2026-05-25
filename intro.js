@@ -35,6 +35,8 @@
     clearCompletenessGate(modal);
 
     modal.dataset.targetId = targetId || '';
+    modal.dataset.targetName = targetName || 'Member';
+    modal.dataset.selectedBrokerId = ''; // empty = direct
     nameEl.textContent = targetName || 'Member';
 
     var textarea = modal.querySelector('.intro-textarea');
@@ -42,19 +44,39 @@
 
     bindNoteCounter(modal);
 
-    // Inject the routing hint so the requester knows whether their note
-    // will reach a broker or go directly to the target.
-    setRoutingHint(modal, null);
+    // Render the broker picker (or the direct-only fallback).
+    renderBrokerPicker(modal, [], targetName, /* loading */ true);
     modal.style.display = 'flex';
     setBodyLocked(true);
 
     if (targetId) {
       var session = await window.maia.getSession();
       if (!session) return;
-      var rpc = await supabase.rpc('has_mutual_connection', { a: session.user.id, b: targetId });
-      if (!rpc.error) {
-        setRoutingHint(modal, rpc.data === true ? 'broker' : 'direct');
+      // mutual_connections returns the set of member IDs connected to BOTH
+      // me and the target — i.e. the valid brokers I could ask. Fetch
+      // names/avatars for those IDs so the picker shows real people, not
+      // UUIDs. If the call fails or returns empty, the picker falls back
+      // to a "this will go directly to X" note with no radio choices.
+      var mutualRpc = await supabase.rpc('mutual_connections', { a: session.user.id, b: targetId });
+      var brokers = [];
+      if (!mutualRpc.error && Array.isArray(mutualRpc.data) && mutualRpc.data.length > 0) {
+        var ids = mutualRpc.data.map(function (row) {
+          // RPC returns either an array of uuid strings or an array of {mutual_connections: uuid} rows
+          if (typeof row === 'string') return row;
+          if (row && row.mutual_connections) return row.mutual_connections;
+          return null;
+        }).filter(Boolean);
+        if (ids.length) {
+          var membersRes = await supabase
+            .from('members')
+            .select('id, full_name, avatar_url')
+            .in('id', ids);
+          if (!membersRes.error && Array.isArray(membersRes.data)) {
+            brokers = membersRes.data;
+          }
+        }
       }
+      renderBrokerPicker(modal, brokers, targetName, /* loading */ false);
     }
   }
 
@@ -137,25 +159,93 @@
     }
   }
 
-  function setRoutingHint(modal, route) {
-    var hint = modal.querySelector('.intro-routing-hint');
-    if (!hint) {
-      hint = document.createElement('p');
-      hint.className = 'intro-routing-hint';
-      hint.style.cssText = 'font-size:11px;color:var(--muted);background:var(--surface);border:1px solid var(--border);padding:8px 12px;margin:0 0 14px;line-height:1.5;';
-      var body = modal.querySelector('.modal-body');
-      if (body && body.parentNode) body.parentNode.insertBefore(hint, body.nextSibling);
+  // Replace any prior routing hint / picker with a fresh one. When
+  // `loading` is true, shows a skeleton line. With brokers, shows a
+  // radio group: each mutual + a "send directly" option. With no
+  // brokers, shows just the "this goes directly to X" hint and no
+  // radios. Sets modal.dataset.selectedBrokerId on change ('' = direct).
+  function renderBrokerPicker(modal, brokers, targetName, loading) {
+    var body = modal.querySelector('.modal-body');
+    if (!body) return;
+
+    // Wipe the previous picker / hint if any.
+    var prev = modal.querySelector('.intro-broker-picker');
+    if (prev) prev.remove();
+    var prevHint = modal.querySelector('.intro-routing-hint');
+    if (prevHint) prevHint.remove();
+
+    var wrap = document.createElement('div');
+    wrap.className = 'intro-broker-picker';
+    wrap.style.cssText = 'margin:0 0 14px;background:var(--surface);border:1px solid var(--border);padding:12px 14px;';
+
+    if (loading) {
+      wrap.innerHTML = '<p style="font-size:11px;color:var(--muted);margin:0;">Checking your mutual connections…</p>';
+      body.parentNode.insertBefore(wrap, body.nextSibling);
+      return;
     }
-    if (route === 'broker') {
-      hint.textContent = 'You share a mutual connection with this member. A peer will broker the introduction off-platform.';
-      hint.style.display = '';
-    } else if (route === 'direct') {
-      hint.textContent = 'No mutual connection on Maia yet. This request will go directly to the member; they\'ll see your note and decide whether to accept.';
-      hint.style.display = '';
-    } else {
-      hint.textContent = '';
-      hint.style.display = 'none';
+
+    if (!brokers || brokers.length === 0) {
+      wrap.innerHTML =
+        '<p style="font-size:11px;color:var(--muted);margin:0;line-height:1.5;">' +
+        'You don\'t have a mutual connection with ' + escapeHtml(targetName || 'this member') + ' on Maia yet. ' +
+        'This request will go directly to them; they\'ll see your note and decide whether to accept.' +
+        '</p>';
+      body.parentNode.insertBefore(wrap, body.nextSibling);
+      modal.dataset.selectedBrokerId = '';
+      return;
     }
+
+    // Heading
+    var heading = document.createElement('p');
+    heading.style.cssText = 'font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin:0 0 10px;';
+    heading.textContent = 'Who should make the introduction?';
+    wrap.appendChild(heading);
+
+    var groupName = 'intro-broker-' + Math.random().toString(36).slice(2, 8);
+
+    function makeRadio(value, labelHtml, checked) {
+      var row = document.createElement('label');
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;font-size:13px;line-height:1.4;color:var(--text);padding:6px 0;cursor:pointer;';
+      var input = document.createElement('input');
+      input.type = 'radio';
+      input.name = groupName;
+      input.value = value;
+      input.checked = !!checked;
+      input.style.cssText = 'accent-color:var(--gold);margin:0;';
+      input.addEventListener('change', function () {
+        if (input.checked) modal.dataset.selectedBrokerId = value;
+      });
+      row.appendChild(input);
+      var text = document.createElement('span');
+      text.innerHTML = labelHtml;
+      row.appendChild(text);
+      return row;
+    }
+
+    // Default selection = direct. Owen wants "if they select no one then it
+    // just goes to a direct connection" — preserve that by pre-checking direct.
+    wrap.appendChild(makeRadio(
+      '',
+      'Send directly to <strong style="color:var(--white);">' + escapeHtml(targetName || 'this member') + '</strong>',
+      true
+    ));
+    modal.dataset.selectedBrokerId = '';
+
+    brokers.forEach(function (b) {
+      var label = 'Ask <strong style="color:var(--white);">' + escapeHtml(b.full_name || 'a peer') + '</strong> to introduce us';
+      wrap.appendChild(makeRadio(b.id, label, false));
+    });
+
+    body.parentNode.insertBefore(wrap, body.nextSibling);
+  }
+
+  function escapeHtml(s) {
+    return String(s || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   function close() {
@@ -200,11 +290,18 @@
     var sendBtn = modal.querySelector('.btn-primary');
     if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = 'Sending…'; }
 
-    var res = await supabase.from('intro_requests').insert({
+    // Empty string in dataset means "send directly" — translate to null
+    // so the DB column stays clean (and the route trigger picks 'direct').
+    var brokerId = modal.dataset.selectedBrokerId || null;
+
+    var payload = {
       requester_id: session.user.id,
       target_id: targetId,
       note: note
-    });
+    };
+    if (brokerId) payload.broker_id = brokerId;
+
+    var res = await supabase.from('intro_requests').insert(payload);
 
     if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = 'Send Request'; }
 
@@ -215,6 +312,8 @@
         alert('You already have a pending request to this member. Wait for a response or cancel the existing one from your dashboard.');
       } else if (msg.indexOf('5 pending direct') !== -1) {
         alert('You have 5 pending direct intro requests already. Wait for responses or cancel some from your dashboard.');
+      } else if (msg.indexOf('not a mutual connection') !== -1) {
+        alert('That introducer isn\'t a mutual connection any more — pick a different one or send directly.');
       } else {
         alert('Could not send the intro request: ' + msg);
       }

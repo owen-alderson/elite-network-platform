@@ -123,5 +123,40 @@ Deno.serve(async (req) => {
     .eq("id", applicationId);
   if (stampErr) return json({ error: "application update failed: " + stampErr.message }, 500);
 
+  // 8. Seed the nominator → new-member connection. A nomination is a
+  // real-world "I know this person" signal — without seeding, day-one
+  // members have zero platform connections and the manual broker picker
+  // can never offer their nominator as an option. Insert as accepted so
+  // it counts as a connection immediately. The route_and_limit trigger
+  // skips its routing branch for status<>'pending', and the notify
+  // triggers skip non-pending inserts, so this is a silent seed (no
+  // emails fired).
+  let nominatorMemberId: string | null = app.nominator_member_id || null;
+  if (!nominatorMemberId && app.nominator_email) {
+    const { data: nominatorMember } = await admin
+      .from("members")
+      .select("id")
+      .ilike("email", app.nominator_email)
+      .maybeSingle();
+    if (nominatorMember) nominatorMemberId = nominatorMember.id;
+  }
+
+  if (nominatorMemberId && nominatorMemberId !== authUserId) {
+    const nowIso = new Date().toISOString();
+    const { error: seedErr } = await admin
+      .from("intro_requests")
+      .insert({
+        requester_id: nominatorMemberId,
+        target_id: authUserId,
+        note: "Connection seeded from nomination.",
+        status: "accepted",
+        route: "direct",
+        responded_at: nowIso,
+      });
+    if (seedErr) {
+      console.warn("Seed connection insert failed (non-fatal):", seedErr.message);
+    }
+  }
+
   return json({ member_id: member.id, auth_user_id: authUserId, invited: invitedNow }, 200);
 });
