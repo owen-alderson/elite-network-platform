@@ -206,3 +206,39 @@ textarea.profile-edit-input {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* Sticky Save / Cancel bar — present only in edit mode (mounted by JS).
+   Keeps the commit/discard actions reachable when the user has scrolled
+   deep into the achievements editor; sidebar buttons stay as the canonical
+   source of truth, this bar just delegates clicks to them. */
+.profile-sticky-edit-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 28px;
+  background: rgba(10, 10, 10, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-top: 1px solid var(--border);
+}
+@media (max-width: 640px) {
+  .profile-sticky-edit-bar {
+    padding: 12px 16px;
+    justify-content: space-between;
+  }
+  .profile-sticky-edit-bar .btn-primary,
+  .profile-sticky-edit-bar .btn-ghost {
+    flex: 1 1 auto;
+  }
+}
+/* Make sure the page can scroll past content without the sticky bar
+   hiding the bottom of the form. */
+body:has(.profile-sticky-edit-bar) {
+  padding-bottom: 72px;
+}

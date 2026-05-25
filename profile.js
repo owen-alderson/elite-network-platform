@@ -88,7 +88,16 @@
     if (photoEl) window.maia.fillAvatar(photoEl, m);
     setText('#profile-name', formatName(m.full_name));
     setText('#profile-tagline', m.bio || m.headline || '');
-    setText('#profile-pillar-badge', m.primary_pillar ? '◈ ' + capitalize(m.primary_pillar) : '');
+    var pillarBadge = document.getElementById('profile-pillar-badge');
+    if (pillarBadge) {
+      if (m.primary_pillar) {
+        pillarBadge.textContent = '◈ ' + capitalize(m.primary_pillar);
+        pillarBadge.hidden = false;
+      } else {
+        pillarBadge.textContent = '';
+        pillarBadge.hidden = true;
+      }
+    }
 
     setMeta('location', joinNonEmpty([m.location_city, m.location_country], ', ') || '—');
     setMeta('member_since', m.joined_at ? new Date(m.joined_at).getFullYear() : '—');
@@ -244,7 +253,7 @@
     if (!Array.isArray(list) || !list.length) {
       var li = document.createElement('li');
       li.style.color = 'var(--muted)';
-      li.textContent = 'No verified achievements yet.';
+      li.textContent = 'No achievements added yet.';
       ul.appendChild(li);
       return;
     }
@@ -407,6 +416,7 @@
     if (isEditing) return; // idempotent — second call would double DOM
     isEditing = true;
     setActionsMode('editing');
+    mountStickyEditBar();
 
     insertPhotoUploader();
 
@@ -868,6 +878,40 @@
     var actions = document.getElementById('profile-actions');
     if (!actions) return;
     actions.dataset.state = mode; // 'self' | 'other' | 'editing'
+  }
+
+  // Sidebar Save/Cancel is hidden below the fold once the user scrolls
+  // into the achievements editor. A bar pinned to the viewport bottom
+  // keeps the commit/discard actions reachable at all times. Click
+  // handlers delegate to the canonical sidebar buttons so save/cancel
+  // logic stays single-sourced.
+  function mountStickyEditBar() {
+    if (document.getElementById('profile-sticky-edit-bar')) return;
+    var bar = document.createElement('div');
+    bar.id = 'profile-sticky-edit-bar';
+    bar.className = 'profile-sticky-edit-bar';
+
+    var cancel = document.createElement('button');
+    cancel.type = 'button';
+    cancel.className = 'btn-ghost';
+    cancel.textContent = 'Cancel';
+    cancel.addEventListener('click', function () {
+      var anchor = document.getElementById('profile-cancel-btn');
+      if (anchor) anchor.click(); else exitEditMode();
+    });
+
+    var save = document.createElement('button');
+    save.type = 'button';
+    save.className = 'btn-primary';
+    save.textContent = 'Save changes';
+    save.addEventListener('click', function () {
+      var anchor = document.getElementById('profile-save-btn');
+      if (anchor) anchor.click(); else saveEdits();
+    });
+
+    bar.appendChild(cancel);
+    bar.appendChild(save);
+    document.body.appendChild(bar);
   }
 
   // "Change Password" (own profile only) — sends a password-reset email,
