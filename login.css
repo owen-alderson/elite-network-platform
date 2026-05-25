@@ -98,11 +98,11 @@
 }
 
 .login-label-opt {
-  color: var(--muted);
-  letter-spacing: 0.15em;
-  font-weight: 400;
+  color: #fff;
+  letter-spacing: 0.05em;
+  font-weight: 600;
   text-transform: none;
-  font-size: 9px;
+  font-size: 12px;
   margin-left: 6px;
 }
 

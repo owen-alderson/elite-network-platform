@@ -21,12 +21,20 @@ window.maia = (function () {
     return {};
   }
 
+  // flowType: 'implicit' matches the project's Supabase Auth Dashboard
+  // config. inviteUserByEmail() + recovery emails emit links that resolve
+  // to {SITE}/dashboard.html#access_token=...&refresh_token=...&type=invite
+  // (fragment). The PKCE flow looks for ?code=... in the query string;
+  // when the client was set to 'pkce' getSession() returned null on first
+  // land and auth.js bounced the user back to login.html on every invite
+  // click, even though Supabase minted the session server-side (verified
+  // in auth logs 2026-05-25 during David's test).
   var client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     auth: {
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
-      flowType: 'pkce'
+      flowType: 'implicit'
     }
   });
 
