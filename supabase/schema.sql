@@ -555,11 +555,26 @@ create trigger intro_requests_protect_columns
 before update on public.intro_requests
 for each row execute function public.intro_requests_protect_columns();
 
--- Connection helpers (used by routing trigger + conversations RLS).
+-- Connection helpers (used by routing trigger + conversations RLS +
+-- admin broker picker).
+--
+-- SECURITY DEFINER because all three read intro_requests, and the RLS
+-- policy on that table only lets a caller see rows where they are
+-- requester / broker / direct-target. The routing trigger fires as the
+-- authenticated requester, so an INVOKER body could only see *their*
+-- accepted intros and would miss the target's separate intros — yielding
+-- a false "no mutual" verdict and routing as 'direct' when a real
+-- broker exists. Verified live 2026-05-25: Lisa → David routed direct
+-- even though Owen had accepted both Lisa↔Owen and David↔Owen, because
+-- Lisa's view of David's connections was empty under RLS. Each function
+-- is a single bounded query, no dynamic SQL — the only information
+-- surfaced is the connection-existence answer the model is supposed to
+-- expose.
 create or replace function public.are_connected(a uuid, b uuid)
 returns boolean
 language sql
 stable
+security definer
 set search_path = ''
 as $$
   select exists (
@@ -576,6 +591,7 @@ create or replace function public.has_mutual_connection(a uuid, b uuid)
 returns boolean
 language sql
 stable
+security definer
 set search_path = ''
 as $$
   with a_conns as (
@@ -599,6 +615,7 @@ create or replace function public.mutual_connections(a uuid, b uuid)
 returns setof uuid
 language sql
 stable
+security definer
 set search_path = ''
 as $$
   with a_conns as (
