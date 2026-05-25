@@ -350,7 +350,21 @@ for each row execute function public.applications_validate_nominator();
 -- The trigger that calls this stays SECURITY INVOKER so is_admin() still
 -- reflects the actual caller (an aborted DEFINER-on-trigger attempt silently
 -- skipped the validation block because is_admin() evaluated as postgres).
-create or replace function public.find_pending_nomination_email(p_code text)
+--
+-- Lives in `private` rather than `public` because the trigger runs as the
+-- caller (anon for apply.html submits) and needs EXECUTE — and granting
+-- EXECUTE to anon on a public-schema function would also auto-expose it
+-- via PostgREST at /rest/v1/rpc/find_pending_nomination_email, where an
+-- attacker could brute-force 8-char nomination codes to enumerate nominee
+-- emails. PostgREST exposes only `public`, so `private.*` is invisible to
+-- the REST surface even with EXECUTE granted broadly. Lisa Alderson's
+-- 2026-05-25 submit hit "permission denied for function
+-- find_pending_nomination_email" because the earlier mirror tried to keep
+-- the function in public and revoke from anon — the revoke broke the
+-- trigger. This shape closes both holes at once.
+create schema if not exists private;
+
+create or replace function private.find_pending_nomination_email(p_code text)
 returns text language sql stable security definer set search_path = '' as $$
   select lower(applicant_email)
   from public.applications
@@ -359,12 +373,9 @@ returns text language sql stable security definer set search_path = '' as $$
     and status in ('pending', 'needs_more_info')
   limit 1;
 $$;
--- Lock down REST RPC exposure. Public-schema functions are auto-exposed at
--- /rest/v1/rpc/<name>; without the explicit anon/authenticated revoke an
--- attacker could brute-force 8-char codes to enumerate nominee emails.
-revoke all on function public.find_pending_nomination_email(text) from public;
-revoke execute on function public.find_pending_nomination_email(text) from anon, authenticated;
-grant execute on function public.find_pending_nomination_email(text) to postgres, service_role;
+
+grant usage on schema private to anon, authenticated;
+grant execute on function private.find_pending_nomination_email(text) to anon, authenticated, service_role;
 
 -- Pair validation: an applicant submission carrying a nomination_code must
 -- (a) reference a real pending nomination row and (b) use the same email
@@ -381,7 +392,7 @@ declare
   parent_email text;
 begin
   if new.submission_type = 'applicant' and new.nomination_code is not null and not public.is_admin() then
-    parent_email := public.find_pending_nomination_email(new.nomination_code);
+    parent_email := private.find_pending_nomination_email(new.nomination_code);
     if parent_email is null then
       raise exception 'Invalid or expired nomination code';
     end if;
