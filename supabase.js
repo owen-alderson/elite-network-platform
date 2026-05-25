@@ -38,6 +38,39 @@ window.maia = (function () {
     }
   });
 
+  // Defensive bootstrap: explicitly parse access_token / refresh_token from
+  // the URL fragment and call setSession. Supabase's own detectSessionInUrl
+  // proved unreliable in production during David's 2026-05-25 test — server
+  // logs showed login succeeded and the browser landed on
+  // /dashboard.html#access_token=... but getSession() kept returning null
+  // and auth.js bounced the user to login.html. Parsing the hash ourselves
+  // turns the implicit-flow callback into a no-op for the library and a
+  // hard guarantee for us. Runs synchronously at client init so any
+  // requireAuth() call sees the session immediately.
+  var sessionFromHashPromise = null;
+  (function bootstrapSessionFromHash() {
+    if (typeof window === 'undefined' || !window.location || !window.location.hash) return;
+    var hash = window.location.hash.replace(/^#/, '');
+    if (hash.indexOf('access_token=') === -1) return;
+    var params = new URLSearchParams(hash);
+    var accessToken = params.get('access_token');
+    var refreshToken = params.get('refresh_token');
+    if (!accessToken || !refreshToken) return;
+    sessionFromHashPromise = client.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken
+    }).then(function (res) {
+      if (res.error) {
+        console.error('Manual setSession from hash failed:', res.error);
+      }
+      // Strip the token fragment from the URL so a refresh doesn't re-run
+      // this with a now-invalid token (and so it doesn't leak via referer).
+      try {
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+      } catch (e) { /* non-fatal */ }
+    });
+  })();
+
   // Hardcoded admin allowlist — phase 1 only.
   // The DB copy in supabase/schema.sql (is_admin()) is the source of truth;
   // this client copy only controls UI visibility. Always assume the client is hostile.
@@ -47,6 +80,12 @@ window.maia = (function () {
   ];
 
   async function getSession() {
+    // Wait for any in-flight manual hash bootstrap before asking the client
+    // for the session, otherwise the first requireAuth() on an invite/magic
+    // link landing can see null and bounce the user to login.html.
+    if (sessionFromHashPromise) {
+      try { await sessionFromHashPromise; } catch (e) { /* logged in bootstrap */ }
+    }
     var res = await client.auth.getSession();
     if (res.error) {
       console.error('getSession error:', res.error);
