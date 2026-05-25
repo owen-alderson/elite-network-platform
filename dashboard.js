@@ -843,7 +843,7 @@
       avatarMember = intro.requester || null;
       if (intro.status === 'pending') {
         title = (intro.requester ? intro.requester.full_name : 'Someone') +
-          ' would like to be introduced to you';
+          ' would like to meet you';
         unread = true;
       } else if (intro.status === 'accepted') {
         title = 'You met ' + (intro.requester ? intro.requester.full_name : '?') + ' through Maia';

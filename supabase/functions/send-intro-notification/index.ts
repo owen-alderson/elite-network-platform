@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
     html = forwardedEmailHtml(targetName, brokerName);
   } else if (event === "direct_received") {
     to = intro.target?.email;
-    subject = `${requesterName} would like to be introduced — Maia`;
+    subject = `${requesterName} would like to meet you — Maia`;
     html = directReceivedEmailHtml(requesterName, intro.note);
   } else if (event === "direct_accepted") {
     to = intro.requester?.email;
