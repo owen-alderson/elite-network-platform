@@ -807,6 +807,15 @@
   margin: 0;
 }
 
+.intro-mini-vouch {
+  font-size: 12px;
+  color: var(--gold);
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+.intro-mini-vouch .intro-mini-link { color: var(--gold); }
+.intro-mini-vouch .intro-mini-link:hover { color: var(--white); }
+
 .intro-mini-note {
   background: var(--black);
   border-left: 2px solid var(--gold-dim);

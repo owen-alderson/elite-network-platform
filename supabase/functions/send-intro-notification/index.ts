@@ -1,12 +1,18 @@
 // send-intro-notification — fires Resend emails when intro_requests
 // transitions through key states. Called by the postgres trigger
-// intro_requests_notify on UPDATE; idempotency is handled by only
-// firing on specific state transitions inside the trigger.
+// intro_requests_notify (UPDATE) + intro_requests_notify_insert
+// (INSERT); idempotency is handled by only firing on specific state
+// transitions inside the trigger.
 //
 // Events:
-//   broker_assigned  → email the assigned broker. "X asked you to
-//                      broker an intro to Y."
-//   forwarded        → email the requester. "Z forwarded your request."
+//   broker_assigned  → email the assigned broker. The requester picked
+//                      them; they review and decide on Maia.
+//   forwarded        → email the TARGET. Broker has vouched, request
+//                      is now visible in the target's dashboard.
+//   broker_accepted  → email the REQUESTER. Target accepted a brokered
+//                      request, conversation has opened on Maia.
+//   direct_received  → email the target on a no-broker request.
+//   direct_accepted  → email the requester when target accepts direct.
 //
 // Setup is shared with send-application-confirmation: relies on the
 // same RESEND_API_KEY and MAIA_FROM_EMAIL secrets in the project.
@@ -33,7 +39,12 @@ function json(body: unknown, status = 200) {
   });
 }
 
-type Event = "broker_assigned" | "forwarded" | "direct_received" | "direct_accepted";
+type Event =
+  | "broker_assigned"
+  | "forwarded"
+  | "broker_accepted"
+  | "direct_received"
+  | "direct_accepted";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
@@ -81,9 +92,13 @@ Deno.serve(async (req) => {
     subject = `${requesterName} asked you to broker an intro — Maia`;
     html = brokerEmailHtml(requesterName, targetName, intro.note);
   } else if (event === "forwarded") {
+    to = intro.target?.email;
+    subject = `${requesterName} would like to meet you — vouched by ${brokerName} — Maia`;
+    html = forwardedEmailHtml(requesterName, brokerName, intro.note);
+  } else if (event === "broker_accepted") {
     to = intro.requester?.email;
-    subject = `Your intro to ${targetName} was forwarded — Maia`;
-    html = forwardedEmailHtml(targetName, brokerName);
+    subject = `${targetName} accepted your introduction — Maia`;
+    html = brokerAcceptedEmailHtml(targetName, brokerName);
   } else if (event === "direct_received") {
     to = intro.target?.email;
     subject = `${requesterName} would like to meet you — Maia`;
@@ -146,19 +161,29 @@ function brokerEmailHtml(requesterName: string, targetName: string, note: string
   const safeNote = (note || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   return shellHtml(`
     <h1>You've been asked to broker an intro.</h1>
-    <p><strong style="color:#f5f0e8;">${escapeHtml(requesterName)}</strong> would like an introduction to <strong style="color:#f5f0e8;">${escapeHtml(targetName)}</strong>, and the admin team thinks you're the right person to make it happen.</p>
+    <p><strong style="color:#f5f0e8;">${escapeHtml(requesterName)}</strong> would like an introduction to <strong style="color:#f5f0e8;">${escapeHtml(targetName)}</strong>, and they've picked you to vouch for it.</p>
     <p>Their note:</p>
     <div class="quote">${safeNote}</div>
-    <p>Make the introduction off-platform (email, message, in person), then mark it forwarded on your dashboard.</p>
+    <p>Open your dashboard to review. If it makes sense, forward it on — ${escapeHtml(targetName)} will see the request with your vouch attached and can accept or decline from their side.</p>
     <a class="btn" href="${SITE_URL}/dashboard.html">Open Maia</a>
   `);
 }
 
-function forwardedEmailHtml(targetName: string, brokerName: string): string {
+function forwardedEmailHtml(requesterName: string, brokerName: string, note: string | null): string {
+  const safeNote = (note || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   return shellHtml(`
-    <h1>Your introduction is on its way.</h1>
-    <p><strong style="color:#f5f0e8;">${escapeHtml(brokerName)}</strong> has made the introduction to <strong style="color:#f5f0e8;">${escapeHtml(targetName)}</strong>. Watch for an email or message — the conversation continues off-platform.</p>
-    <p>Once you've connected, mark the intro as accepted on your dashboard so it shows up in your network.</p>
+    <h1>${escapeHtml(requesterName)} would like to meet you.</h1>
+    <p><strong style="color:#f5f0e8;">${escapeHtml(brokerName)}</strong> — a mutual connection — has vouched for this introduction. Their note to you:</p>
+    <div class="quote">${safeNote}</div>
+    <p>Open Maia to see their profile and accept or decline. If you accept, a private conversation opens between the two of you.</p>
+    <a class="btn" href="${SITE_URL}/dashboard.html">Open Maia</a>
+  `);
+}
+
+function brokerAcceptedEmailHtml(targetName: string, brokerName: string): string {
+  return shellHtml(`
+    <h1>${escapeHtml(targetName)} accepted your introduction.</h1>
+    <p>The intro <strong style="color:#f5f0e8;">${escapeHtml(brokerName)}</strong> vouched for has landed — a private conversation has opened between the two of you. Your note is already there as the first message.</p>
     <a class="btn" href="${SITE_URL}/dashboard.html">Open Maia</a>
   `);
 }

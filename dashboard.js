@@ -287,10 +287,11 @@
       // New intro requests where I'm the broker (broker-route, status pending)
       supabase.from('intro_requests').select('id', { count: 'exact', head: true })
         .eq('broker_id', userId).eq('status', 'pending').gt('created_at', since),
-      // New direct intro requests received
+      // Intro requests addressed to me: either direct + pending, or brokered + forwarded
       supabase.from('intro_requests').select('id', { count: 'exact', head: true })
-        .eq('target_id', userId).eq('route', 'direct').eq('status', 'pending').gt('created_at', since),
-      // Intros I requested that just got forwarded
+        .eq('target_id', userId)
+        .or('and(route.eq.direct,status.eq.pending,created_at.gt.' + since + '),and(route.eq.broker,status.eq.forwarded,forwarded_at.gt.' + since + ')'),
+      // Intros I requested where the broker just vouched and forwarded to the target
       supabase.from('intro_requests').select('id', { count: 'exact', head: true })
         .eq('requester_id', userId).eq('status', 'forwarded').gt('forwarded_at', since),
       // New connections — accepted intros where I'm a party, accepted since last seen
@@ -303,7 +304,7 @@
       { label: 'new message',           plural: 'new messages',           count: counts[0].count || 0 },
       { label: 'broker request',        plural: 'broker requests',        count: counts[1].count || 0 },
       { label: 'intro request',         plural: 'intro requests',         count: counts[2].count || 0 },
-      { label: 'forwarded intro',       plural: 'forwarded intros',       count: counts[3].count || 0 },
+      { label: 'forwarded intro awaiting their response', plural: 'forwarded intros awaiting their response', count: counts[3].count || 0 },
       { label: 'new connection',        plural: 'new connections',        count: counts[4].count || 0 }
     ].filter(function (it) { return it.count > 0; });
 
@@ -321,7 +322,7 @@
     });
   }
 
-  // ── Received intro requests (direct route, I'm the target) ──
+  // ── Received intro requests (I'm the target — direct pending, or broker forwarded) ──
   async function loadReceivedRequests(userId) {
     var section = document.getElementById('received-section');
     var listEl = document.getElementById('received-list');
@@ -331,12 +332,12 @@
     var res = await supabase
       .from('intro_requests')
       .select(
-        'id, created_at, status, note, route,' +
-        'requester:members!requester_id(id,full_name,headline,primary_pillar,location_city,avatar_url)'
+        'id, created_at, status, note, route, forwarded_at,' +
+        'requester:members!requester_id(id,full_name,headline,primary_pillar,location_city,avatar_url),' +
+        'broker:members!broker_id(id,full_name,avatar_url)'
       )
       .eq('target_id', userId)
-      .eq('route', 'direct')
-      .eq('status', 'pending')
+      .or('and(route.eq.direct,status.eq.pending),and(route.eq.broker,status.eq.forwarded)')
       .order('created_at', { ascending: false });
 
     if (res.error) {
@@ -373,6 +374,19 @@
 
     if (requester.headline) {
       card.appendChild(text('p', 'intro-mini-sub', requester.headline));
+    }
+
+    // Broker vouch line — only on broker-route forwarded rows. The
+    // target is seeing this because a mutual connection passed it on.
+    if (intro.route === 'broker' && intro.broker && intro.broker.full_name) {
+      var vouchLine = el('p', 'intro-mini-vouch');
+      vouchLine.appendChild(document.createTextNode('Vouched by '));
+      var brokerLink = document.createElement('a');
+      brokerLink.href = 'profile.html?id=' + encodeURIComponent(intro.broker.id || '');
+      brokerLink.className = 'intro-mini-link';
+      brokerLink.textContent = intro.broker.full_name;
+      vouchLine.appendChild(brokerLink);
+      card.appendChild(vouchLine);
     }
 
     var note = el('blockquote', 'intro-mini-note');
@@ -468,9 +482,9 @@
     actions.appendChild(introActionBtn('Decline', 'btn-ghost btn-sm app-btn-reject', function () {
       return updateIntro(intro.id, { status: 'declined', responded_at: new Date().toISOString() });
     }, 'Decline this intro request?'));
-    actions.appendChild(introActionBtn('Mark forwarded', 'btn-primary btn-sm', function () {
+    actions.appendChild(introActionBtn('Forward to them', 'btn-primary btn-sm', function () {
       return updateIntro(intro.id, { status: 'forwarded', forwarded_at: new Date().toISOString() });
-    }));
+    }, 'Forward this intro request on Maia? The target will see it in their dashboard with your vouch attached.'));
     card.appendChild(actions);
 
     return card;
@@ -548,19 +562,14 @@
     }
     card.appendChild(text('p', 'intro-mini-meta', meta.join(' · ')));
 
-    // Requester actions: Cancel a pending request, or Mark accepted once
-    // a forwarded intro has actually led somewhere.
-    if (intro.status === 'pending' || intro.status === 'forwarded') {
+    // Requester actions: Cancel while pending. Once forwarded, the
+    // target drives the next step (accept/decline from their dashboard);
+    // requester just sees "Awaiting their response" — no action button.
+    if (intro.status === 'pending') {
       var actions = el('div', 'intro-mini-actions');
-      if (intro.status === 'pending') {
-        actions.appendChild(introActionBtn('Cancel request', 'btn-ghost btn-sm app-btn-reject', function () {
-          return updateIntro(intro.id, { status: 'declined', responded_at: new Date().toISOString() });
-        }, 'Cancel this intro request? It will move to declined.'));
-      } else if (intro.status === 'forwarded') {
-        actions.appendChild(introActionBtn('Mark accepted', 'btn-primary btn-sm', function () {
-          return updateIntro(intro.id, { status: 'accepted', responded_at: new Date().toISOString() });
-        }));
-      }
+      actions.appendChild(introActionBtn('Cancel request', 'btn-ghost btn-sm app-btn-reject', function () {
+        return updateIntro(intro.id, { status: 'declined', responded_at: new Date().toISOString() });
+      }, 'Cancel this intro request? It will move to declined.'));
       card.appendChild(actions);
     }
 
