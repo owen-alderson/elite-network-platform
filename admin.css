@@ -500,6 +500,12 @@
   .admin-event-form .form-row { flex-direction: column; gap: 0; }
 }
 
+@media (max-width: 640px) {
+  /* iOS zoom-prevention floor on admin form inputs. */
+  .admin-event-form .form-input,
+  .admin-event-form .form-textarea { font-size: 16px; padding: 11px 14px; }
+}
+
 .member-status-active   { color: #6fbf73; border-color: #6fbf73; }
 .member-status-paused   { color: #d9b87a; border-color: #d9b87a; }
 .member-status-removed  { color: var(--muted); border-color: var(--border); }

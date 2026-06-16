@@ -272,3 +272,10 @@
   .msg-thread-empty { display: none; }
   .msg-thread { min-height: calc(100vh - var(--nav-h)); }
 }
+
+@media (max-width: 640px) {
+  /* iOS Safari zooms anything <16px on focus and doesn't zoom back.
+     The compose textarea needs to hit the floor. */
+  .msg-compose textarea { font-size: 16px; }
+  .msg-compose { padding: 10px 14px; }
+}

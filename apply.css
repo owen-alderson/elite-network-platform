@@ -389,3 +389,23 @@
   .achievement-entry { grid-template-columns: 1fr; }
   .ach-num { display: none; }
 }
+
+/* Sub-640px overrides — iOS zoom prevention on inputs in this file
+   (style.css's site-wide rule would lose source-order to the
+   apply.css base rule otherwise), plus tighter inner padding and
+   centered flow buttons so the form fits cleanly at 375px. */
+@media (max-width: 640px) {
+  .form-input,
+  .form-textarea { font-size: 16px; padding: 11px 14px; }
+  .flow-inner { padding: 40px 20px 80px; }
+  .flow-solo  { padding: 40px 18px 80px; }
+  .flow-center { padding: 60px 20px 60px; }
+  .flow-heading { line-height: 1.08; }
+  .pillar-opt { font-size: 13px; padding: 8px 12px; }
+  .flow-actions { flex-direction: column; gap: 10px; }
+  .flow-actions button,
+  .flow-actions .btn-primary,
+  .flow-actions .btn-ghost { width: 100%; }
+  .entry-card { padding: 24px 18px; }
+  .achievement-entry { gap: 8px; }
+}
