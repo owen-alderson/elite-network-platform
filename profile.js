@@ -10,12 +10,12 @@
     'headline',
     'bio',
     'primary_pillar',
-    'location_city',
-    'location_country',
     'current_work',
     'linkedin_url',
     'instagram_handle',
     'website_url'
+    // location_city + location_country are written via the location-autocomplete
+    // input (see setupLocationAutocomplete + the saveEdits location block).
   ];
 
   // Tags: free-form, capped at 5, normalized to lowercase + trimmed.
@@ -423,8 +423,7 @@
     swapForInput('#profile-name', 'full_name', current.full_name || '', 'input');
     swapForInput('#profile-tagline', 'bio', current.bio || '', 'textarea');
 
-    swapMetaForInput('location_city', current.location_city || '', 'City');
-    swapMetaForInputAt(1, 'location_country', current.location_country || '', 'Country');
+    setupLocationAutocomplete(current.location_city || '', current.location_country || '');
 
     // Headline is currently shown in the sidebar role/tagline. We add it as a
     // dedicated edit row above the bio.
@@ -764,6 +763,43 @@
       payload[field] = v === '' ? null : v;
     });
 
+    // Location — handled separately because the autocomplete writes both
+    // location_city and location_country from a single input. If the user
+    // typed without picking a suggestion, we do one last Photon lookup;
+    // a complete miss blocks the save with a clear error so we never
+    // store made-up places.
+    var locInput = document.querySelector('[data-edit-field="location"]');
+    if (locInput) {
+      var typed = (locInput.value || '').trim();
+      var pickedCity = (locInput.dataset.selectedCity || '').trim();
+      var pickedCountry = (locInput.dataset.selectedCountry || '').trim();
+      var expectedLabel = pickedCity
+        ? (pickedCountry ? pickedCity + ', ' + pickedCountry : pickedCity)
+        : '';
+
+      if (!typed) {
+        payload.location_city = null;
+        payload.location_country = null;
+      } else if (pickedCity && expectedLabel.toLowerCase() === typed.toLowerCase()) {
+        payload.location_city = pickedCity;
+        payload.location_country = pickedCountry || null;
+      } else {
+        var resolved = await resolveTypedLocation(typed);
+        if (!resolved) {
+          alert('"' + typed + '" didn\'t match any city we could find. Start typing the name and pick a real place from the dropdown.');
+          locInput.focus();
+          if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save'; }
+          return;
+        }
+        // Normalise the input to the resolved place so it sticks if save fails.
+        locInput.value = resolved.country ? resolved.city + ', ' + resolved.country : resolved.city;
+        locInput.dataset.selectedCity = resolved.city;
+        locInput.dataset.selectedCountry = resolved.country || '';
+        payload.location_city = resolved.city;
+        payload.location_country = resolved.country || null;
+      }
+    }
+
     // Tags: read state from the chip-editor's stash. Capped at 5 by the
     // editor + a CHECK constraint at the DB layer.
     var tagsBox = document.querySelector('[data-edit-field="tags"]');
@@ -823,6 +859,174 @@
     el.replaceWith(input);
     // Preserve the original ID on the input so re-render finds the right node
     // — but on save we re-render from scratch, so identifying via dataset is enough.
+  }
+
+  // ── Location autocomplete ──────────────────────────────────
+  // Single-input editor for the "Location" meta-item, replacing the old
+  // City + Country pair. Suggestions are real-world cities/towns from
+  // photon.komoot.io (Nominatim front-end, CORS-friendly, no API key).
+  // The picked suggestion writes back to location_city + location_country
+  // on members so the rest of the schema doesn't change.
+
+  function setupLocationAutocomplete(city, country) {
+    var el = document.querySelector('[data-field="location"]');
+    if (!el) return;
+
+    var wrap = document.createElement('div');
+    wrap.className = 'profile-location-edit';
+
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'profile-edit-input profile-edit-input-sm profile-location-input';
+    input.placeholder = 'Start typing a city…';
+    input.autocomplete = 'off';
+    input.spellcheck = false;
+    input.dataset.editField = 'location';
+    if (city) {
+      input.value = country ? city + ', ' + country : city;
+      input.dataset.selectedCity = city;
+      input.dataset.selectedCountry = country || '';
+    }
+
+    var dropdown = document.createElement('div');
+    dropdown.className = 'profile-location-dropdown';
+    dropdown.style.display = 'none';
+
+    wrap.appendChild(input);
+    wrap.appendChild(dropdown);
+    el.replaceWith(wrap);
+
+    var debounceTimer = null;
+    var lastQuery = '';
+    var inflight = null;
+
+    input.addEventListener('input', function () {
+      // Any keystroke invalidates a previously picked suggestion — user
+      // must repick (or pass the on-save geocode fallback).
+      input.dataset.selectedCity = '';
+      input.dataset.selectedCountry = '';
+
+      var q = (input.value || '').trim();
+      if (q === lastQuery) return;
+      lastQuery = q;
+
+      clearTimeout(debounceTimer);
+      if (q.length < 2) {
+        dropdown.style.display = 'none';
+        return;
+      }
+      debounceTimer = setTimeout(function () { fetchAndRender(q); }, 250);
+    });
+
+    input.addEventListener('focus', function () {
+      if (dropdown.children.length > 0) dropdown.style.display = 'block';
+    });
+
+    // Hide dropdown when user clicks outside the wrapper. blur on the
+    // input alone fires before the mousedown on a suggestion, which is
+    // why we attach to document instead.
+    document.addEventListener('mousedown', function onOutside(e) {
+      if (!wrap.contains(e.target)) dropdown.style.display = 'none';
+    });
+
+    async function fetchAndRender(q) {
+      dropdown.innerHTML = '<div class="profile-location-loading">Searching…</div>';
+      dropdown.style.display = 'block';
+
+      var token = {};
+      inflight = token;
+
+      try {
+        var suggestions = await searchPlaces(q);
+        if (inflight !== token) return; // newer request already in flight
+        if ((input.value || '').trim() !== q) return; // user kept typing
+        renderSuggestions(suggestions);
+      } catch (e) {
+        if (inflight !== token) return;
+        console.warn('photon error:', e);
+        dropdown.innerHTML = '<div class="profile-location-empty">Could not load suggestions — check your connection and try again.</div>';
+      }
+    }
+
+    function renderSuggestions(suggestions) {
+      if (!suggestions.length) {
+        dropdown.innerHTML = '<div class="profile-location-empty">No matches. Try a different spelling.</div>';
+        return;
+      }
+      dropdown.innerHTML = '';
+      suggestions.forEach(function (s) {
+        var item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'profile-location-item';
+        item.textContent = s.label;
+        // mousedown fires before blur — lets us update the input before
+        // the dropdown gets dismissed by outside-click handling.
+        item.addEventListener('mousedown', function (e) {
+          e.preventDefault();
+          input.value = s.country ? s.city + ', ' + s.country : s.city;
+          input.dataset.selectedCity = s.city;
+          input.dataset.selectedCountry = s.country || '';
+          lastQuery = input.value.trim();
+          dropdown.style.display = 'none';
+        });
+        dropdown.appendChild(item);
+      });
+    }
+  }
+
+  // Photon (Komoot) search — returns up to 8 city/town/village matches.
+  // lang=en forces English names so Athens shows as "Athens, Attica,
+  // Greece" rather than "Αθήνα". The osm_tag multi-repeat narrows the
+  // result set to places people would put on a profile.
+  async function searchPlaces(query) {
+    var url = 'https://photon.komoot.io/api/?q=' + encodeURIComponent(query) +
+              '&limit=8&lang=en' +
+              '&osm_tag=place:city&osm_tag=place:town&osm_tag=place:village';
+    var res = await fetch(url);
+    if (!res.ok) throw new Error('photon http ' + res.status);
+    var data = await res.json();
+    var rows = (data.features || []).map(function (f) {
+      var p = f.properties || {};
+      return {
+        city: p.name || '',
+        state: p.state || '',
+        country: p.country || '',
+        label: [p.name, p.state, p.country].filter(Boolean).join(', ')
+      };
+    }).filter(function (s) { return s.city && s.country; });
+
+    // De-dupe by "city + country" pair — Photon sometimes returns multiple
+    // OSM nodes for the same city.
+    var seen = {};
+    return rows.filter(function (s) {
+      var key = (s.city + '|' + s.country).toLowerCase();
+      if (seen[key]) return false;
+      seen[key] = true;
+      return true;
+    });
+  }
+
+  // On-save geocode fallback — user typed a location but didn't pick a
+  // suggestion (clicked Save with the dropdown still up, or pasted text).
+  // We run one more search and accept if the top match resembles what
+  // they typed.
+  async function resolveTypedLocation(typed) {
+    try {
+      var rows = await searchPlaces(typed);
+      if (!rows.length) return null;
+      var typedLower = typed.toLowerCase().replace(/\s+/g, ' ').trim();
+      // Prefer an exact label match; fall back to city-name match.
+      for (var i = 0; i < rows.length; i++) {
+        if (rows[i].label.toLowerCase() === typedLower) return rows[i];
+      }
+      for (var j = 0; j < rows.length; j++) {
+        if (rows[j].city.toLowerCase() === typedLower.split(',')[0].trim()) return rows[j];
+      }
+      return null;
+    } catch (e) {
+      console.warn('location resolve failed:', e);
+      return null;
+    }
   }
 
   function swapMetaForInput(field, value, placeholder) {
