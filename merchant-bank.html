@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Merchant Banking Layer — Maia</title>
+  <meta name="description" content="Maia is building a merchant banking layer — warm introductions to capital, and a network that backs its own. Coming soon." />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="partners.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    /* Merchant banking page — scoped additions only; everything else reuses style.css + partners.css variables & classes. */
+    .mb-hero-badge {
+      display: inline-block; margin-left: 14px; padding: 5px 13px;
+      font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 500;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--gold); border: 1px solid var(--gold-dim); border-radius: 999px;
+      vertical-align: middle;
+    }
+    /* The two core ideas: Maia backs members / members back members — equal weight. */
+    .mb-split {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+      background: var(--border); border: 1px solid var(--border);
+      border-top: 3px solid var(--gold); border-radius: 3px; overflow: hidden; margin-top: 8px;
+    }
+    .mb-split-half { background: var(--surface); padding: 44px 40px; }
+    .mb-split-kicker {
+      font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 16px;
+    }
+    .mb-split-half h3 {
+      font-family: var(--font-serif); font-size: 27px; font-weight: 400;
+      color: var(--white); margin-bottom: 14px; line-height: 1.15;
+    }
+    .mb-split-half p { font-size: 14px; color: var(--muted); line-height: 1.75; margin: 0; }
+    /* Centered prose section (proof loop / horizon / register). */
+    .mb-center { text-align: center; }
+    .mb-center .mb-body {
+      font-size: 15px; color: var(--muted); max-width: 600px;
+      margin: 0 auto; line-height: 1.8;
+    }
+    .mb-interest-note { font-size: 12px; color: var(--muted); letter-spacing: 0.02em; margin-top: 18px; }
+    /* On-page regulatory fine print. */
+    .mb-disclaimer-strip { border-top: 1px solid var(--border); background: var(--black); padding: 32px 32px; }
+    .mb-disclaimer {
+      max-width: 760px; margin: 0 auto; font-size: 11px; line-height: 1.7;
+      color: var(--muted); letter-spacing: 0.02em; text-align: center;
+    }
+    @media (max-width: 900px) { .mb-split { grid-template-columns: 1fr; } }
+    @media (max-width: 640px) {
+      .mb-split-half { padding: 28px 22px; }
+      .mb-hero-badge { display: inline-block; margin: 12px 0 0; }
+      .mb-disclaimer-strip { padding: 24px 18px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="wordmark">MAIA</a>
+      <div class="nav-links">
+        <a href="members.html">Members</a>
+        <a href="events.html">Events</a>
+        <a href="spaces.html">Spaces</a>
+        <a href="login.html" class="nav-signin">Sign in</a>
+        <a href="apply.html" class="nav-cta">Request Access</a>
+      </div>
+    </div>
+      <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="members.html">Members</a>
+    <a href="events.html">Events</a>
+    <a href="spaces.html">Spaces</a>
+    <a href="partners.html">Partners</a>
+    <a href="login.html" class="mobile-signin">Sign in</a>
+    <a href="apply.html" class="mobile-cta">Request Access</a>
+  </div>
+
+  <!-- HERO -->
+  <section class="partner-hero">
+    <div class="partner-hero-inner">
+      <p class="hero-eyebrow">The merchant banking layer<span class="mb-hero-badge">Coming soon</span></p>
+      <h1 class="hero-headline">A network that<br><em>backs its own.</em></h1>
+      <p class="hero-sub">Beyond profiles, spaces, and events, Maia is building a merchant banking layer — warm introductions to capital, and a network that stands behind the ventures its members build. The next phase of what membership means. Not yet open — worth being early to.</p>
+    </div>
+  </section>
+
+  <!-- WHAT IT WILL BE -->
+  <section class="p-section" style="background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+    <div class="section-inner mb-center">
+      <p class="section-label">What the capital layer will be</p>
+      <h2 class="section-heading">Not a fund you pitch.<br>A network that backs you.</h2>
+      <p class="mb-body">Membership already puts you in the room with the people who move capital. The layer now in development turns proximity into outcomes — and crosses a line no private club has: when a member is building, Maia intends not only to make the introduction, but to stand behind the ventures it believes in. Built deliberately. Coming soon.</p>
+    </div>
+  </section>
+
+  <!-- TWO SIDES -->
+  <section class="p-section">
+    <div class="section-inner">
+      <p class="section-label">Two ways capital will move</p>
+      <h2 class="section-heading">Maia backs members.<br>Members back members.</h2>
+      <div class="mb-split">
+        <div class="mb-split-half">
+          <p class="mb-split-kicker">One — The house</p>
+          <h3>Maia backs its own.</h3>
+          <p>No private club in the world invests in its own members. That is the line Maia is built to cross. When the layer opens, the network intends to stand behind select members' ventures — alongside the members building them. A house with skin in the success of the people inside it. This is the part nobody else can copy, because nobody else is built to.</p>
+        </div>
+        <div class="mb-split-half">
+          <p class="mb-split-kicker">Two — The network</p>
+          <h3>Members back members.</h3>
+          <p>Inside Maia, the Investor pillar — family offices, angels, allocators — and the Entrepreneurship pillar — founders and operators — are already in the same room. When a member is raising, Maia will make the warm introduction to the members who genuinely fit, before it ever reaches the open market. Smart introductions between two people who were always meant to meet — never a cold pitch, never financial advice.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WILL WORK -->
+  <section class="p-section" style="background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+    <div class="section-inner">
+      <p class="section-label">How it will work</p>
+      <h2 class="section-heading">Smart introductions.<br>No financial advice.</h2>
+      <div class="p-three-col">
+        <div class="p-col">
+          <span class="p-col-num">01</span>
+          <h3>A warm introduction</h3>
+          <p>When a member is building, Maia introduces the right people inside the network — <em>"let me introduce you to someone who wants to build this with you."</em> The connection is the product.</p>
+        </div>
+        <div class="p-col">
+          <span class="p-col-num">02</span>
+          <h3>The network is the diligence</h3>
+          <p>Everyone has been nominated and vetted to the same global bar. That shared standard is the first layer of trust — so conversations move warmer and faster here than anywhere outside.</p>
+        </div>
+        <div class="p-col">
+          <span class="p-col-num">03</span>
+          <h3>The decision is the members'</h3>
+          <p>The conversation, the terms, and the decision belong to the members in the room. Maia makes the introduction and steps back — an intermediary, never an adviser.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHO IT'S FOR -->
+  <section class="p-section">
+    <div class="section-inner">
+      <p class="section-label">Who it is being built for</p>
+      <h2 class="section-heading">Builders, backers,<br>and the companies behind them.</h2>
+      <div class="p-gains-grid">
+        <div class="p-gain">
+          <h3>For members building</h3>
+          <p>Founders and operators in the <strong>Entrepreneurship</strong> pillar reach capital that already understands them — introduced through people they trust, not pitched cold into an inbox.</p>
+        </div>
+        <div class="p-gain">
+          <h3>For members backing</h3>
+          <p>The <strong>Investor</strong> pillar — family offices, angels, allocators — sees network-vetted ventures from members held to a global bar, before they reach the open market.</p>
+        </div>
+        <div class="p-gain">
+          <h3>For corporate members</h3>
+          <p>Companies, not only individuals, join the same room — whether they are deploying capital or seeking it. One standard of admission applies to all.</p>
+        </div>
+        <div class="p-gain">
+          <h3>Aligned by design</h3>
+          <p>Everyone has cleared the same bar. The network itself is the first layer of diligence, so trust is the starting point — not the thing you have to establish.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROOF LOOP -->
+  <section class="p-section" style="background: var(--surface); border-top: 1px solid var(--border);">
+    <div class="section-inner mb-center">
+      <p class="section-label">Why it compounds</p>
+      <h2 class="section-heading">The first ventures<br>become the proof.</h2>
+      <p class="mb-body">A capital layer earns trust by working once, in the open, inside the network. The first ventures introduced and backed through Maia become the reference for the next. As members raise and build through the network, membership compounds in value for everyone already inside it — an athlete's wellness brand, a musician's label, an operator's second act, each made a little more real by the room around it.</p>
+    </div>
+  </section>
+
+  <!-- ON THE HORIZON -->
+  <section class="p-section">
+    <div class="section-inner mb-center">
+      <p class="section-label">On the horizon</p>
+      <h2 class="section-heading">A wider circle,<br>a smaller ticket.</h2>
+      <p class="mb-body">Further out, Maia is exploring fractional participation in member ventures — a way to open a member's raise to a wider circle of the network than a traditional cap table allows. It is an aspiration, not a feature, and it will be scoped carefully and lawfully before anything is ever offered. We share it because it is part of where this is going — not because it is here today.</p>
+    </div>
+  </section>
+
+  <!-- REGISTER INTEREST -->
+  <section class="p-section" style="background: var(--surface); border-top: 1px solid var(--border);">
+    <div class="section-inner mb-center">
+      <p class="section-label" style="color: var(--gold);">Coming soon</p>
+      <h2 class="section-heading">Be among the first<br>when it opens.</h2>
+      <p class="mb-body">The merchant banking layer opens to members first. Register your interest and you will be among the first to know when it does. No commitment, no offer — an early seat at something being built carefully.</p>
+      <div style="margin-top: 32px;">
+        <a class="btn-primary" href="mailto:hello@maiacircle.com?subject=Maia%20%E2%80%94%20Merchant%20banking%20layer%20interest&amp;body=I%27d%20like%20to%20register%20my%20interest%20in%20the%20Maia%20merchant%20banking%20layer%20when%20it%20opens.">Register your interest →</a>
+      </div>
+      <p class="mb-interest-note">Non-binding. An expression of interest only — not a commitment to invest or to accept investment.</p>
+    </div>
+  </section>
+
+  <!-- DISCLAIMER -->
+  <section class="mb-disclaimer-strip">
+    <p class="mb-disclaimer">Coming soon. The merchant banking layer described on this page is in development and not yet available. Nothing here is an offer to sell or a solicitation of an offer to buy any security, an invitation or inducement to engage in investment activity, or investment, legal, tax, or financial advice. Maia is being designed to make introductions between members; it does not advise members on whether, where, or how to invest, and does not act as a broker, dealer, or investment adviser. Any future capital activity will be available only where lawful, only to eligible and verified persons, and only through separate formal documentation that will govern in full. Registering interest is a non-binding expression of interest and creates no obligation or right to invest or to receive investment. Ventures are not endorsed or recommended by Maia; all investments carry risk, including total loss of capital, and members should seek their own independent professional advice.</p>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <span class="wordmark">MAIA</span>
+      <p>Private membership. By invitation only.</p>
+      <div class="footer-links">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="mailto:hello@maiacircle.com">Contact</a>
+        <a href="partners.html">Partner with us</a>
+        <a href="merchant-bank.html" style="color: var(--gold)">Merchant banking</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="nav.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+  <script src="auth.js"></script>
+</body>
+</html>
