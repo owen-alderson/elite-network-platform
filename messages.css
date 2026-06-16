@@ -7,6 +7,7 @@
   margin: 0 auto;
   padding: calc(var(--nav-h) + 24px) 0 0;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .msg-list-pane {
@@ -234,10 +235,21 @@
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 10px;
-  align-items: flex-end;
+  align-items: stretch;
   padding: 16px 24px;
   border-top: 1px solid var(--border);
   background: var(--black);
+}
+/* Send button fills the compose row height so it lines up flush with the
+   textarea (top + bottom), with the label centered — not floating short
+   at the bottom. */
+.msg-compose #msg-send {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 22px;
+  min-width: 88px;
+  white-space: nowrap;
 }
 
 .msg-compose textarea {
@@ -262,7 +274,7 @@
   .msg-thread-pane {
     display: none;
     position: fixed;
-    inset: var(--nav-h) 0 0 0;
+    top: var(--nav-h); left: 0; right: 0; bottom: 0;
     background: var(--black);
     z-index: 50;
   }
@@ -270,7 +282,11 @@
   .msg-layout--showing-thread .msg-thread-pane { display: flex; }
   .msg-back { display: inline-block; }
   .msg-thread-empty { display: none; }
-  .msg-thread { min-height: calc(100vh - var(--nav-h)); }
+  /* Fit the fixed pane exactly so the compose bar stays on-screen. The old
+     min-height:100vh INSIDE an already-viewport-tall fixed pane pushed the
+     compose below the fold on iOS — the likely "can't use messages" cause.
+     Now: thread fills the pane, the message body scrolls, compose pins. */
+  .msg-thread { min-height: 0; height: 100%; flex: 1; }
 }
 
 @media (max-width: 640px) {
