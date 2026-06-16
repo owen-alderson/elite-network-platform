@@ -177,6 +177,19 @@
   margin: 0 auto;
   text-align: left;
 }
+/* These form classes live in apply.css, which this page doesn't load — define
+   them here so the contact form isn't a stack of unstyled labels + fields. */
+.form-row { display: flex; gap: 16px; }
+.form-row .form-group { flex: 1; }
+.form-group { margin-bottom: 24px; }
+.form-label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
 
 /* ── Section shared ────────────────────────────────────────── */
 .p-section {}
@@ -187,4 +200,26 @@
   .p-gains-grid { grid-template-columns: 1fr; }
   .spring-callout { grid-template-columns: 1fr; gap: 40px; }
   .spring-callout-right { flex-direction: row; flex-wrap: wrap; gap: 24px; }
+}
+
+@media (max-width: 780px) {
+  /* Paired fields stack on phones instead of squeezing two per row. */
+  .form-row { flex-direction: column; gap: 0; }
+}
+
+@media (max-width: 640px) {
+  /* The hero's left margin + width:100% overflowed the right edge, leaving no
+     right gutter; on phones drop the offset and use even gutters instead. */
+  .partner-hero-inner {
+    margin-left: 0;
+    width: auto;
+    padding-left: 22px;
+    padding-right: 22px;
+  }
+}
+
+@media (max-width: 600px) {
+  /* Stack each city row so the status badge never fights the name for width. */
+  .city-row-p { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .city-status-badge { white-space: nowrap; flex-shrink: 0; }
 }

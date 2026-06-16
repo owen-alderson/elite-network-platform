@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Spring Place — Members Evening · Maia</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="event.css" />
+  <link rel="stylesheet" href="style.css?v=20260616c" />
+  <link rel="stylesheet" href="event.css?v=20260616c" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
@@ -223,18 +223,6 @@
     </div>
   </div>
 
-  <!-- RSVP CONFIRMED OVERLAY -->
-  <div class="modal-overlay" id="rsvp-confirm" style="display:none;" onclick="closeRsvp()">
-    <div class="modal" onclick="event.stopPropagation()" style="text-align:center; max-width:420px;">
-      <div style="font-size:36px; color:var(--gold); margin-bottom:20px;">◈</div>
-      <p class="flow-eyebrow" style="margin-bottom:10px;">You're confirmed</p>
-      <h3 style="font-family:var(--font-serif); font-size:28px; font-weight:300; color:var(--white); margin-bottom:12px;">See you on the 24th.</h3>
-      <p style="font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:6px;">Spring Place, Tribeca. 7:00 PM.</p>
-      <p style="font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:28px;">The full attendee list will be shared with you 48 hours before. A calendar invite is on its way.</p>
-      <button class="btn-primary btn-sm" onclick="closeRsvp()">Done</button>
-    </div>
-  </div>
-
   <footer class="footer">
     <div class="footer-inner">
       <span class="wordmark">MAIA</span>
@@ -249,14 +237,6 @@
   </footer>
 
   <script src="nav.js"></script>
-  <script>
-    // Confirm-overlay close handler stays inline; the RSVP button itself
-    // is wired up by event.js after data loads.
-    function closeRsvp() {
-      document.getElementById('rsvp-confirm').style.display = 'none';
-      document.body.style.overflow = '';
-    }
-  </script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="supabase.js"></script>
   <script src="auth.js"></script>

@@ -75,7 +75,9 @@
   border: 1px solid var(--border);
   padding: 14px 16px;
   font-family: var(--font-sans);
-  font-size: 14px;
+  /* 16px (not 14) so iOS Safari doesn't zoom the page on focus. The site-wide
+     floor uses attribute selectors that lose to these ID rules, so set it here. */
+  font-size: 16px;
   color: var(--text);
   margin-bottom: 24px;
   transition: border-color 0.15s ease;

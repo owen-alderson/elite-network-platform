@@ -19,6 +19,7 @@
 
     bindCompose();
     bindBack();
+    bindKeyboardViewport();
 
     await loadConversations();
     var params = new URLSearchParams(window.location.search);
@@ -327,6 +328,30 @@
       var layout = document.getElementById('msg-layout');
       if (layout) layout.classList.remove('msg-layout--showing-thread');
     });
+  }
+
+  // Keep the compose bar above the iOS keyboard. The mobile thread pane is
+  // position:fixed; bottom:0, anchored to the LAYOUT viewport — which on iOS
+  // < 16.4 does not shrink when the keyboard opens, so the textarea + Send
+  // button get hidden behind it. The viewport meta (interactive-widget=
+  // resizes-content) handles modern iOS; this tracks visualViewport for the
+  // rest, offsetting the pane's bottom by the keyboard's height.
+  function bindKeyboardViewport() {
+    var vv = window.visualViewport;
+    if (!vv) return;
+    function apply() {
+      var pane = document.getElementById('msg-thread-pane');
+      if (!pane) return;
+      if (!window.matchMedia('(max-width: 700px)').matches) {
+        pane.style.bottom = '';
+        return;
+      }
+      var keyboard = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      pane.style.bottom = keyboard + 'px';
+      if (keyboard > 0) scrollThreadToBottom();
+    }
+    vv.addEventListener('resize', apply);
+    vv.addEventListener('scroll', apply);
   }
 
   // ── Realtime ────────────────────────────────────────────────

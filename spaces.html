@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Spaces — Maia</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=20260616c" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
@@ -22,7 +22,6 @@
         <a href="login.html" class="nav-signin">Sign in</a>
         <a href="apply.html" class="nav-cta">Request Access</a>
       </div>
-    </div>
       <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
         <span></span><span></span><span></span>
       </button>
@@ -47,7 +46,7 @@
   </div>
 
   <div style="background: var(--surface); border-bottom: 1px solid var(--border); padding: 28px 0;">
-    <div style="max-width: var(--max-w); margin: 0 auto; padding: 0 32px; display: flex; align-items: center; justify-content: space-between;">
+    <div class="spaces-inner" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
       <p style="font-size: 13px; color: var(--muted);">Are you a private club or venue interested in partnering with Maia?</p>
       <a href="partners.html" class="btn-ghost" style="padding: 9px 22px; font-size: 11px;">Partner with us →</a>
     </div>
@@ -63,7 +62,7 @@
        cards (not data-driven) so the muted "Coming soon" treatment is
        distinct from the confirmed partner-spaces grid above. -->
   <div style="background: var(--black); padding: 60px 0 96px;">
-    <div style="max-width: var(--max-w); margin: 0 auto; padding: 0 32px;">
+    <div class="spaces-inner">
       <p class="section-label" style="color: var(--gold); margin: 0 0 12px;">Coming next</p>
       <h2 class="section-heading" style="margin: 0 0 14px;">Going global,<br>one curated partner per city.</h2>
       <p style="font-size: 15px; color: var(--muted); max-width: 580px; line-height: 1.7; margin: 0 0 48px;">Maia's playbook is one local partner per major metropolitan city — never a global chain. Six partnerships are in active development across Europe and North America. The pilot launches in New York; the rest follow as each local anchor confirms.</p>

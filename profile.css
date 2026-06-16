@@ -133,7 +133,7 @@ textarea.profile-edit-input {
     gap: 6px;
   }
   .profile-ach-year    { grid-area: year; }
-  .profile-ach-remove  { grid-area: remove; justify-self: end; }
+  .profile-ach-remove  { grid-area: remove; justify-self: end; min-width: 44px; min-height: 44px; }
   .profile-ach-title   { grid-area: title; }
   .profile-ach-details { grid-area: details; }
 }
@@ -262,7 +262,9 @@ body:has(.profile-sticky-edit-bar) {
   border-top: none;
   max-height: 260px;
   overflow-y: auto;
-  z-index: 30;
+  /* Above the sticky edit bar (z-index:50) so its lower suggestions stay
+     visible and tappable when the dropdown reaches the viewport bottom. */
+  z-index: 60;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
 }
 

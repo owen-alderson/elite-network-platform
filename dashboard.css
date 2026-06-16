@@ -603,6 +603,20 @@
   flex-shrink: 0;
   animation: pulse 2s ease infinite;
 }
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.4; transform: scale(0.7); }
+}
+
+/* On mobile the nav-member chip keeps only the avatar + unread dot (tap to
+   open the inbox); the name, separator, and injected Sign out are dropped
+   — Sign out lives in the hamburger menu, matching .nav-session-name being
+   hidden site-wide on mobile. */
+@media (max-width: 700px) {
+  .nav-member-name { display: none; }
+  .nav-member .nav-session-sep,
+  .nav-member .nav-signout { display: none; }
+}
 
 /* ── Inbox panel ───────────────────────────────────────────── */
 .inbox-panel {
@@ -611,6 +625,7 @@
   right: 0;
   width: 360px;
   height: calc(100vh - var(--nav-h));
+  height: calc(100dvh - var(--nav-h));
   background: var(--surface);
   border-left: 1px solid var(--border);
   z-index: 200;
@@ -1087,8 +1102,15 @@
 
 }
 
+/* The open partner space (Spring Place) gets a subtle gold wash so it reads
+   as live, distinct from the "Soon" chips. */
+.dash-space-chip.active-space {
+  border-color: var(--gold-dim);
+  background: rgba(201, 168, 76, 0.06);
+}
+
 /* Inbox panel safety on ultra-narrow */
 @media (max-width: 380px) {
   .dash-main { padding: 18px 14px 60px; }
-  .dash-greeting-name { font-size: 26px; }
+  .dash-greeting-head { font-size: 26px; }
 }

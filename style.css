@@ -259,6 +259,7 @@ a { color: inherit; text-decoration: none; }
 .hero {
   position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   background: var(--black);
@@ -345,6 +346,17 @@ a { color: inherit; text-decoration: none; }
   text-transform: uppercase;
   color: var(--gold);
   margin-bottom: 20px;
+}
+/* Shared eyebrow used by the intro-request / profile / event modals. apply.css
+   also defines it (and wins on apply pages); defined here so pages that don't
+   load apply.css — dashboard, profile, event — still render it gold + uppercase
+   instead of as plain body text. */
+.flow-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 16px;
 }
 .section-heading {
   font-family: var(--font-serif);
@@ -1058,6 +1070,13 @@ a { color: inherit; text-decoration: none; }
 /* ============================================================
    SPACES PAGE
    ============================================================ */
+/* Shared wrapper for the spaces promo bar + "Coming next" strip so their
+   gutters compress with the rest of the site on phones (see 640px block). */
+.spaces-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 32px;
+}
 .spaces-grid {
   max-width: var(--max-w);
   margin: 0 auto;
@@ -1120,20 +1139,28 @@ a { color: inherit; text-decoration: none; }
   }
   .members-sidebar { position: static; }
   .filter-list { flex-direction: row; flex-wrap: wrap; gap: 6px; }
-  .filter-list .filter-btn { width: auto; padding: 7px 14px; }
+  .filter-list .filter-btn { width: auto; padding: 7px 14px; min-height: 44px; display: inline-flex; align-items: center; }
   .members-grid { grid-template-columns: repeat(2, 1fr); }
   .profile-wrap { grid-template-columns: 1fr; }
   .profile-photo { max-width: 240px; }
   .connections-grid { grid-template-columns: repeat(3, 1fr); }
   .spaces-grid { grid-template-columns: 1fr; }
   .event-row { grid-template-columns: 80px 1fr; }
-  .event-tags { display: none; }
+  .event-image-block { width: 80px; height: 64px; }
+  /* Don't hide the visibility tag + "X spots remaining" on phones — reflow
+     them under the title so members still see them without opening the event. */
+  .event-tags {
+    grid-column: 2;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
+  }
 }
 
 @media (max-width: 600px) {
   .pillar-grid { grid-template-columns: 1fr; }
   .members-grid { grid-template-columns: 1fr; }
-  .nav-links a:not(.nav-cta) { display: none; }
   .apply-actions { flex-direction: column; align-items: center; }
   .footer-inner { flex-direction: column; text-align: center; }
   .connections-grid { grid-template-columns: repeat(2, 1fr); }
@@ -1209,6 +1236,14 @@ a { color: inherit; text-decoration: none; }
   .nav-links { display: none; }
   .hamburger { display: flex; }
   .mobile-menu { display: flex; }
+  /* .nav-links carried margin-right:auto to push the right-hand cluster
+     over; it's hidden on mobile, so anchor the wordmark left instead —
+     otherwise the session chip + hamburger bunch next to the wordmark on
+     the left with empty space on the right. */
+  .nav-inner .wordmark { margin-right: auto; }
+  /* The 48px side padding that frames the events list on desktop crushes
+     the rows on a phone — pull it in so the cards keep their breathing room. */
+  .events-list { padding: 32px 16px; }
 }
 
 /* ── Modal (used by intro request flow on dashboard + profile) ── */
@@ -1390,8 +1425,8 @@ a { color: inherit; text-decoration: none; }
    appearing. Long URLs, hashtags, and emails in user-generated
    content break the layout otherwise. */
 html, body { overflow-x: hidden; }
-.profile-tagline, .member-card-headline, .intro-mini-note,
-.event-title, .venue-desc, blockquote { overflow-wrap: anywhere; }
+.profile-tagline, .card-name, .card-title, .card-next, .intro-mini-note,
+.event-title, .venue-desc, blockquote { overflow-wrap: anywhere; word-break: break-word; }
 
 /* iOS Safari zoom-on-focus floor — every input/select/textarea on
    the platform must be ≥16px on mobile or iOS bounces the page
@@ -1421,6 +1456,8 @@ html, body { overflow-x: hidden; }
   .section-inner { padding: 64px 18px; }
   .hero-inner { padding: calc(var(--nav-h) + 56px) 22px 72px; }
   .apply-inner { padding-left: 18px; padding-right: 18px; }
+  .page-header-inner { padding-left: 18px; padding-right: 18px; }
+  .spaces-inner { padding-left: 18px; padding-right: 18px; }
   .footer-inner { padding: 28px 18px; }
 
   /* Hero headline floor — clamp(48px, 6vw, 84px) sticks at 48px
@@ -1448,6 +1485,13 @@ html, body { overflow-x: hidden; }
     justify-content: center;
   }
   .btn-sm { min-height: 36px; }
+  /* Upcoming / Past toggle — give the chips a real tap area too. */
+  .events-toggle-btn {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
 
   /* Footer rows wrap on tiny phones — drop the rigid horizontal
      gap and align center for a cleaner stacked look. */

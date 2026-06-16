@@ -280,7 +280,15 @@
   }
   .msg-layout--showing-thread .msg-list-pane { display: none; }
   .msg-layout--showing-thread .msg-thread-pane { display: flex; }
-  .msg-back { display: inline-block; }
+  /* The only way back to the inbox on a phone — give it a real 44px hit
+     area while keeping its visual position (negative margins absorb the pad). */
+  .msg-back {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 10px 4px;
+    margin: -10px 0 4px -4px;
+  }
   .msg-thread-empty { display: none; }
   /* Fit the fixed pane exactly so the compose bar stays on-screen. The old
      min-height:100vh INSIDE an already-viewport-tall fixed pane pushed the

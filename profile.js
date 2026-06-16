@@ -141,10 +141,13 @@
     });
     section.appendChild(wrap);
 
-    // Insert after the Current focus block if present, else at top of main.
+    // Insert directly after the Current focus block, inside .profile-main
+    // (column 2). Using parentNode.parentNode put it in .profile-wrap as a
+    // stray grid item — landing in the sidebar column on desktop and floating
+    // to the page bottom on mobile.
     var workSection = document.getElementById('profile-current-work');
     if (workSection && workSection.parentNode) {
-      workSection.parentNode.parentNode.insertBefore(section, workSection.parentNode.nextSibling);
+      workSection.parentNode.insertBefore(section, workSection.nextSibling);
     } else {
       anchor.appendChild(section);
     }
@@ -1116,6 +1119,26 @@
     bar.appendChild(cancel);
     bar.appendChild(save);
     document.body.appendChild(bar);
+
+    // Edit mode is all text inputs, so the iOS keyboard is up most of the
+    // time. A fixed bottom:0 bar gets pushed behind the keyboard — track the
+    // visual viewport and lift the bar by the keyboard's height so Save/Cancel
+    // stay reachable. The listener self-removes once the bar is torn down.
+    if (window.visualViewport) {
+      var vv = window.visualViewport;
+      var trackKeyboard = function () {
+        var b = document.getElementById('profile-sticky-edit-bar');
+        if (!b) {
+          vv.removeEventListener('resize', trackKeyboard);
+          vv.removeEventListener('scroll', trackKeyboard);
+          return;
+        }
+        var overlap = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+        b.style.transform = overlap > 0 ? 'translateY(-' + overlap + 'px)' : '';
+      };
+      vv.addEventListener('resize', trackKeyboard);
+      vv.addEventListener('scroll', trackKeyboard);
+    }
   }
 
   // "Change Password" (own profile only) — sends a password-reset email,

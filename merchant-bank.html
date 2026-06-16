@@ -6,8 +6,8 @@
   <title>The Merchant Banking Layer — Maia</title>
   <meta name="description" content="Maia is building a merchant banking layer — warm introductions to capital, and a network that backs its own. Coming soon." />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="partners.css" />
+  <link rel="stylesheet" href="style.css?v=20260616c" />
+  <link rel="stylesheet" href="partners.css?v=20260616c" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
@@ -52,6 +52,9 @@
     @media (max-width: 900px) { .mb-split { grid-template-columns: 1fr; } }
     @media (max-width: 640px) {
       .mb-split-half { padding: 28px 22px; }
+      /* The eyebrow is a no-wrap flex row; without this the "Coming soon"
+         badge can't drop to its own line and the margin-top above is a no-op. */
+      .partner-hero .hero-eyebrow { flex-wrap: wrap; }
       .mb-hero-badge { display: inline-block; margin: 12px 0 0; }
       .mb-disclaimer-strip { padding: 24px 18px; }
     }
@@ -69,7 +72,6 @@
         <a href="login.html" class="nav-signin">Sign in</a>
         <a href="apply.html" class="nav-cta">Request Access</a>
       </div>
-    </div>
       <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
         <span></span><span></span><span></span>
       </button>
