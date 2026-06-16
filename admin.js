@@ -1145,6 +1145,7 @@
     var btnRow = el('div', 'app-action-buttons');
 
     if (m.status === 'active') {
+      btnRow.appendChild(memberInviteBtn(m));
       btnRow.appendChild(memberStatusBtn('Pause', 'paused', 'btn-ghost btn-sm', m.id));
       btnRow.appendChild(memberStatusBtn('Remove', 'removed', 'btn-ghost btn-sm app-btn-reject', m.id, 'Remove this member? They\'ll be hidden from the directory; their data stays in the DB.'));
     } else if (m.status === 'paused') {
@@ -1157,6 +1158,32 @@
     article.appendChild(foot);
 
     return article;
+  }
+
+  // Admin onboarding action: email an existing member a one-click sign-in
+  // magic link via the send-member-invite edge function. Built for the
+  // seeded founding members (no password, never signed in) — invite-member
+  // only reaches NEW users created from an approved application.
+  function memberInviteBtn(m) {
+    var btn = document.createElement('button');
+    btn.className = 'btn-primary btn-sm';
+    btn.textContent = 'Send sign-in invite';
+    btn.addEventListener('click', async function () {
+      if (!confirm('Email ' + (m.full_name || 'this member') + ' (' + (m.email || '') + ') a one-click sign-in link to Maia?')) return;
+      btn.disabled = true;
+      var prev = btn.textContent;
+      btn.textContent = 'Sending…';
+      var res = await supabase.functions.invoke('send-member-invite', { body: { member_id: m.id } });
+      var errMsg = (res.error && res.error.message) || (res.data && res.data.error);
+      if (errMsg) {
+        alert('Could not send invite: ' + errMsg);
+        btn.disabled = false;
+        btn.textContent = prev;
+        return;
+      }
+      btn.textContent = 'Invite sent ✓';
+    });
+    return btn;
   }
 
   function memberStatusBtn(label, newStatus, classes, memberId, confirmMsg) {
