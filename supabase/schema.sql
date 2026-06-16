@@ -235,7 +235,12 @@ create table public.applications (
   -- same code, allowing admin to pair the records. applications_validate_
   -- nomination_pair() trigger requires (code, applicant_email) to match a
   -- pending nomination row before allowing the applicant insert.
-  nomination_code          text
+  nomination_code          text,
+  -- Per-row token for the "needs more info" in-app revision flow. The
+  -- needs-info status email carries apply.html?edit=<edit_token>; the
+  -- applicant (who has no account) revises in-app via the token-gated
+  -- get_application_for_edit / submit_application_revision RPCs below.
+  edit_token               text not null default (gen_random_uuid())::text
 );
 
 create index applications_status_idx on public.applications (status);
@@ -456,12 +461,70 @@ create trigger applications_send_status_change
 after update on public.applications
 for each row execute function public.applications_send_status_change();
 
+-- "Needs more info" in-app revision RPCs.
+-- When admin sets an application to needs_more_info, the status email
+-- carries apply.html?edit=<edit_token>. The applicant has no account, so
+-- they revise their row through these SECURITY DEFINER, token-gated RPCs
+-- instead of the broad applications SELECT/UPDATE that only admins hold.
+-- The Supabase default grant (anon, authenticated, service_role) is what
+-- the public apply page relies on; the (id, edit_token, status) match is
+-- the gate, so an applicant can only ever read/revise their own row.
+create or replace function public.get_application_for_edit(p_application_id uuid, p_edit_token text)
+returns public.applications
+language plpgsql
+security definer
+set search_path = 'public'
+as $$
+declare
+  rec public.applications;
+begin
+  select * into rec from public.applications
+  where id = p_application_id
+    and edit_token = p_edit_token
+    and status = 'needs_more_info';
+  if not found then
+    raise exception 'This edit link is invalid or has already been used.';
+  end if;
+  return rec;
+end;
+$$;
+
+create or replace function public.submit_application_revision(p_application_id uuid, p_edit_token text, p_payload jsonb)
+returns void
+language plpgsql
+security definer
+set search_path = 'public'
+as $$
+begin
+  update public.applications set
+    applicant_full_name             = coalesce(nullif(p_payload->>'applicant_full_name',''), applicant_full_name),
+    applicant_pillar                = p_payload->>'applicant_pillar',
+    applicant_headline              = p_payload->>'applicant_headline',
+    applicant_credential            = p_payload->>'applicant_credential',
+    applicant_signature_achievement = p_payload->>'applicant_signature_achievement',
+    applicant_achievements          = coalesce(p_payload->'applicant_achievements', '[]'::jsonb),
+    applicant_linkedin_url          = p_payload->>'applicant_linkedin_url',
+    applicant_location              = p_payload->>'applicant_location',
+    applicant_current_work          = p_payload->>'applicant_current_work',
+    status                          = 'pending',
+    reviewer_notes                  = null,
+    submitted_at                    = now()
+  where id = p_application_id
+    and edit_token = p_edit_token
+    and status = 'needs_more_info';
+  if not found then
+    raise exception 'This edit link is invalid or has already been used.';
+  end if;
+end;
+$$;
+
 ------------------------------------------------------------------------
 -- intro_requests
 -- The core mechanic. Two route variants:
---   route='broker' — requested when a mutual connection exists; admin
---                    assigns a broker; broker forwards off-platform.
---   route='direct' — no mutual connection; goes straight to target,
+--   route='broker' — the requester picks a mutual connection as broker;
+--                    the broker forwards on-platform; the target then sees
+--                    the request (with the broker's vouch) and accepts/declines.
+--   route='direct' — no broker chosen; goes straight to target,
 --                    target accepts/declines themselves. Capped at 5
 --                    pending per requester.
 -- A connection forms (and unlocks DM) when status = 'accepted'.
@@ -500,13 +563,15 @@ create policy "intro_requests_insert_self" on public.intro_requests
   for insert to authenticated
   with check (requester_id = (select auth.uid()));
 
--- SELECT: requester always; broker if assigned; target only on direct route; admin always.
+-- SELECT: requester always; broker if assigned; target on a direct route,
+-- or on a broker route once the broker has forwarded it; admin always.
 create policy "intro_requests_select_party" on public.intro_requests
   for select to authenticated
   using (
     requester_id = (select auth.uid())
     or broker_id = (select auth.uid())
     or (target_id = (select auth.uid()) and route = 'direct')
+    or (target_id = (select auth.uid()) and route = 'broker' and forwarded_at is not null)
     or public.is_admin()
   );
 
@@ -517,12 +582,14 @@ create policy "intro_requests_update_party_or_admin" on public.intro_requests
     broker_id = (select auth.uid())
     or requester_id = (select auth.uid())
     or (target_id = (select auth.uid()) and route = 'direct')
+    or (target_id = (select auth.uid()) and route = 'broker' and forwarded_at is not null)
     or public.is_admin()
   )
   with check (
     broker_id = (select auth.uid())
     or requester_id = (select auth.uid())
     or (target_id = (select auth.uid()) and route = 'direct')
+    or (target_id = (select auth.uid()) and route = 'broker' and forwarded_at is not null)
     or public.is_admin()
   );
 
@@ -610,7 +677,7 @@ as $$
 $$;
 
 -- Returns the set of member IDs connected to BOTH a and b. Used by the
--- admin broker picker so only valid brokers appear.
+-- intro.js broker picker so only valid mutual connections are offerable.
 create or replace function public.mutual_connections(a uuid, b uuid)
 returns setof uuid
 language sql
@@ -633,8 +700,18 @@ as $$
   select other from a_conns intersect select other from b_conns;
 $$;
 
-revoke execute on function public.mutual_connections(uuid, uuid) from public;
-grant  execute on function public.mutual_connections(uuid, uuid) to authenticated;
+-- Connection-graph helpers are SECURITY DEFINER (they read intro_requests
+-- past RLS). Only authenticated members ever call them — the intro.js broker
+-- picker, profile.js connection state, admin.js mutuals listing, and the
+-- messages RLS gate. Revoke the default anon grant so the /rest/v1/rpc
+-- surface can't be brute-forced unauthenticated to probe the connection
+-- graph. authenticated + service_role keep their default Supabase grant.
+revoke execute on function public.are_connected(uuid, uuid)         from public, anon;
+revoke execute on function public.has_mutual_connection(uuid, uuid) from public, anon;
+revoke execute on function public.mutual_connections(uuid, uuid)    from public, anon;
+grant  execute on function public.are_connected(uuid, uuid)         to authenticated;
+grant  execute on function public.has_mutual_connection(uuid, uuid) to authenticated;
+grant  execute on function public.mutual_connections(uuid, uuid)    to authenticated;
 
 -- Combined routing + rate-limit trigger.
 --
@@ -772,6 +849,16 @@ begin
       url := fn_url,
       headers := jsonb_build_object('Content-Type', 'application/json'),
       body := jsonb_build_object('intro_id', new.id, 'event', 'direct_accepted')
+    );
+  end if;
+
+  -- broker_accepted: target accepted a brokered intro on-platform. Notifies
+  -- the requester (mirrors direct_accepted, but for the broker route).
+  if (old.status is distinct from new.status and new.status = 'accepted' and new.route = 'broker') then
+    perform net.http_post(
+      url := fn_url,
+      headers := jsonb_build_object('Content-Type', 'application/json'),
+      body := jsonb_build_object('intro_id', new.id, 'event', 'broker_accepted')
     );
   end if;
 
