@@ -11,14 +11,46 @@
 
   function el(id) { return document.getElementById(id); }
 
+  // iOS Safari ignores `overflow: hidden` on body — the page can still
+  // scroll behind a fixed-positioned modal, which can move the modal's
+  // backdrop with the page on touch. The position:fixed-with-saved-top
+  // trick is the reliable cross-browser lock. We restore the original
+  // scroll position on unlock so the page doesn't jump.
+  var _savedScrollY = 0;
   function setBodyLocked(locked) {
-    document.body.style.overflow = locked ? 'hidden' : '';
+    var body = document.body;
+    if (locked) {
+      _savedScrollY = window.scrollY || window.pageYOffset || 0;
+      body.style.position = 'fixed';
+      body.style.top = '-' + _savedScrollY + 'px';
+      body.style.left = '0';
+      body.style.right = '0';
+      body.style.width = '100%';
+      body.style.overflow = 'hidden';
+    } else {
+      body.style.position = '';
+      body.style.top = '';
+      body.style.left = '';
+      body.style.right = '';
+      body.style.width = '';
+      body.style.overflow = '';
+      window.scrollTo(0, _savedScrollY);
+    }
   }
 
   async function open(targetName, targetId) {
     var modal = el('intro-modal');
     var nameEl = el('modal-name');
     if (!modal || !nameEl) return;
+
+    // Reset internal scroll on the inner panel each open — without
+    // this the panel can stay scrolled from the previous open so the
+    // title is below the visible area.
+    var resetScroll = function () {
+      var inner = modal.querySelector('.modal');
+      if (inner) inner.scrollTop = 0;
+      modal.scrollTop = 0;
+    };
 
     // Profile-completeness gate: members with thin profiles shouldn't be
     // reaching out — there's nothing for the target to evaluate. Surface a
@@ -29,6 +61,7 @@
         showCompletenessGate(modal, status);
         modal.style.display = 'flex';
         setBodyLocked(true);
+        resetScroll();
         return;
       }
     }
@@ -48,6 +81,7 @@
     renderBrokerPicker(modal, [], targetName, /* loading */ true);
     modal.style.display = 'flex';
     setBodyLocked(true);
+    resetScroll();
 
     if (targetId) {
       var session = await window.maia.getSession();

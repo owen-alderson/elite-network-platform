@@ -1166,15 +1166,27 @@ a { color: inherit; text-decoration: none; }
 /* ── Modal (used by intro request flow on dashboard + profile) ── */
 .modal-overlay {
   position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   inset: 0;
+  width: 100vw;
+  height: 100vh;
+  /* 100dvh handles the iOS Safari URL bar collapsing/expanding so the
+     overlay never falls a bar's worth of pixels short of the viewport. */
+  height: 100dvh;
   background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   padding: 24px;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   animation: modalFadeIn 0.2s ease;
 }
 
@@ -1186,8 +1198,19 @@ a { color: inherit; text-decoration: none; }
   max-width: 480px;
   width: 100%;
   max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
   overflow-y: auto;
   position: relative;
+  /* Auto-margins on a flex item give us "center if it fits, top-pin if
+     it overflows" — the top of the modal stays reachable even when its
+     content is taller than the viewport (flex align-items:center alone
+     would clip the top in that case). */
+  margin: auto;
+}
+
+@media (max-width: 480px) {
+  .modal-overlay { padding: 12px; }
+  .modal { padding: 24px 20px; }
 }
 
 .modal-close {
