@@ -1,0 +1,105 @@
+/* legal.css — shared layout for privacy.html + terms.html.
+   Reuses the global tokens in style.css; defines only the reading layout. */
+
+.legal-wrap {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: calc(var(--nav-h) + 64px) 24px 96px;
+}
+
+.legal-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 16px;
+}
+
+.legal-title {
+  font-family: var(--font-serif);
+  font-size: clamp(34px, 5vw, 52px);
+  font-weight: 300;
+  color: var(--white);
+  line-height: 1.1;
+  margin: 0 0 12px;
+}
+
+.legal-updated {
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  margin: 0 0 36px;
+}
+
+.legal-intro {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.85;
+  margin: 0 0 8px;
+}
+
+.legal-wrap h2 {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 400;
+  color: var(--white);
+  line-height: 1.2;
+  margin: 40px 0 12px;
+}
+
+.legal-wrap h3 {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 24px 0 8px;
+}
+
+.legal-wrap p {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.85;
+  margin: 0 0 14px;
+}
+
+.legal-wrap ul {
+  margin: 0 0 16px;
+  padding-left: 20px;
+}
+
+.legal-wrap li {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.8;
+  margin-bottom: 8px;
+}
+
+.legal-wrap a { color: var(--gold); text-decoration: none; border-bottom: 1px solid var(--gold-dim); }
+.legal-wrap a:hover { color: var(--white); }
+
+.legal-wrap strong { color: var(--text); font-weight: 500; }
+
+/* Callout block — used for the capital-layer no-offer note and the
+   pre-formation governing-law note. */
+.legal-note {
+  border-left: 2px solid var(--gold-dim);
+  background: var(--surface);
+  padding: 16px 20px;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.75;
+  margin: 20px 0;
+}
+.legal-note p { font-size: 13px; margin: 0; }
+
+.legal-divider {
+  height: 1px;
+  background: var(--border);
+  border: none;
+  margin: 40px 0;
+}
+
+@media (max-width: 640px) {
+  .legal-wrap { padding: calc(var(--nav-h) + 40px) 18px 64px; }
+  .legal-wrap h2 { font-size: 21px; }
+}
