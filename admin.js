@@ -29,6 +29,7 @@
   var introListEl, introTabsEl, introStatEls;
   var eventListEl, eventCreateBtn;
   var memberListEl, memberTabsEl, memberStatEls;
+  var onboardNameEl, onboardEmailEl, onboardPillarEl, onboardHeadlineEl, onboardBtn, onboardMsgEl;
   var spaceListEl, spaceSaveBtn;
 
   // ── Boot ────────────────────────────────────────────────────
@@ -65,6 +66,15 @@
       removed: document.getElementById('member-stat-removed'),
       total: document.getElementById('member-stat-total')
     };
+
+    onboardNameEl = document.getElementById('onboard-name');
+    onboardEmailEl = document.getElementById('onboard-email');
+    onboardPillarEl = document.getElementById('onboard-pillar');
+    onboardHeadlineEl = document.getElementById('onboard-headline');
+    onboardBtn = document.getElementById('onboard-btn');
+    onboardMsgEl = document.getElementById('onboard-msg');
+    populateOnboardPillars();
+    if (onboardBtn) onboardBtn.addEventListener('click', onboardMember);
 
     spaceListEl = document.getElementById('admin-space-list');
     spaceSaveBtn = document.getElementById('space-save-btn');
@@ -1246,6 +1256,93 @@
 
     wrap.appendChild(select);
     return wrap;
+  }
+
+  // ── Onboard a brand-new member by email ─────────────────────
+  // For people met off-platform (a call, a warm intro) who never went
+  // through the apply form. Calls the admin-gated onboard-member edge fn,
+  // which creates the auth user + members row and emails the branded
+  // magic-link welcome in one step.
+  function populateOnboardPillars() {
+    if (!onboardPillarEl) return;
+    ALL_PILLARS.forEach(function (p) {
+      var opt = document.createElement('option');
+      opt.value = p;
+      opt.textContent = p.replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+      onboardPillarEl.appendChild(opt);
+    });
+  }
+
+  function setOnboardMsg(msg, kind) {
+    if (!onboardMsgEl) return;
+    onboardMsgEl.textContent = msg || '';
+    onboardMsgEl.classList.toggle('is-error', kind === 'error');
+    onboardMsgEl.classList.toggle('is-ok', kind === 'ok');
+  }
+
+  function friendlyOnboardError(code) {
+    if (code === 'already_member') return 'Someone with that email is already a member — use “Send sign-in invite” on their card instead.';
+    if (code === 'invalid_email') return 'That email doesn’t look valid.';
+    if (code === 'name_required') return 'Enter their full name.';
+    if (code === 'forbidden' || code === 'unauthenticated') return 'You’re not authorised to do that — sign in as the admin.';
+    if (code === 'resend_not_configured') return 'Email isn’t configured on the server.';
+    return 'Could not onboard: ' + code;
+  }
+
+  async function onboardMember() {
+    var fullName = (onboardNameEl.value || '').trim();
+    var email = (onboardEmailEl.value || '').trim().toLowerCase();
+    var pillar = onboardPillarEl ? onboardPillarEl.value : '';
+    var headline = onboardHeadlineEl ? (onboardHeadlineEl.value || '').trim() : '';
+
+    setOnboardMsg('');
+    if (!fullName) { setOnboardMsg('Enter their full name.', 'error'); onboardNameEl.focus(); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setOnboardMsg('Enter a valid email.', 'error'); onboardEmailEl.focus(); return; }
+
+    if (!confirm('Onboard ' + fullName + ' (' + email + ') and email them a one-click sign-in link now?')) return;
+
+    onboardBtn.disabled = true;
+    var prev = onboardBtn.textContent;
+    onboardBtn.textContent = 'Onboarding…';
+
+    var payload = { email: email, full_name: fullName };
+    if (pillar) payload.primary_pillar = pillar;
+    if (headline) payload.headline = headline;
+
+    var res = await supabase.functions.invoke('onboard-member', { body: payload });
+    var outcome = await readFnResult(res);
+
+    onboardBtn.disabled = false;
+    onboardBtn.textContent = prev;
+
+    if (!outcome.ok) {
+      setOnboardMsg(friendlyOnboardError(outcome.error), 'error');
+      return;
+    }
+
+    onboardNameEl.value = '';
+    onboardEmailEl.value = '';
+    if (onboardPillarEl) onboardPillarEl.value = '';
+    if (onboardHeadlineEl) onboardHeadlineEl.value = '';
+    setOnboardMsg('✓ ' + fullName + ' onboarded — welcome email sent to ' + email + '.', 'ok');
+    await refreshMembers();
+  }
+
+  // Normalise a supabase.functions.invoke() result into { ok, data } /
+  // { ok:false, error }. On a non-2xx the client sets res.error to a generic
+  // FunctionsHttpError; the real machine-readable code lives in the JSON body
+  // on res.error.context (a Response), so we read it back when present.
+  async function readFnResult(res) {
+    if (!res.error) return { ok: true, data: res.data };
+    var detail = (res.error && res.error.message) || 'request failed';
+    try {
+      var ctx = res.error.context;
+      if (ctx && typeof ctx.json === 'function') {
+        var j = await ctx.json();
+        if (j && j.error) detail = j.error;
+      }
+    } catch (e) { /* keep the generic message */ }
+    return { ok: false, error: detail };
   }
 
   // ── Spaces admin ────────────────────────────────────────────

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css?v=20260616c">
-  <link rel="stylesheet" href="admin.css?v=20260616c">
+  <link rel="stylesheet" href="admin.css?v=20260617a">
 </head>
 <body>
 
@@ -208,6 +208,40 @@
         </div>
       </header>
 
+      <!-- Onboard a brand-new member who came via a call / warm intro (not
+           the apply form). Creates their account + emails the magic-link
+           welcome in one step via the onboard-member edge function. -->
+      <section class="admin-event-form admin-onboard-form">
+        <h2 class="admin-form-heading">Onboard a member</h2>
+        <p class="form-hint admin-onboard-intro">For someone you met directly — a call, a warm intro — who didn't apply. Creates their account and emails a one-click sign-in link. They complete their own profile after.</p>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Full name</label>
+            <input class="form-input" type="text" id="onboard-name" placeholder="e.g. Olympia Gancia" autocomplete="off" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input class="form-input" type="email" id="onboard-email" placeholder="name@example.com" autocomplete="off" autocapitalize="off" spellcheck="false" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Primary pillar <span class="form-label-opt">(optional — they can set it themselves)</span></label>
+            <select class="form-input" id="onboard-pillar">
+              <option value="">— unset —</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Headline <span class="form-label-opt">(optional)</span></label>
+            <input class="form-input" type="text" id="onboard-headline" placeholder="e.g. Founder, Acme · ex-Google" />
+          </div>
+        </div>
+        <div class="form-actions">
+          <p class="form-hint admin-onboard-msg" id="onboard-msg" aria-live="polite"></p>
+          <button class="btn-primary btn-sm" id="onboard-btn">Onboard &amp; send invite</button>
+        </div>
+      </section>
+
       <section id="admin-member-list" class="admin-list" aria-live="polite">
         <p class="admin-loading">Loading…</p>
       </section>
@@ -287,7 +321,7 @@
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="supabase.js"></script>
   <script src="auth.js"></script>
-  <script src="admin.js?v=20260616b"></script>
+  <script src="admin.js?v=20260617a"></script>
   <script src="nav.js"></script>
 </body>
 </html>

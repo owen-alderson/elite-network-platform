@@ -510,6 +510,22 @@
 .member-status-paused   { color: #d9b87a; border-color: #d9b87a; }
 .member-status-removed  { color: var(--muted); border-color: var(--border); }
 
+/* ── Onboard-a-member form (Members view) ─────────── */
+.admin-onboard-form { margin-bottom: 28px; }
+.admin-onboard-intro { margin: -6px 0 18px; max-width: 60ch; }
+/* Result line sits opposite the button; pushes above it on narrow screens. */
+.admin-onboard-form .form-actions {
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.admin-onboard-msg { margin: 0; }
+.admin-onboard-msg.is-error { color: #d98c8c; }
+.admin-onboard-msg.is-ok    { color: var(--gold); }
+@media (max-width: 700px) {
+  .admin-onboard-form .form-actions { justify-content: flex-start; }
+}
+
 /* ── Tags on member + application cards ─────────── */
 .admin-tag-row {
   display: flex;
