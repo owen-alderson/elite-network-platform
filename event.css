@@ -40,6 +40,18 @@
 }
 .back-link:hover { color: var(--white); }
 
+/* Phone-only tap floor for the hero back-link (desktop keeps the compact
+   inline link flush to the hero's left edge). */
+@media (max-width: 700px) {
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 10px 4px;
+    margin-bottom: 22px;
+  }
+}
+
 .event-hero-date {
   display: flex;
   align-items: baseline;

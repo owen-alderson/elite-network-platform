@@ -747,7 +747,8 @@
     for (var i = 0; i < EVT_EXPECT_MAX; i++) {
       var row = document.createElement('div');
       row.className = 'evt-expect-row';
-      row.style.cssText = 'display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-bottom:8px;';
+      // Layout lives entirely in admin.css (.evt-expect-row) so the mobile
+      // breakpoint can stack the inputs (an inline style would beat it).
       var titleInput = document.createElement('input');
       titleInput.type = 'text';
       titleInput.className = 'form-input';

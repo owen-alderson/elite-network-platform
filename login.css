@@ -1,5 +1,6 @@
 .login-body {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -131,6 +132,21 @@
 .login-helper-sep {
   margin: 0 10px;
   color: var(--border);
+}
+
+/* Phone-only: grow the helper links (sign-in link / forgot / skip) to a
+   44px tap area. Scoped to mobile so the centered desktop helper row keeps
+   its compact inline links, aligned '·' separator, and tight hover underline.
+   vertical-align:middle keeps the separator centered against the taller links. */
+@media (max-width: 700px) {
+  .login-helper a {
+    display: inline-block;
+    min-height: 44px;
+    padding: 11px 6px;
+    line-height: 1.4;
+    vertical-align: middle;
+  }
+  .login-helper-sep { vertical-align: middle; }
 }
 
 .login-submit {

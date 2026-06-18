@@ -326,8 +326,14 @@ body:has(.profile-sticky-edit-bar) {
     padding: 8px 14px;
   }
   .profile-tag-x {
-    min-width: 24px;
-    min-height: 24px;
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* Negative margins keep the chip visually tight while the hit area
+       reaches the 44px floor (mirrors .profile-ach-remove). */
+    margin: -12px -8px -12px 0;
   }
   .profile-location-item {
     font-size: 15px;

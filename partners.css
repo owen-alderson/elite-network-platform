@@ -5,6 +5,7 @@
 .partner-hero {
   position: relative;
   min-height: 88vh;
+  min-height: 88dvh;
   display: flex;
   align-items: center;
   background: var(--black);

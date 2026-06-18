@@ -616,6 +616,14 @@
   .nav-member-name { display: none; }
   .nav-member .nav-session-sep,
   .nav-member .nav-signout { display: none; }
+  /* The avatar/unread-dot chip is the ONLY path to notifications on a phone —
+     give it a real 44px tap area (avatar stays centered). */
+  .nav-member {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0 6px;
+    justify-content: center;
+  }
 }
 
 /* ── Inbox panel ───────────────────────────────────────────── */
@@ -1099,6 +1107,20 @@
   /* Inbox panel — pinned-fixed 360px wide on tablets and up;
      on phones, take the full screen so it doesn't overflow. */
   .inbox-panel { width: 100vw; max-width: 100vw; }
+
+  /* 6/18 mobile audit: touch + layout floors. */
+  .inbox-close {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+  /* Partner-space chips stack one-per-row instead of a cramped 2-up. */
+  .dash-spaces-row { grid-template-columns: 1fr; }
+  /* Sidebar-strip nav links reach the 44px tap floor. */
+  .dash-nav-item { min-height: 44px; }
 
 }
 

@@ -495,6 +495,16 @@
   margin-top: 18px;
 }
 
+/* "What to expect" rows: title + body inputs side-by-side on desktop,
+   stacked full-width on phones (layout moved out of an inline style so the
+   media query can override it). */
+.evt-expect-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
 @media (max-width: 700px) {
   .admin-event-form { padding: 20px; }
   .admin-event-form .form-row { flex-direction: column; gap: 0; }
@@ -504,6 +514,16 @@
   /* iOS zoom-prevention floor on admin form inputs. */
   .admin-event-form .form-input,
   .admin-event-form .form-textarea { font-size: 16px; padding: 11px 14px; }
+  /* Stack the "what to expect" title/body inputs full-width. */
+  .evt-expect-row { grid-template-columns: 1fr; gap: 6px; }
+  /* Lift the smallest admin caption labels off the sub-12px floor. */
+  .app-status,
+  .admin-engagement-pill,
+  .admin-tag,
+  .admin-today-eyebrow,
+  .admin-eyebrow,
+  .app-card-eyebrow,
+  .app-section-label { font-size: 11px; }
 }
 
 .member-status-active   { color: #6fbf73; border-color: #6fbf73; }

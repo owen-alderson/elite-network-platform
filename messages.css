@@ -295,11 +295,22 @@
      compose below the fold on iOS — the likely "can't use messages" cause.
      Now: thread fills the pane, the message body scrolls, compose pins. */
   .msg-thread { min-height: 0; height: 100%; flex: 1; }
+  /* 6/18 audit: the mobile compose layout turns on at 700px but the iOS
+     16px zoom floor only applied <=640px — close the 641-700px gap so the
+     compose field never triggers focus-zoom. Plus a 44px tap area on the
+     thread-header name (it links to the other member's profile). */
+  .msg-compose textarea { font-size: 16px; }
+  .msg-thread-name {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 6px 0;
+    margin: -6px 0 -2px;
+  }
 }
 
 @media (max-width: 640px) {
-  /* iOS Safari zooms anything <16px on focus and doesn't zoom back.
-     The compose textarea needs to hit the floor. */
-  .msg-compose textarea { font-size: 16px; }
+  /* The compose textarea 16px iOS-zoom floor now lives in the 700px block
+     above (covers all of <=640px too). */
   .msg-compose { padding: 10px 14px; }
 }

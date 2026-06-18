@@ -459,8 +459,15 @@
   .flow-solo  { padding: 40px 18px 80px; }
   .flow-center { padding: 60px 20px 60px; }
   .flow-heading { line-height: 1.08; }
-  .pillar-opt { font-size: 13px; padding: 8px 12px; }
-  .flow-actions { flex-direction: column; gap: 10px; }
+  .pillar-opt {
+    font-size: 13px;
+    padding: 12px 14px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+  /* column-reverse puts the primary forward action (2nd in DOM) above Back. */
+  .flow-actions { flex-direction: column-reverse; gap: 10px; }
   .flow-actions button,
   .flow-actions .btn-primary,
   .flow-actions .btn-ghost { width: 100%; }

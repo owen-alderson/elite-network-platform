@@ -473,4 +473,17 @@
 @media (max-width: 640px) {
   .venue-hero-inner { padding: 0 18px 36px; }
   .venue-body-inner { padding: 40px 18px 64px; }
+  /* 6/18 audit: tap floors for the hero back-link + small sidebar links. */
+  .back-link {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+  .location-map-link,
+  .venue-also-card a {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    font-size: 12px;
+  }
 }

@@ -1174,6 +1174,11 @@ a { color: inherit; text-decoration: none; }
   display: none;
   flex-direction: column;
   justify-content: center;
+  /* 44px tap area — this is the ONLY nav entry point on a phone, so the
+     hit region must clear the touch floor (the bars stay visually 22x1px). */
+  align-items: center;
+  min-width: 44px;
+  min-height: 44px;
   gap: 5px;
   background: none;
   border: none;
@@ -1202,6 +1207,12 @@ a { color: inherit; text-decoration: none; }
   border-bottom: 1px solid var(--border);
   z-index: 99;
   flex-direction: column;
+  /* Scroll internally so injected rows (Messages/Admin/Sign out) stay
+     reachable on short/landscape screens; the panel is position:fixed. */
+  max-height: calc(100dvh - var(--nav-h));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   padding: 16px 0 24px;
   transform: translateY(-8px);
   opacity: 0;
@@ -1492,6 +1503,21 @@ html, body { overflow-x: hidden; }
     align-items: center;
     justify-content: center;
   }
+
+  /* Touch + legibility floors surfaced by the 6/18 mobile audit. */
+  .modal-close {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+  /* Member-facing metadata labels — lift off the sub-12px floor on phones. */
+  .tag,
+  .event-tag,
+  .event-spots,
+  .event-month { font-size: 12px; }
 
   /* Footer rows wrap on tiny phones — drop the rigid horizontal
      gap and align center for a cleaner stacked look. */
