@@ -3,6 +3,35 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+    /* Pre-paint guard: if a Maia auth token is cached, hide the page so a
+       signed-in member never flashes the logged-out homepage while auth.js
+       confirms the session and redirects them to their dashboard. auth.js
+       reveals the page if the session is actually absent/expired; the timeout
+       is a safety net so no visitor is ever stranded on a blank page. */
+    (function () {
+      try {
+        var prefix = 'sb-emlresxklixzcsammste-auth-token';
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (k && k.indexOf(prefix) === 0) {
+            document.documentElement.style.visibility = 'hidden';
+            /* Single reveal entry-point, shared with auth.js. auth.js calls
+               this the moment it decides (redirect or reveal), so the timer
+               below is only ever a last-resort net for the case where the
+               auth scripts fail to load/run at all — it never races the real
+               decision. */
+            window.__maiaReveal = function () {
+              if (window.__maiaRevealTimer) { clearTimeout(window.__maiaRevealTimer); window.__maiaRevealTimer = null; }
+              document.documentElement.style.visibility = '';
+            };
+            window.__maiaRevealTimer = setTimeout(window.__maiaReveal, 4000);
+            break;
+          }
+        }
+      } catch (e) { /* storage blocked — just render normally */ }
+    })();
+  </script>
   <title>Maia — Private Members Network</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="stylesheet" href="style.css?v=20260616c" />
@@ -252,6 +281,6 @@
   <script src="nav.js"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="supabase.js"></script>
-  <script src="auth.js"></script>
+  <script src="auth.js?v=20260618a"></script>
 </body>
 </html>

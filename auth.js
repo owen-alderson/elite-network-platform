@@ -82,6 +82,39 @@
   // Exported in case a page needs to validate a redirect param itself.
   window.maia.sameOriginUrl = sameOriginUrl;
 
+  // Signed-in visitors who open the public homepage are sent straight to
+  // their dashboard rather than seeing the logged-out landing page. Scoped to
+  // the landing page ONLY — other public pages (Members, Events, Spaces, the
+  // venue/partner pages…) stay browsable while signed in. index.html's <head>
+  // optimistically hides the page when an auth token is cached so the
+  // homepage never flashes; we reveal it here if the session is absent/expired.
+  function isLandingPage() {
+    var p = window.location.pathname || '/';
+    return p === '/' || p.endsWith('/') || /\/index\.html?$/i.test(p);
+  }
+
+  // Reveal a page that index.html's pre-paint guard hid. Prefer the shared
+  // entry-point (which also cancels the guard's last-resort timer) so the
+  // timer can never fire after we've already made a decision.
+  function revealPage() {
+    if (typeof window.__maiaReveal === 'function') { window.__maiaReveal(); return; }
+    var de = document.documentElement;
+    if (de && de.style.visibility === 'hidden') de.style.visibility = '';
+  }
+
+  if (isLandingPage()) {
+    window.maia.getSession().then(function (session) {
+      if (session) {
+        // Cancel the reveal net before navigating so it can't flash the
+        // homepage mid-redirect on a slow unload.
+        if (window.__maiaRevealTimer) { clearTimeout(window.__maiaRevealTimer); window.__maiaRevealTimer = null; }
+        window.location.replace(new URL('dashboard.html', window.location.href).toString());
+      } else {
+        revealPage();
+      }
+    }).catch(function () { revealPage(); });
+  }
+
   // Auth-aware UI: every page that loads auth.js gets a consistent visible
   // signal of whether the visitor is signed in.
   //   • Logged out: "Request Access" CTA visible, wordmark non-interactive
