@@ -23,8 +23,9 @@
 
   // Pillar list. Mirrors the directory filter + apply form — keep in sync.
   // Investor + Entrepreneurship added 2026-05-17 (cofounder call).
+  // Art added 2026-06-24 (Nidaa Ombali — first contemporary-art curator member).
   var ALL_PILLARS = [
-    'beauty', 'entertainment', 'entrepreneurship', 'fashion', 'finance',
+    'art', 'beauty', 'entertainment', 'entrepreneurship', 'fashion', 'finance',
     'hospitality', 'investor', 'music', 'sport', 'wellness'
   ];
 

@@ -20,7 +20,7 @@
   var editingSpaceId = null;
 
   var ALL_PILLARS = [
-    'beauty', 'entertainment', 'entrepreneurship', 'fashion', 'finance',
+    'art', 'beauty', 'entertainment', 'entrepreneurship', 'fashion', 'finance',
     'hospitality', 'investor', 'music', 'sport', 'wellness'
   ];
 
