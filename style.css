@@ -733,7 +733,11 @@ a { color: inherit; text-decoration: none; }
 .card-avatar img {
   width: 100%; height: 100%;
   object-fit: cover;
-  object-position: center 30%; /* bias toward the upper third — faces sit there */
+  /* Default focal point — biased toward the upper third where faces sit
+     in most headshots. Members can override per-photo via the focal-point
+     picker in profile edit mode; fillAvatar() then sets object-position
+     inline, which wins over this declaration. */
+  object-position: 50% 30%;
   filter: grayscale(30%);
 }
 .card-body {
@@ -831,6 +835,10 @@ a { color: inherit; text-decoration: none; }
 .profile-photo img {
   width: 100%; height: 100%;
   object-fit: cover;
+  /* Matches .card-avatar img so the same crop appears on both surfaces.
+     Override is set inline by fillAvatar() when the photo has a focal
+     point (avatar_url ends with #focus=X,Y). */
+  object-position: 50% 30%;
   filter: grayscale(20%);
 }
 .profile-meta {

@@ -155,6 +155,53 @@ textarea.profile-edit-input {
   min-height: 14px;
 }
 
+/* ── Focal-point picker (edit mode) ──────────────
+   The member clicks on the full image to choose what should sit at the
+   centre of the square crop used on member cards and the profile photo.
+   The cropped preview lives in #profile-photo above; this is the wide
+   uncropped surface they pick from. */
+.profile-focus-picker {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.profile-focus-hint {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 0 0 10px;
+  line-height: 1.5;
+}
+.profile-focus-stage {
+  position: relative;
+  display: block;
+  width: 100%;
+  cursor: crosshair;
+  user-select: none;
+  overflow: hidden;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+.profile-focus-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  pointer-events: none;
+}
+.profile-focus-dot {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--gold);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.7), 0 2px 6px rgba(0,0,0,0.5);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.profile-focus-status {
+  margin-top: 8px;
+}
+
 /* ── Tags (read-only display + edit chips) ───────── */
 .profile-tags-section {
   margin-top: 24px;

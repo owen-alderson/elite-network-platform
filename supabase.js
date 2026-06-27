@@ -129,6 +129,11 @@ window.maia = (function () {
   // has an avatar_url) or the first letter of their name as a fallback.
   // Used everywhere a member's face is shown so initial → photo flips
   // happen consistently.
+  //
+  // Focal point: avatar_url may carry a `#focus=X,Y` fragment (X,Y are
+  // percentages 0–100). When present, we set object-position so the
+  // square crop on both member cards AND the profile photo is centered
+  // on that point. No fragment → CSS default applies.
   function fillAvatar(divEl, member) {
     if (!divEl) return;
     divEl.innerHTML = '';
@@ -137,6 +142,8 @@ window.maia = (function () {
       img.src = member.avatar_url;
       img.alt = member.full_name || '';
       img.className = 'avatar-img';
+      var focus = parseAvatarFocus(member.avatar_url);
+      if (focus) img.style.objectPosition = focus.x + '% ' + focus.y + '%';
       divEl.appendChild(img);
       divEl.classList.add('has-avatar');
     } else {
@@ -144,6 +151,33 @@ window.maia = (function () {
       divEl.textContent = name.charAt(0).toUpperCase();
       divEl.classList.remove('has-avatar');
     }
+  }
+
+  function parseAvatarFocus(url) {
+    if (!url) return null;
+    var idx = url.indexOf('#focus=');
+    if (idx === -1) return null;
+    var parts = url.slice(idx + 7).split(',');
+    if (parts.length !== 2) return null;
+    var x = parseFloat(parts[0]);
+    var y = parseFloat(parts[1]);
+    if (isNaN(x) || isNaN(y)) return null;
+    return {
+      x: Math.max(0, Math.min(100, x)),
+      y: Math.max(0, Math.min(100, y))
+    };
+  }
+
+  // Strip any existing `#focus=…` and append the supplied {x,y}. Used by
+  // the profile edit picker so the saved avatar_url carries the latest
+  // focal point.
+  function withAvatarFocus(url, focus) {
+    if (!url) return url;
+    var base = url.split('#focus=')[0];
+    if (!focus) return base;
+    var x = Math.round(Math.max(0, Math.min(100, focus.x)));
+    var y = Math.round(Math.max(0, Math.min(100, focus.y)));
+    return base + '#focus=' + x + ',' + y;
   }
 
   // Upload a File to the avatars bucket under the user's own folder, then
@@ -220,6 +254,8 @@ window.maia = (function () {
     isAdmin: isAdmin,
     onAuthStateChange: onAuthStateChange,
     fillAvatar: fillAvatar,
+    parseAvatarFocus: parseAvatarFocus,
+    withAvatarFocus: withAvatarFocus,
     uploadAvatar: uploadAvatar,
     profileChecks: profileChecks,
     canIntroNow: canIntroNow,

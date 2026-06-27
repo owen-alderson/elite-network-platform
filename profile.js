@@ -423,6 +423,7 @@
     mountStickyEditBar();
 
     insertPhotoUploader();
+    insertFocusPicker();
 
     swapForInput('#profile-name', 'full_name', current.full_name || '', 'input');
     swapForInput('#profile-tagline', 'bio', current.bio || '', 'textarea');
@@ -637,12 +638,98 @@
       status.textContent = 'Photo updated.';
       status.style.color = 'var(--gold)';
       if (window.maia.invalidateIntroCache) window.maia.invalidateIntroCache();
+      // Re-mount the focal-point picker against the new image so the
+      // member can immediately adjust the crop on the photo they just
+      // uploaded.
+      insertFocusPicker();
     });
 
     wrap.appendChild(btn);
     wrap.appendChild(input);
     wrap.appendChild(status);
     photo.parentNode.insertBefore(wrap, photo.nextSibling);
+  }
+
+  // Focal-point picker. Shown in edit mode only when there's a photo to
+  // adjust. Clicking the full image moves the dot and persists the new
+  // focal point as a `#focus=X,Y` fragment on avatar_url — fillAvatar()
+  // reads that fragment and applies object-position on both the member
+  // card and the profile photo, so the two surfaces show the same crop.
+  function insertFocusPicker() {
+    var existing = document.getElementById('profile-focus-picker');
+    if (existing) existing.remove();
+    if (!current || !current.avatar_url) return;
+
+    var upload = document.getElementById('profile-photo-upload');
+    if (!upload || !upload.parentNode) return;
+
+    var wrap = document.createElement('div');
+    wrap.id = 'profile-focus-picker';
+    wrap.className = 'profile-focus-picker';
+
+    var hint = document.createElement('p');
+    hint.className = 'profile-focus-hint';
+    hint.textContent = 'Click on the photo to pick what shows in the circle. The cropped preview above updates as you click.';
+    wrap.appendChild(hint);
+
+    var stage = document.createElement('div');
+    stage.className = 'profile-focus-stage';
+
+    var img = document.createElement('img');
+    img.src = current.avatar_url;
+    img.alt = '';
+    img.className = 'profile-focus-img';
+    img.draggable = false;
+    stage.appendChild(img);
+
+    var dot = document.createElement('span');
+    dot.className = 'profile-focus-dot';
+    stage.appendChild(dot);
+
+    var status = document.createElement('p');
+    status.className = 'profile-focus-status profile-photo-status';
+
+    var focus = window.maia.parseAvatarFocus(current.avatar_url) || { x: 50, y: 30 };
+    positionDot(focus);
+
+    stage.addEventListener('click', async function (e) {
+      var rect = stage.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      focus = {
+        x: clampPct(((e.clientX - rect.left) / rect.width) * 100),
+        y: clampPct(((e.clientY - rect.top) / rect.height) * 100)
+      };
+      positionDot(focus);
+
+      var newUrl = window.maia.withAvatarFocus(current.avatar_url, focus);
+      current.avatar_url = newUrl;
+      var photoEl = document.getElementById('profile-photo');
+      if (photoEl) window.maia.fillAvatar(photoEl, current);
+
+      status.textContent = 'Saving…';
+      status.style.color = 'var(--muted)';
+      var res = await supabase.from('members')
+        .update({ avatar_url: newUrl })
+        .eq('id', sessionUserId);
+      if (res.error) {
+        console.warn('avatar focal-point save error:', res.error);
+        status.textContent = 'Could not save crop.';
+        status.style.color = '#d97a7a';
+      } else {
+        status.textContent = 'Saved.';
+        status.style.color = 'var(--gold)';
+      }
+    });
+
+    function positionDot(f) {
+      dot.style.left = f.x + '%';
+      dot.style.top = f.y + '%';
+    }
+    function clampPct(n) { return Math.max(0, Math.min(100, Math.round(n))); }
+
+    wrap.appendChild(stage);
+    wrap.appendChild(status);
+    upload.parentNode.insertBefore(wrap, upload.nextSibling);
   }
 
   function insertSecondaryPillarsEditor(selected) {
