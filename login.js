@@ -9,8 +9,10 @@
 // user_metadata.has_password !== true and redirects them to set-password.html.
 // Once they set one, all subsequent sign-ins are password-only.
 //
-// The 2/hour Supabase Auth SMTP rate limit only matters for paths 2 + 3 —
-// password sign-in (path 1) is the steady-state flow and uses zero email.
+// Auth emails (paths 2 + 3) go out via custom SMTP → Resend (wired 6/18;
+// the old built-in 2/hour cap no longer applies). Password sign-in (path 1)
+// is the steady-state flow and uses zero email. The configured Auth email
+// rate limit can still 429 a burst — surfaced honestly below.
 //
 // Requires supabase.js to be loaded first.
 
