@@ -59,6 +59,20 @@
     margin-top: 6px;
     line-height: 1.6;
   }
+  .otp-label {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #888888;
+    margin: 26px 0 6px;
+  }
+  .otp {
+    font-size: 30px;
+    letter-spacing: 0.35em;
+    color: #f5f0e8;
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
   .muted {
     color: #888888;
     font-size: 12px;
@@ -76,6 +90,9 @@
       <a class="cta" href="{{ .ConfirmationURL }}">Sign in</a>
     </div>
     <p class="fallback">Or paste this into your browser:<br />{{ .ConfirmationURL }}</p>
+    <p class="otp-label">Prefer to type a code?</p>
+    <p class="otp">{{ .Token }}</p>
+    <p class="fallback">Enter it on the sign-in page — useful if the link above won't open on your phone.</p>
     <p class="muted">Maia is invite-only. Sign-in links are personal — never share them.</p>
   </div>
 </body>

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css?v=20260627a">
-  <link rel="stylesheet" href="login.css?v=20260618b">
+  <link rel="stylesheet" href="login.css?v=20260707a">
 </head>
 <body class="login-body">
   <main class="login-shell">
@@ -43,6 +43,19 @@
 
       <p id="login-status" class="login-status" role="status" aria-live="polite"></p>
 
+      <div id="login-code-block" hidden>
+        <label for="login-code" class="login-label">6-digit code from the email</label>
+        <input
+          id="login-code"
+          name="code"
+          type="text"
+          inputmode="numeric"
+          autocomplete="one-time-code"
+          maxlength="6"
+          placeholder="123456">
+        <button type="button" class="btn-primary login-submit" id="login-code-submit">Verify code</button>
+      </div>
+
       <p class="login-helper">
         <a href="#" id="login-magic-link">Email me a sign-in link instead</a>
         <span class="login-helper-sep">·</span>
@@ -56,7 +69,7 @@
   </main>
 
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <script src="supabase.js?v=20260627a"></script>
-  <script src="login.js?v=20260626a"></script>
+  <script src="supabase.js?v=20260707a"></script>
+  <script src="login.js?v=20260707a"></script>
 </body>
 </html>

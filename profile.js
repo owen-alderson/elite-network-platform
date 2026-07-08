@@ -325,11 +325,15 @@
           if (!canIntro.ready) {
             // Soft gate — replace with a link to profile-edit. The hard gate
             // in intro.js still catches any leak past this.
+            // data-mode must be "other": profile.css hides every [data-mode]
+            // that doesn't match data-state, so a "locked" mode rendered as
+            // no button at all (Melanie's 7/5 report — button visible on
+            // first paint, gone once JS finished).
             var lockedLink = document.createElement('a');
             lockedLink.className = 'btn-primary';
             lockedLink.href = 'profile.html?edit=1';
             lockedLink.textContent = 'Finish profile to request intros';
-            lockedLink.dataset.mode = 'locked';
+            lockedLink.dataset.mode = 'other';
             introBtn.parentNode.replaceChild(lockedLink, introBtn);
           } else {
             introBtn.addEventListener('click', function () {

@@ -46,6 +46,25 @@
     status.className = 'login-status' + (kind ? ' is-' + kind : '');
   }
 
+  // If the user just arrived from a dead magic link (supabase.js stashes the
+  // error_code it finds in the URL fragment), say so plainly instead of
+  // presenting a blank sign-in form — otherwise expired links read as an
+  // unexplained loop back to this page.
+  (function surfaceAuthError() {
+    var code = null;
+    try {
+      code = sessionStorage.getItem('maia_auth_error');
+      sessionStorage.removeItem('maia_auth_error');
+    } catch (e) { /* private mode */ }
+    if (!code) return;
+    if (code === 'otp_expired') {
+      setStatus('That sign-in link has expired or was already used. Enter your email below and we’ll send you a fresh one — the new email also contains a 6-digit code you can type in directly.', 'error');
+    } else {
+      setStatus('That sign-in link didn’t work. Enter your email below and we’ll send you a fresh one.', 'error');
+    }
+    emailInput.focus();
+  })();
+
   function getEmail() {
     return (emailInput.value || '').trim().toLowerCase();
   }
@@ -87,12 +106,90 @@
     var res = await window.maia.signInWithMagicLink(email, redirectTo);
     if (res && res.error) {
       console.warn('Magic-link request error:', res.error.message);
+      // Rate limits must be surfaced honestly. Before this, a rate-limited
+      // request still showed "a link is on its way" — the member waited for
+      // an email that was never sent, re-clicked their old expired link, and
+      // looped. Saying "wait a few minutes" leaks nothing about whether the
+      // account exists (the limit applies either way).
+      var msg = res.error.message || '';
+      if (res.error.status === 429 || /rate ?limit|too many/i.test(msg)) {
+        setStatus('We’ve sent you several emails recently, so this one was held back. Wait a couple of minutes and try again — or use the 6-digit code from the last email we sent you.', 'error');
+        showCodeEntry(email);
+        submit.disabled = false;
+        submit.textContent = 'Sign in';
+        return;
+      }
     }
 
     // Always show the same generic message — anti-enumeration.
-    setStatus('If you are a member, a sign-in link is on its way to your inbox.', 'success');
+    setStatus('If you are a member, a sign-in link is on its way to your inbox. You can click the link — or type the 6-digit code from the email below.', 'success');
     submit.textContent = 'Sent';
+    showCodeEntry(email);
     // Leave submit disabled.
+  }
+
+  // ── Path 2b: 6-digit code entry ─────────────────────────────
+  // The magic-link email carries a one-time code alongside the link. Typing
+  // the code sidesteps everything that breaks link-clicking on mobile:
+  // in-app email browsers, cross-device sign-in, and corporate link scanners
+  // that consume the link before the member ever taps it.
+  var codeBlock = document.getElementById('login-code-block');
+  var codeInput = document.getElementById('login-code');
+  var codeSubmit = document.getElementById('login-code-submit');
+  var codeEmail = null;
+
+  function showCodeEntry(email) {
+    codeEmail = email;
+    if (!codeBlock) return;
+    codeBlock.hidden = false;
+  }
+
+  async function verifyCode() {
+    var token = (codeInput.value || '').replace(/\D/g, '');
+    if (token.length !== 6) {
+      setStatus('The code is the 6 digits from the sign-in email.', 'error');
+      return;
+    }
+    var email = codeEmail || getEmail();
+    if (!email) {
+      setStatus('Enter your email first.', 'error');
+      return;
+    }
+    codeSubmit.disabled = true;
+    codeSubmit.textContent = 'Verifying...';
+
+    // Magic-link codes verify as type "email"; codes from admin-generated
+    // invite links verify as type "magiclink". Try both so one input works
+    // for every email we send.
+    var res = await window.maia.client.auth.verifyOtp({ email: email, token: token, type: 'email' });
+    if (res.error) {
+      res = await window.maia.client.auth.verifyOtp({ email: email, token: token, type: 'magiclink' });
+    }
+
+    if (res.error) {
+      console.warn('Code verification error:', res.error.message);
+      setStatus('That code didn’t work — it may have expired. Request a fresh sign-in email and use the new code.', 'error');
+      codeSubmit.disabled = false;
+      codeSubmit.textContent = 'Verify code';
+      return;
+    }
+
+    window.location.replace(redirectTo);
+  }
+
+  if (codeSubmit) {
+    codeSubmit.addEventListener('click', function (event) {
+      event.preventDefault();
+      verifyCode();
+    });
+  }
+  if (codeInput) {
+    codeInput.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        verifyCode();
+      }
+    });
   }
 
   // ── Path 3: forgot-password recovery ────────────────────────

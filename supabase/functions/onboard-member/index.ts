@@ -144,10 +144,13 @@ Deno.serve(async (req) => {
   if (linkErr) return json({ error: "link_failed: " + linkErr.message }, 500);
   const actionLink = linkData?.properties?.action_link;
   if (!actionLink) return json({ error: "link_missing" }, 500);
+  // Same OTP the link carries — shown as a typeable code so the member can
+  // still get in when the link is stale or their mail app breaks it.
+  const emailOtp = linkData?.properties?.email_otp || "";
 
   // 8. Send the branded welcome email (identical to send-member-invite v2).
   const subject = `Welcome to Maia, ${firstName}`;
-  const html = welcomeHtml(firstName, actionLink);
+  const html = welcomeHtml(firstName, actionLink, emailOtp);
   const resendRes = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -175,8 +178,13 @@ function vpRow(label: string, desc: string): string {
   </tr>`;
 }
 
-function welcomeHtml(firstName: string, signinUrl: string): string {
+function welcomeHtml(firstName: string, signinUrl: string, emailOtp: string): string {
   const safeName = firstName.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const otpBlock = emailOtp
+    ? `<p style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#888888;margin:22px 0 6px;">Or type this code on the sign-in page</p>
+       <p style="font-size:30px;letter-spacing:0.35em;color:#f5f0e8;font-weight:600;margin:0 0 18px;">${emailOtp}</p>
+       <p style="font-size:12px;color:#888888;margin:0 0 16px;">Go to <a href="${SITE_URL}/login.html" style="color:#c9a84c;">maiacircle.com/login</a>, enter your email, and type the code — handy if the button won't open on your phone.</p>`
+    : "";
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -207,9 +215,11 @@ function welcomeHtml(firstName: string, signinUrl: string): string {
     </table>
     <p>Click below to sign in — no password needed for your first visit.</p>
     <a class="btn" href="${signinUrl}">Sign in to Maia</a>
+    ${otpBlock}
     <p>Once you're in, take a moment to complete your profile — your field, and what you're building or curious about next. The network is shaped by the people who show up early.</p>
     <p class="signoff">— The Maia team</p>
     <p class="muted">If the button doesn't work, paste this link into your browser:<br><span style="color:#666;word-break:break-all;">${signinUrl}</span></p>
+    <p class="muted">Link expired? Go to <a href="${SITE_URL}/login.html" style="color:#c9a84c;">maiacircle.com/login</a>, enter your email, and a fresh one arrives in seconds.</p>
     <p class="muted">Maia is invite-only. You're receiving this because you've been nominated as a member.</p>
   </div>
 </body>

@@ -70,6 +70,7 @@
 
 #login-email,
 #login-password,
+#login-code,
 #new-password,
 #confirm-password {
   background: transparent;
@@ -86,6 +87,7 @@
 
 #login-email:focus,
 #login-password:focus,
+#login-code:focus,
 #new-password:focus,
 #confirm-password:focus {
   outline: none;
@@ -94,6 +96,7 @@
 
 #login-email::placeholder,
 #login-password::placeholder,
+#login-code::placeholder,
 #new-password::placeholder,
 #confirm-password::placeholder {
   color: var(--muted);
@@ -199,4 +202,22 @@
     font-size: 26px;
     margin-bottom: 24px;
   }
+}
+
+/* 6-digit code entry — revealed after a sign-in email is requested. The
+   input mirrors the email/password fields; wide letter-spacing makes the
+   six digits read as a code, not a password. */
+#login-code-block {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+#login-code-block[hidden] { display: none; }
+#login-code {
+  width: 100%;
+  box-sizing: border-box;
+  letter-spacing: 0.35em;
 }

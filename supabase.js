@@ -51,6 +51,23 @@ window.maia = (function () {
   (function bootstrapSessionFromHash() {
     if (typeof window === 'undefined' || !window.location || !window.location.hash) return;
     var hash = window.location.hash.replace(/^#/, '');
+
+    // Failed verification (expired / already-used link) redirects here with
+    // #error=access_denied&error_code=otp_expired. Before this was handled,
+    // the fragment was silently dropped, requireAuth found no session and
+    // bounced to login.html with zero explanation — the "circular login"
+    // Melanie reported 7/5. Stash the code so login.js can explain and
+    // offer a fresh link.
+    if (hash.indexOf('error=') !== -1 && hash.indexOf('access_token=') === -1) {
+      var errParams = new URLSearchParams(hash);
+      var code = errParams.get('error_code') || errParams.get('error') || 'unknown';
+      try { sessionStorage.setItem('maia_auth_error', code); } catch (e) { /* private mode */ }
+      try {
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+      } catch (e) { /* non-fatal */ }
+      return;
+    }
+
     if (hash.indexOf('access_token=') === -1) return;
     var params = new URLSearchParams(hash);
     var accessToken = params.get('access_token');
