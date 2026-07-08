@@ -1236,3 +1236,23 @@ create policy "event_images_admin_update" on storage.objects
 create policy "event_images_admin_delete" on storage.objects
   for delete to authenticated
   using (bucket_id = 'event-images' and public.is_admin());
+
+-- ────────────────────────────────────────────────────────────────
+-- 2026-07-07 — FK covering indexes + search_path pin
+-- Mirrors live migration fk_covering_indexes_and_search_path.
+-- Every FK the Supabase performance advisor flagged gets a covering
+-- index ahead of the ~200-member wave; the one function the security
+-- advisor flagged as having a mutable search_path gets it pinned.
+-- ────────────────────────────────────────────────────────────────
+
+create index if not exists applications_created_member_id_idx on public.applications (created_member_id);
+create index if not exists applications_nominator_member_id_idx on public.applications (nominator_member_id);
+create index if not exists applications_reviewed_by_idx on public.applications (reviewed_by);
+create index if not exists conversations_intro_id_idx on public.conversations (intro_id);
+create index if not exists events_created_by_idx on public.events (created_by);
+create index if not exists events_partner_space_id_idx on public.events (partner_space_id);
+create index if not exists intro_requests_target_id_idx on public.intro_requests (target_id);
+create index if not exists members_nominated_by_idx on public.members (nominated_by);
+create index if not exists messages_sender_id_idx on public.messages (sender_id);
+
+alter function public.applications_validate_nomination_pair() set search_path = public, pg_temp;
