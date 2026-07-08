@@ -419,6 +419,12 @@
   letter-spacing: 0.1em;
   color: var(--gold);
 }
+.sug-why {
+  font-size: 11px;
+  color: var(--gold);
+  line-height: 1.5;
+  margin: 2px 0 2px;
+}
 .sug-next {
   font-size: 11px;
   font-style: italic;

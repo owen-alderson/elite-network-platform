@@ -131,23 +131,28 @@
       excludeIds[r.target_id] = true;
     });
 
-    // Need our own primary_pillar so we can weight suggestions toward
-    // *different* pillars — Maia's thesis is cross-pollination (talent
-    // moving fields), not "people in your industry." Joined-date order
-    // is the tiebreaker.
+    // My own profile drives the matching: pillar (cross-pollination is the
+    // thesis — different fields score higher), tags (shared interests),
+    // effective city (travel_city wins over home — "who is in my city NOW"),
+    // and what I'm building (keyword overlap with their current_work).
     var meRes = await supabase
       .from('members')
-      .select('primary_pillar')
+      .select('primary_pillar,tags,location_city,travel_city,current_work')
       .eq('id', currentUserId)
       .maybeSingle();
-    var myPillar = (meRes.data && meRes.data.primary_pillar) || null;
+    var me = meRes.data || {};
+    var myPillar = me.primary_pillar || null;
+    var myCity = (me.travel_city || me.location_city || '').toLowerCase();
+    var iAmTraveling = !!me.travel_city;
+    var myTags = (Array.isArray(me.tags) ? me.tags : []).map(function (t) { return String(t).toLowerCase(); });
+    var myWorkWords = significantWords((me.current_work || '') + ' ' + myTags.join(' '));
 
     var res = await supabase
       .from('members')
-      .select('id,full_name,headline,primary_pillar,location_city,avatar_url,current_work')
+      .select('id,full_name,headline,bio,primary_pillar,tags,location_city,travel_city,avatar_url,current_work')
       .eq('status', 'active')
       .order('joined_at', { ascending: false })
-      .limit(40);
+      .limit(60);
 
     listEl.innerHTML = '';
     if (res.error) {
@@ -156,28 +161,91 @@
     }
     var pool = (res.data || []).filter(function (m) { return !excludeIds[m.id]; });
 
-    // Partition into different-pillar (preferred) + same-pillar (fallback).
-    // Within each bucket, joined_at DESC order from the upstream query is
-    // preserved.
-    var different = [];
-    var same = [];
-    pool.forEach(function (m) {
-      if (myPillar && m.primary_pillar === myPillar) same.push(m);
-      else different.push(m);
+    var scored = pool.map(function (m, i) {
+      var score = 0;
+      var reasons = []; // {w: weight, t: text} — strongest one is shown
+
+      // Same city right now — the strongest practical signal there is.
+      var theirCity = (m.travel_city || m.location_city || '').toLowerCase();
+      if (myCity && theirCity && myCity === theirCity) {
+        var cityLabel = m.travel_city || m.location_city;
+        if (m.travel_city || iAmTraveling) {
+          score += 4;
+          reasons.push({ w: 4, t: 'In ' + cityLabel + ' right now, like you' });
+        } else {
+          score += 3;
+          reasons.push({ w: 3, t: 'Both based in ' + cityLabel });
+        }
+      }
+
+      // Shared tags — explicit common ground.
+      var shared = (Array.isArray(m.tags) ? m.tags : [])
+        .map(function (t) { return String(t).toLowerCase(); })
+        .filter(function (t) { return myTags.indexOf(t) !== -1; });
+      if (shared.length) {
+        var pts = Math.min(shared.length, 2) * 2;
+        score += pts;
+        reasons.push({ w: pts, t: 'Shared interest: ' + shared.slice(0, 2).join(', ') });
+      }
+
+      // What they're building overlaps with what I'm building.
+      if (myWorkWords.length) {
+        var theirText = significantWords((m.current_work || '') + ' ' + (m.headline || '') + ' ' + (m.bio || ''));
+        var overlap = theirText.filter(function (w) { return myWorkWords.indexOf(w) !== -1; });
+        if (overlap.length) {
+          var wpts = Math.min(overlap.length, 2);
+          score += wpts;
+          reasons.push({ w: wpts + 0.5, t: 'Building around ' + overlap.slice(0, 2).join(' + ') + ' — close to what you\'re working on' });
+        }
+      }
+
+      // Cross-pollination base: a different field is the point of Maia.
+      if (myPillar && m.primary_pillar && m.primary_pillar !== myPillar) {
+        score += 2;
+        reasons.push({ w: 1, t: capitalize(m.primary_pillar) + ' × ' + capitalize(myPillar) + ' — the crossing Maia exists for' });
+      }
+
+      // Newest-member micro-boost keeps the list fresh as a tiebreaker.
+      score += (60 - i) / 1000;
+
+      reasons.sort(function (a, b) { return b.w - a.w; });
+      return {
+        m: m,
+        score: score,
+        reason: reasons.length ? reasons[0].t : 'New to the network — take a look'
+      };
     });
-    var rows = different.slice(0, 3).concat(same.slice(0, 1));
-    if (rows.length < 4) rows = rows.concat(different.slice(3, 4 - rows.length + 3));
-    rows = rows.slice(0, 4);
+
+    scored.sort(function (a, b) { return b.score - a.score; });
+    var rows = scored.slice(0, 4);
 
     if (!rows.length) {
       listEl.innerHTML = '<p style="color:var(--muted);font-size:13px;">No new members to suggest right now. Browse the directory directly.</p>';
       return;
     }
     var canIntro = await window.maia.canIntroNow();
-    rows.forEach(function (m) { listEl.appendChild(buildSuggestionRow(m, canIntro.ready)); });
+    rows.forEach(function (s) { listEl.appendChild(buildSuggestionRow(s.m, canIntro.ready, s.reason)); });
   }
 
-  function buildSuggestionRow(m, canIntro) {
+  // Words worth matching on: lowercase, 4+ chars, not filler. Used for the
+  // "building something adjacent" overlap between members' current_work.
+  var WORK_STOPWORDS = {
+    with: 1, that: 1, this: 1, from: 1, into: 1, about: 1, their: 1, them: 1,
+    have: 1, been: 1, will: 1, what: 1, when: 1, where: 1, working: 1,
+    building: 1, launching: 1, next: 1, project: 1, company: 1, currently: 1,
+    also: 1, more: 1, over: 1, some: 1, most: 1, they: 1, your: 1, mine: 1
+  };
+  function significantWords(s) {
+    var seen = {};
+    return String(s || '').toLowerCase().replace(/[^\w\s]/g, ' ').split(/\s+/)
+      .filter(function (w) {
+        if (w.length < 4 || WORK_STOPWORDS[w] || seen[w]) return false;
+        seen[w] = true;
+        return true;
+      });
+  }
+
+  function buildSuggestionRow(m, canIntro, reason) {
     var row = el('div', 'suggestion-row');
     var avatar = el('div', 'sug-avatar');
     window.maia.fillAvatar(avatar, m);
@@ -196,13 +264,19 @@
 
     info.appendChild(text('p', 'sug-role', m.headline || ''));
 
+    // The "here's why" line — a suggestion without a reason is a directory.
+    if (reason) {
+      info.appendChild(text('p', 'sug-why', reason));
+    }
+
     if (m.current_work) {
       info.appendChild(text('p', 'sug-next', m.current_work));
     }
 
     var tagText = [];
     if (m.primary_pillar) tagText.push(capitalize(m.primary_pillar));
-    if (m.location_city) tagText.push(m.location_city);
+    if (m.travel_city && m.travel_city !== m.location_city) tagText.push('Now in ' + m.travel_city);
+    else if (m.location_city) tagText.push(m.location_city);
     info.appendChild(text('span', 'sug-tag', tagText.join(' · ')));
     row.appendChild(info);
 

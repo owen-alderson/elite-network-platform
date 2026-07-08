@@ -30,8 +30,8 @@ const ADMIN_EMAILS = ["owen.alderson@gmail.com"];
 // Mirrors ALL_PILLARS in admin.js. Any value not on this list is dropped to
 // null so a bad client can't write arbitrary pillar strings.
 const ALLOWED_PILLARS = [
-  "art", "beauty", "entertainment", "entrepreneurship", "fashion", "finance",
-  "hospitality", "investor", "music", "sport", "wellness",
+  "academia", "art", "beauty", "entertainment", "entrepreneurship", "fashion",
+  "finance", "hospitality", "investor", "music", "sport", "wellness",
 ];
 
 const cors = {

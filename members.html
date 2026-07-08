@@ -48,6 +48,8 @@
       <p class="members-sidebar-label">Filter by pillar</p>
       <div class="filter-list">
         <button class="filter-btn active" data-pillar="all">All</button>
+        <button class="filter-btn" data-pillar="academia">Academia</button>
+        <button class="filter-btn" data-pillar="art">Art</button>
         <button class="filter-btn" data-pillar="beauty">Beauty</button>
         <button class="filter-btn" data-pillar="entertainment">Entertainment</button>
         <button class="filter-btn" data-pillar="entrepreneurship">Entrepreneurship</button>
@@ -63,7 +65,8 @@
 
     <main class="members-main">
       <div class="members-search">
-        <input type="text" class="members-search-input" id="members-search" placeholder="Search by name or headline…" />
+        <input type="text" class="members-search-input" id="members-search" placeholder="Try “models in Milan” — or search by name…" />
+        <p id="members-search-hint" style="display:none;font-size:11px;letter-spacing:0.08em;color:var(--gold);margin:8px 2px 0;"></p>
       </div>
       <div class="members-grid" id="members-grid"></div>
     </main>
@@ -85,7 +88,7 @@
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="supabase.js?v=20260707a"></script>
   <script src="auth.js"></script>
-  <script src="members.js?v=3"></script>
+  <script src="members.js?v=20260707b"></script>
 
   <script src="nav.js"></script>
 </body>

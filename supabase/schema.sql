@@ -1256,3 +1256,14 @@ create index if not exists members_nominated_by_idx on public.members (nominated
 create index if not exists messages_sender_id_idx on public.messages (sender_id);
 
 alter function public.applications_validate_nomination_pair() set search_path = public, pg_temp;
+
+-- ────────────────────────────────────────────────────────────────
+-- 2026-07-07 (2) — travel location
+-- Mirrors live migration travel_location_columns. Where the member is
+-- right now vs. the permanent location_city/location_country; null =
+-- at home. Member-editable via the existing self-update RLS policy.
+-- ────────────────────────────────────────────────────────────────
+
+alter table public.members
+  add column if not exists travel_city text,
+  add column if not exists travel_country text;

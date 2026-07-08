@@ -24,9 +24,10 @@
   // Pillar list. Mirrors the directory filter + apply form — keep in sync.
   // Investor + Entrepreneurship added 2026-05-17 (cofounder call).
   // Art added 2026-06-24 (Nidaa Ombali — first contemporary-art curator member).
+  // Academia added 2026-07-07 (tester feedback — academic in education had no fit).
   var ALL_PILLARS = [
-    'art', 'beauty', 'entertainment', 'entrepreneurship', 'fashion', 'finance',
-    'hospitality', 'investor', 'music', 'sport', 'wellness'
+    'academia', 'art', 'beauty', 'entertainment', 'entrepreneurship', 'fashion',
+    'finance', 'hospitality', 'investor', 'music', 'sport', 'wellness'
   ];
 
   // Single source of truth for the loaded member record.
@@ -58,7 +59,7 @@
   async function load(targetId, fallbackEmail) {
     var res = await supabase
       .from('members')
-      .select('id,email,full_name,headline,bio,primary_pillar,secondary_pillars,tags,location_city,location_country,linkedin_url,instagram_handle,website_url,avatar_url,achievements,current_work,joined_at,nominated_by,status')
+      .select('id,email,full_name,headline,bio,primary_pillar,secondary_pillars,tags,location_city,location_country,travel_city,travel_country,linkedin_url,instagram_handle,website_url,avatar_url,achievements,current_work,joined_at,nominated_by,status')
       .eq('id', targetId)
       .maybeSingle();
 
@@ -101,6 +102,7 @@
     }
 
     setMeta('location', joinNonEmpty([m.location_city, m.location_country], ', ') || '—');
+    renderTravelMeta(m);
     setMeta('member_since', m.joined_at ? new Date(m.joined_at).getFullYear() : '—');
     setMeta('pillar', m.primary_pillar ? capitalize(m.primary_pillar) : '—');
     setMeta('nominated_by', m.nominated_by ? 'Member' : 'Private');
@@ -115,6 +117,35 @@
     if (isOwn) renderCompleteness(m);
 
     setActionsMode(isOwn ? 'self' : 'other');
+  }
+
+  // "Currently in" meta row — only rendered while a travel location is set.
+  // The permanent location row above it never changes.
+  function renderTravelMeta(m) {
+    var existing = document.getElementById('profile-travel-meta');
+    if (existing) existing.remove();
+    if (!m.travel_city) return;
+
+    var locEl = document.querySelector('[data-field="location"]');
+    var locItem = locEl && locEl.closest('.meta-item');
+    if (!locItem || !locItem.parentNode) return;
+
+    var item = document.createElement('div');
+    item.className = 'meta-item';
+    item.id = 'profile-travel-meta';
+
+    var label = document.createElement('p');
+    label.className = 'meta-label';
+    label.textContent = 'Currently in';
+    item.appendChild(label);
+
+    var val = document.createElement('p');
+    val.className = 'meta-value';
+    val.style.color = 'var(--gold)';
+    val.textContent = joinNonEmpty([m.travel_city, m.travel_country], ', ');
+    item.appendChild(val);
+
+    locItem.parentNode.insertBefore(item, locItem.nextSibling);
   }
 
   function renderTags(tags) {
@@ -433,6 +464,10 @@
     swapForInput('#profile-tagline', 'bio', current.bio || '', 'textarea');
 
     setupLocationAutocomplete(current.location_city || '', current.location_country || '');
+    // Static "Currently in" display row would duplicate the editor — drop it.
+    var travelMeta = document.getElementById('profile-travel-meta');
+    if (travelMeta) travelMeta.remove();
+    insertTravelLocationEditor(current.travel_city || '', current.travel_country || '');
 
     // Headline is currently shown in the sidebar role/tagline. We add it as a
     // dedicated edit row above the bio.
@@ -895,6 +930,39 @@
       }
     }
 
+    // Travel location — same picked-or-geocode contract as the permanent
+    // location above. Empty input = back home (both columns null).
+    var travelInput = document.querySelector('[data-edit-field="travel_location"]');
+    if (travelInput) {
+      var typedTravel = (travelInput.value || '').trim();
+      var travelCity = (travelInput.dataset.selectedCity || '').trim();
+      var travelCountry = (travelInput.dataset.selectedCountry || '').trim();
+      var travelLabel = travelCity
+        ? (travelCountry ? travelCity + ', ' + travelCountry : travelCity)
+        : '';
+
+      if (!typedTravel) {
+        payload.travel_city = null;
+        payload.travel_country = null;
+      } else if (travelCity && travelLabel.toLowerCase() === typedTravel.toLowerCase()) {
+        payload.travel_city = travelCity;
+        payload.travel_country = travelCountry || null;
+      } else {
+        var resolvedTravel = await resolveTypedLocation(typedTravel);
+        if (!resolvedTravel) {
+          alert('"' + typedTravel + '" didn\'t match any city we could find. Start typing the name and pick a real place from the dropdown — or clear the field if you\'re back home.');
+          travelInput.focus();
+          if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save'; }
+          return;
+        }
+        travelInput.value = resolvedTravel.country ? resolvedTravel.city + ', ' + resolvedTravel.country : resolvedTravel.city;
+        travelInput.dataset.selectedCity = resolvedTravel.city;
+        travelInput.dataset.selectedCountry = resolvedTravel.country || '';
+        payload.travel_city = resolvedTravel.city;
+        payload.travel_country = resolvedTravel.country || null;
+      }
+    }
+
     // Tags: read state from the chip-editor's stash. Capped at 5 by the
     // editor + a CHECK constraint at the DB layer.
     var tagsBox = document.querySelector('[data-edit-field="tags"]');
@@ -966,17 +1034,23 @@
   function setupLocationAutocomplete(city, country) {
     var el = document.querySelector('[data-field="location"]');
     if (!el) return;
+    el.replaceWith(buildLocationInput(city, country, 'location', 'Start typing a city…'));
+  }
 
+  // Build a city-autocomplete input bound to Photon. Used twice in edit
+  // mode: the permanent location (editField "location") and the travel /
+  // currently-in location (editField "travel_location").
+  function buildLocationInput(city, country, editField, placeholder) {
     var wrap = document.createElement('div');
     wrap.className = 'profile-location-edit';
 
     var input = document.createElement('input');
     input.type = 'text';
     input.className = 'profile-edit-input profile-edit-input-sm profile-location-input';
-    input.placeholder = 'Start typing a city…';
+    input.placeholder = placeholder;
     input.autocomplete = 'off';
     input.spellcheck = false;
-    input.dataset.editField = 'location';
+    input.dataset.editField = editField;
     if (city) {
       input.value = country ? city + ', ' + country : city;
       input.dataset.selectedCity = city;
@@ -989,7 +1063,6 @@
 
     wrap.appendChild(input);
     wrap.appendChild(dropdown);
-    el.replaceWith(wrap);
 
     var debounceTimer = null;
     var lastQuery = '';
@@ -1067,6 +1140,35 @@
         dropdown.appendChild(item);
       });
     }
+
+    return wrap;
+  }
+
+  // "Currently in" editor — travel location, shown right under the
+  // permanent-location input in edit mode. Cleared input = back home.
+  function insertTravelLocationEditor(city, country) {
+    var locWrap = document.querySelector('[data-edit-field="location"]');
+    if (!locWrap || !locWrap.parentNode) return;
+    var anchor = locWrap.closest('.meta-item') || locWrap.parentNode;
+
+    var item = document.createElement('div');
+    item.className = 'meta-item';
+    item.id = 'profile-travel-edit';
+
+    var label = document.createElement('p');
+    label.className = 'meta-label';
+    label.textContent = 'Currently in';
+    item.appendChild(label);
+
+    var hint = document.createElement('p');
+    hint.style.cssText = 'font-size:11px;color:var(--muted);margin:0 0 6px;';
+    hint.textContent = 'Traveling? Set the city you\'re in now so members nearby can find you. Clear it when you\'re home.';
+    item.appendChild(hint);
+
+    item.appendChild(buildLocationInput(city, country, 'travel_location', 'Same as home — or set a city'));
+
+    if (anchor.nextSibling) anchor.parentNode.insertBefore(item, anchor.nextSibling);
+    else anchor.parentNode.appendChild(item);
   }
 
   // Photon (Komoot) search — returns up to 8 city/town/village matches.
