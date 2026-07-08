@@ -1314,6 +1314,22 @@
     bar.appendChild(save);
     document.body.appendChild(bar);
 
+    // Caret-reveal fallback: when a focused input sits behind the lifted
+    // bar (mid-form fields on short viewports), re-center it once the
+    // visualViewport resize from the keyboard has settled. Self-removes
+    // with the bar, mirroring trackKeyboard's teardown.
+    document.addEventListener('focusin', function onFocus(e) {
+      var b = document.getElementById('profile-sticky-edit-bar');
+      if (!b) { document.removeEventListener('focusin', onFocus); return; }
+      if (!e.target.matches('input, textarea, select')) return;
+      setTimeout(function () {
+        if (window.visualViewport &&
+            window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop > 0) {
+          e.target.scrollIntoView({ block: 'center' });
+        }
+      }, 350);
+    });
+
     // Edit mode is all text inputs, so the iOS keyboard is up most of the
     // time. A fixed bottom:0 bar gets pushed behind the keyboard — track the
     // visual viewport and lift the bar by the keyboard's height so Save/Cancel

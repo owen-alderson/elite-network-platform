@@ -290,6 +290,12 @@ body:has(.profile-sticky-edit-bar) {
   padding-bottom: 72px;
 }
 
+/* Steer WebKit's focus-reveal scroll above the lifted sticky bar so the
+   focused input's caret is never hidden behind it (bar 69px + room). */
+html:has(.profile-sticky-edit-bar) {
+  scroll-padding-bottom: 90px;
+}
+
 /* ── Location autocomplete (edit mode) ──────────────────────── */
 .profile-location-edit {
   position: relative;

@@ -56,12 +56,15 @@ body {
   font-size: 15px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  animation: pageEnter 0.4s ease both;
+  /* fill-mode must NOT be 'both'/'forwards': a retained transform makes body
+     the containing block for every position:fixed element (nav, mobile menu,
+     modals, sticky bars) — they anchor to the page instead of the viewport. */
+  animation: pageEnter 0.4s ease backwards;
 }
 
 @keyframes pageEnter {
   from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; }
 }
 
 /* Selection colour */
@@ -1404,8 +1407,24 @@ a { color: inherit; text-decoration: none; }
   border-bottom-color: var(--gold-dim);
 }
 
-@media (max-width: 700px) {
+/* 768px, not 700: with the injected Messages/Admin links + session chip the
+   logged-in desktop nav's min-content can exceed narrow-tablet widths and the
+   overflow-x clip eats the Sign out link. Hiding the name buys the room. */
+@media (max-width: 768px) {
   .nav-session-name { display: none; }
+}
+
+@media (max-width: 700px) {
+  /* Touch-target floor: the top-bar Sign out is a bare 11px link on public
+     pages (dashboard hides its copy via dashboard.css .nav-member rules).
+     Nav is 68px tall, so a 44px hit area fits. */
+  .nav-signout {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 6px;
+    border-bottom: none;
+  }
 }
 
 /* Member sign-in link on public-page navs (hidden by auth.js when logged in). */
@@ -1445,7 +1464,9 @@ a { color: inherit; text-decoration: none; }
    content break the layout otherwise. */
 html, body { overflow-x: hidden; }
 .profile-tagline, .card-name, .card-title, .card-next, .intro-mini-note,
-.event-title, .venue-desc, blockquote { overflow-wrap: anywhere; word-break: break-word; }
+.connection-name, .connection-tag, .intro-mini-sub, .intro-mini-line, .dash-profile-role,
+.inbox-title, .inbox-body, .ach-text, .meta-value, #profile-current-work,
+.event-title, .venue-desc, blockquote, #profile-links a { overflow-wrap: anywhere; word-break: break-word; }
 
 /* iOS Safari zoom-on-focus floor — every input/select/textarea on
    the platform must be ≥16px on mobile or iOS bounces the page

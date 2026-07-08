@@ -404,6 +404,8 @@
   color: var(--gold);
   flex-shrink: 0;
 }
+.sug-info { min-width: 0; }
+.sug-name, .sug-role, .sug-why, .sug-tag { overflow-wrap: anywhere; word-break: break-word; }
 .sug-name {
   font-size: 14px;
   color: var(--white);
@@ -712,6 +714,7 @@
   color: var(--gold);
   flex-shrink: 0;
 }
+.inbox-content { min-width: 0; }
 .inbox-title {
   font-size: 13px;
   color: var(--white);

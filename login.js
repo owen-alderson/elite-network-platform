@@ -144,6 +144,11 @@
     codeEmail = email;
     if (!codeBlock) return;
     codeBlock.hidden = false;
+    // On phones the block appears below the fold — and below the still-open
+    // iOS keyboard. Focus pulls it above the keyboard; scrollIntoView covers
+    // the case where programmatic (non-gesture) focus doesn't scroll.
+    if (codeInput) codeInput.focus();
+    codeBlock.scrollIntoView({ block: 'nearest' });
   }
 
   async function verifyCode() {

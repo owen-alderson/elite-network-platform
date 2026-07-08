@@ -8,6 +8,12 @@
   var gridEl = document.getElementById('members-grid');
   var toolbarEl = document.querySelector('.filter-list');
   var searchEl = document.getElementById('members-search');
+
+  // <=640px: the site-wide 16px input floor (iOS zoom rule) makes the long
+  // NL-search placeholder overflow the input; swap in the short form.
+  if (searchEl && window.matchMedia('(max-width: 640px)').matches) {
+    searchEl.placeholder = 'Try “models in Milan”…';
+  }
   var allMembers = [];
   var activeFilter = 'all';
   var searchTerm = '';
