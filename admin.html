@@ -88,19 +88,18 @@
       <header class="admin-header">
         <p class="admin-eyebrow">INTRO QUEUE</p>
         <h1 class="admin-title">Intros</h1>
-        <p class="admin-subtitle">Assign a broker — a member who knows both parties — or decline. The broker makes the introduction off-platform and marks the request forwarded.</p>
+        <p class="admin-subtitle">Read-mostly oversight. Members pick their own broker (a mutual connection) when they request an intro — or send it direct. Admin can decline anything inappropriate.</p>
 
         <div class="admin-stats">
-          <div class="admin-stat"><strong id="intro-stat-pending">—</strong><span>Awaiting broker</span></div>
+          <div class="admin-stat"><strong id="intro-stat-direct">—</strong><span>Direct (pending)</span></div>
           <div class="admin-stat"><strong id="intro-stat-assigned">—</strong><span>With broker</span></div>
           <div class="admin-stat"><strong id="intro-stat-forwarded">—</strong><span>Forwarded</span></div>
           <div class="admin-stat"><strong id="intro-stat-declined">—</strong><span>Declined</span></div>
         </div>
 
         <div class="admin-tabs" id="admin-intro-tabs">
-          <button class="admin-tab is-active" data-intro-filter="awaiting">Awaiting broker</button>
+          <button class="admin-tab is-active" data-intro-filter="direct">Direct (pending)</button>
           <button class="admin-tab" data-intro-filter="assigned">With broker</button>
-          <button class="admin-tab" data-intro-filter="direct">Direct (pending)</button>
           <button class="admin-tab" data-intro-filter="forwarded">Forwarded</button>
           <button class="admin-tab" data-intro-filter="declined">Declined</button>
           <button class="admin-tab" data-intro-filter="all">All</button>
@@ -321,7 +320,7 @@
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="supabase.js?v=20260707a"></script>
   <script src="auth.js"></script>
-  <script src="admin.js?v=20260624a"></script>
+  <script src="admin.js?v=20260708a"></script>
   <script src="nav.js"></script>
 </body>
 </html>

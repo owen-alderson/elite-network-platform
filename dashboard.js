@@ -669,8 +669,8 @@
       .from('intro_requests')
       .select(
         'id, forwarded_at, responded_at, requester_id, target_id,' +
-        'requester:members!requester_id(id,full_name,headline,primary_pillar,location_city,avatar_url),' +
-        'target:members!target_id(id,full_name,headline,primary_pillar,location_city,avatar_url)'
+        'requester:members!requester_id(id,full_name,headline,primary_pillar,location_city,travel_city,avatar_url),' +
+        'target:members!target_id(id,full_name,headline,primary_pillar,location_city,travel_city,avatar_url)'
       )
       .eq('status', 'accepted')
       .or('requester_id.eq.' + userId + ',target_id.eq.' + userId)
@@ -697,8 +697,81 @@
     }
     section.hidden = false;
     if (countEl) countEl.textContent = String(connections.length);
+    allConnections = connections;
+    bindConnectionControls();
+    renderConnectionList();
+  }
+
+  // ── Connections list: search + collapse ─────────────────────
+  // A flat card dump stops working past a dozen connections; at 50-100 it's
+  // unusable. Collapsed to the most recent CONN_VISIBLE with "Show all",
+  // plus a live search over name / headline / pillar / city (incl. travel).
+  var allConnections = [];
+  var connSearch = '';
+  var connExpanded = false;
+  var connControlsBound = false;
+  var CONN_VISIBLE = 6;
+
+  function bindConnectionControls() {
+    if (connControlsBound) return;
+    connControlsBound = true;
+    var searchEl = document.getElementById('connections-search');
+    var showAllBtn = document.getElementById('connections-show-all');
+    if (searchEl) {
+      searchEl.addEventListener('input', function (e) {
+        connSearch = (e.target.value || '').trim().toLowerCase();
+        renderConnectionList();
+      });
+    }
+    if (showAllBtn) {
+      showAllBtn.addEventListener('click', function () {
+        connExpanded = !connExpanded;
+        renderConnectionList();
+      });
+    }
+  }
+
+  function renderConnectionList() {
+    var listEl = document.getElementById('connections-list');
+    var controls = document.getElementById('connections-controls');
+    var showAllBtn = document.getElementById('connections-show-all');
+    if (!listEl) return;
+
+    var total = allConnections.length;
+    if (controls) controls.hidden = total <= CONN_VISIBLE;
+
+    var rows = allConnections;
+    if (connSearch) {
+      rows = rows.filter(function (c) {
+        var m = c.member;
+        return [m.full_name, m.headline, m.primary_pillar, m.location_city, m.travel_city]
+          .filter(Boolean).join(' ').toLowerCase().indexOf(connSearch) !== -1;
+      });
+    }
+
+    var collapsed = !connSearch && !connExpanded && rows.length > CONN_VISIBLE;
+    var visible = collapsed ? rows.slice(0, CONN_VISIBLE) : rows;
+
     listEl.innerHTML = '';
-    connections.forEach(function (c) { listEl.appendChild(buildConnectionCard(c)); });
+    if (!visible.length) {
+      var empty = document.createElement('p');
+      empty.style.cssText = 'color:var(--muted);font-size:13px;grid-column:1/-1;padding:8px 0;';
+      empty.textContent = 'No connections match “' + connSearch + '”.';
+      listEl.appendChild(empty);
+    } else {
+      visible.forEach(function (c) { listEl.appendChild(buildConnectionCard(c)); });
+    }
+
+    if (showAllBtn) {
+      if (connSearch || rows.length <= CONN_VISIBLE) {
+        showAllBtn.hidden = true;
+      } else {
+        showAllBtn.hidden = false;
+        showAllBtn.textContent = connExpanded
+          ? 'Show fewer'
+          : 'Show all ' + rows.length + ' →';
+      }
+    }
   }
 
   function buildConnectionCard(c) {

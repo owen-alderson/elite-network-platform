@@ -1145,3 +1145,20 @@
   .dash-main { padding: 18px 14px 60px; }
   .dash-greeting-head { font-size: 26px; }
 }
+
+/* Connections list controls — search + collapse (usable at 50-100 connections) */
+.connections-controls { margin: 2px 0 14px; }
+.connections-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: transparent;
+  border: 1px solid var(--border);
+  padding: 12px 14px;
+  font-family: var(--font-sans);
+  font-size: 16px; /* iOS zoom floor */
+  color: var(--text);
+  transition: border-color 0.15s ease;
+}
+.connections-search-input:focus { outline: none; border-color: var(--gold-dim); }
+.connections-search-input::placeholder { color: var(--muted); opacity: 0.6; }
+.connections-show-all { margin-top: 14px; }

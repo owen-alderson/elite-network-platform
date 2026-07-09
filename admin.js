@@ -10,9 +10,8 @@
 
   // ── State ───────────────────────────────────────────────────
   var currentAppFilter = 'pending';
-  var currentIntroFilter = 'awaiting';
+  var currentIntroFilter = 'direct';
   var currentMemberFilter = 'active';
-  var activeMembers = [];   // cached for the broker picker
   var editingEventId = null;  // null = creating, uuid = updating
   var editingEventImageUrl = null;  // current image_url when editing — kept if no new upload
   var currentEventWhen = 'upcoming';  // 'upcoming' | 'past' | 'all'
@@ -49,7 +48,7 @@
     introListEl = document.getElementById('admin-intro-list');
     introTabsEl = document.getElementById('admin-intro-tabs');
     introStatEls = {
-      pending: document.getElementById('intro-stat-pending'),
+      direct: document.getElementById('intro-stat-direct'),
       assigned: document.getElementById('intro-stat-assigned'),
       forwarded: document.getElementById('intro-stat-forwarded'),
       declined: document.getElementById('intro-stat-declined')
@@ -90,7 +89,7 @@
 
     await Promise.all([
       refreshApps(),
-      loadActiveMembers().then(refreshIntros),
+      refreshIntros(),
       loadTodayOverview(),
       loadPartnerSpaceOptions()
     ]);
@@ -429,20 +428,6 @@
   }
 
   // ── Intros: load + render ───────────────────────────────────
-  async function loadActiveMembers() {
-    var res = await supabase
-      .from('members')
-      .select('id, full_name, primary_pillar')
-      .eq('status', 'active')
-      .order('full_name');
-    if (res.error) {
-      console.error('loadActiveMembers error:', res.error);
-      activeMembers = [];
-      return;
-    }
-    activeMembers = res.data || [];
-  }
-
   async function refreshIntros() {
     await Promise.all([loadIntroStats(), renderIntros()]);
   }
@@ -450,8 +435,8 @@
   // Stat queries map filter names → DB predicates.
   async function loadIntroStats() {
     var queries = {
-      pending: function (q) { return q.eq('status', 'pending').is('broker_id', null); },
-      assigned: function (q) { return q.eq('status', 'pending').not('broker_id', 'is', null); },
+      direct: function (q) { return q.eq('status', 'pending').eq('route', 'direct'); },
+      assigned: function (q) { return q.eq('status', 'pending').eq('route', 'broker'); },
       forwarded: function (q) { return q.eq('status', 'forwarded'); },
       declined: function (q) { return q.in('status', ['declined', 'expired']); }
     };
@@ -478,14 +463,11 @@
       )
       .order('created_at', { ascending: false });
 
-    if (currentIntroFilter === 'awaiting') {
-      // Broker-route only — direct-route pending intros never need a broker.
-      q = q.eq('status', 'pending').is('broker_id', null).eq('route', 'broker');
-    } else if (currentIntroFilter === 'assigned') {
-      q = q.eq('status', 'pending').not('broker_id', 'is', null).eq('route', 'broker');
-    } else if (currentIntroFilter === 'direct') {
-      // Direct-route pending intros — admin visibility, no admin action needed.
+    if (currentIntroFilter === 'direct') {
+      // Direct-route pending intros — admin visibility, decline-only action.
       q = q.eq('status', 'pending').eq('route', 'direct');
+    } else if (currentIntroFilter === 'assigned') {
+      q = q.eq('status', 'pending').eq('route', 'broker');
     } else if (currentIntroFilter === 'forwarded') {
       q = q.eq('status', 'forwarded');
     } else if (currentIntroFilter === 'declined') {
@@ -503,19 +485,6 @@
       introListEl.appendChild(emptyMsg('No intros in this view.'));
       return;
     }
-
-    // For pending broker-route intros, prefetch the set of mutual
-    // connections so the broker picker shows only valid candidates —
-    // members connected to both requester and target.
-    await Promise.all(res.data.map(async function (intro) {
-      if (intro.status !== 'pending' || intro.route !== 'broker') return;
-      var rpc = await supabase.rpc('mutual_connections', {
-        a: intro.requester_id, b: intro.target_id
-      });
-      intro._mutualIds = rpc.error ? [] : (rpc.data || []).map(function (r) {
-        return typeof r === 'string' ? r : r.mutual_connections;
-      });
-    }));
 
     res.data.forEach(function (intro) { introListEl.appendChild(buildIntroCard(intro)); });
   }
@@ -554,7 +523,7 @@
     body.appendChild(noteEl);
 
     if (intro.broker && intro.broker.full_name) {
-      body.appendChild(text('p', 'app-section-label', 'Assigned broker'));
+      body.appendChild(text('p', 'app-section-label', 'Broker (chosen by requester)'));
       body.appendChild(text('p', 'app-card-line', intro.broker.full_name));
     }
     if (intro.forwarded_at) {
@@ -575,97 +544,36 @@
     return article;
   }
 
+  // Since manual broker selection (requester picks a mutual connection at
+  // request time), there is nothing for admin to assign — oversight is
+  // read-mostly, with decline as the only intervention.
   function buildIntroActionFoot(intro) {
     var foot = el('footer', 'app-card-actions');
-
-    // Broker picker
-    var pickerWrap = el('div', 'intro-picker-wrap');
-    var label = text('label', 'app-section-label', intro.broker_id ? 'Reassign broker' : 'Assign broker');
-    pickerWrap.appendChild(label);
-
-    var select = document.createElement('select');
-    select.className = 'app-notes intro-broker-select';
-    var blank = document.createElement('option');
-    blank.value = '';
-    blank.textContent = '— select a mutual member —';
-    select.appendChild(blank);
-
-    var requesterId = intro.requester ? intro.requester.id : null;
-    var targetId = intro.target ? intro.target.id : null;
-
-    // Only members connected to BOTH requester and target are valid brokers.
-    // _mutualIds is populated upstream in renderIntros via the
-    // mutual_connections() SQL helper.
-    var mutualSet = {};
-    (intro._mutualIds || []).forEach(function (id) { mutualSet[id] = true; });
-
-    var eligible = activeMembers.filter(function (m) {
-      if (m.id === requesterId || m.id === targetId) return false;
-      return !!mutualSet[m.id];
-    });
-
-    if (eligible.length === 0) {
-      blank.textContent = '— no mutual connections to broker via —';
-      select.disabled = true;
-    } else {
-      eligible.forEach(function (m) {
-        var opt = document.createElement('option');
-        opt.value = m.id;
-        opt.textContent = m.full_name + (m.primary_pillar ? ' · ' + m.primary_pillar.replace(/_/g, ' ') : '');
-        if (intro.broker_id === m.id) opt.selected = true;
-        select.appendChild(opt);
-      });
-    }
-    pickerWrap.appendChild(select);
-    foot.appendChild(pickerWrap);
-
     var btnRow = el('div', 'app-action-buttons');
-    btnRow.appendChild(introActionBtn('Decline', 'declined', 'btn-ghost btn-sm app-btn-reject', intro.id, select));
-    btnRow.appendChild(introActionBtn(intro.broker_id ? 'Update broker' : 'Assign broker', 'assign', 'btn-primary btn-sm', intro.id, select));
+    btnRow.appendChild(introDeclineBtn(intro.id));
     foot.appendChild(btnRow);
     return foot;
   }
 
-  function introActionBtn(label, action, classes, introId, selectEl) {
+  function introDeclineBtn(introId) {
     var btn = document.createElement('button');
-    btn.className = classes;
-    btn.textContent = label;
+    btn.className = 'btn-ghost btn-sm app-btn-reject';
+    btn.textContent = 'Decline';
     btn.addEventListener('click', async function () {
-      if (action === 'declined' && !confirm('Decline this intro request? The requester will see the status change.')) return;
-
-      var brokerId = selectEl ? selectEl.value : '';
-      if (action === 'assign' && !brokerId) {
-        alert('Pick a broker from the dropdown first.');
-        return;
-      }
+      if (!confirm('Decline this intro request? The requester will see the status change.')) return;
       btn.disabled = true;
-      var original = btn.textContent;
       btn.textContent = 'Saving…';
-
-      var err;
-      if (action === 'assign') {
-        err = await assignBroker(introId, brokerId);
-      } else {
-        err = await declineIntro(introId);
-      }
-
+      var err = await declineIntro(introId);
       if (err) {
-        console.error('Intro action failed:', err);
+        console.error('Intro decline failed:', err);
         alert('Could not save: ' + (err.message || 'unknown error'));
         btn.disabled = false;
-        btn.textContent = original;
+        btn.textContent = 'Decline';
         return;
       }
       await refreshIntros();
     });
     return btn;
-  }
-
-  async function assignBroker(introId, brokerId) {
-    var res = await supabase.from('intro_requests').update({
-      broker_id: brokerId
-    }).eq('id', introId);
-    return res.error;
   }
 
   async function declineIntro(introId) {
@@ -677,12 +585,14 @@
   }
 
   function statusClassFor(intro) {
-    if (intro.status === 'pending') return intro.broker_id ? 'assigned' : 'awaiting';
+    if (intro.status === 'pending') return intro.route === 'broker' ? 'assigned' : 'awaiting';
     return intro.status;
   }
 
   function introStatusLabel(intro) {
-    if (intro.status === 'pending') return intro.broker_id ? 'WITH BROKER' : 'AWAITING BROKER';
+    if (intro.status === 'pending') {
+      return intro.route === 'broker' ? 'WITH BROKER' : 'AWAITING THEIR RESPONSE';
+    }
     return intro.status.toUpperCase();
   }
 

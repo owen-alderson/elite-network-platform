@@ -6,7 +6,7 @@
   <title>Home — Maia</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="stylesheet" href="style.css?v=20260708a" />
-  <link rel="stylesheet" href="dashboard.css?v=20260708a" />
+  <link rel="stylesheet" href="dashboard.css?v=20260708b" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
@@ -161,7 +161,12 @@
           <span class="dash-intro-count" id="connections-count">0</span>
         </div>
         <p class="dash-section-sub">Members you've been introduced to. Each connection is a forwarded intro on either side.</p>
+        <div class="connections-controls" id="connections-controls" hidden>
+          <input type="text" id="connections-search" class="connections-search-input"
+                 placeholder="Search your connections — name, field, city…" autocomplete="off" />
+        </div>
         <div class="connections-grid" id="connections-list"></div>
+        <button type="button" class="btn-ghost btn-sm connections-show-all" id="connections-show-all" hidden>Show all</button>
       </section>
 
       <!-- Upcoming events -->
@@ -263,7 +268,7 @@
   <script src="supabase.js?v=20260707a"></script>
   <script src="auth.js?v=20260626a"></script>
   <script src="intro.js?v=20260626a"></script>
-  <script src="dashboard.js?v=20260707b"></script>
+  <script src="dashboard.js?v=20260708b"></script>
   <script>
     function toggleInbox() {
       const panel   = document.getElementById('inbox-panel');
