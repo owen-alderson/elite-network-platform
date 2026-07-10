@@ -124,8 +124,9 @@
     gate.innerHTML =
       '<p class="flow-eyebrow" style="margin-bottom:12px;">Complete your profile</p>' +
       '<h3 class="modal-title">Add a few details first.</h3>' +
-      '<p class="modal-body">Members are more likely to accept an intro from someone with a complete profile. ' +
-      'You\'ve filled <strong style="color:var(--gold);">' + status.score + ' of ' + status.total + '</strong> sections — finish a couple more and intro requests will open up.</p>' +
+      '<p class="modal-body">Members are more likely to accept an intro from someone they can evaluate. ' +
+      'You\'ve filled <strong style="color:var(--gold);">' + status.score + ' of ' + status.total + '</strong> profile sections — <strong style="color:var(--gold);">any 2</strong> unlock intro requests. ' +
+      'A photo and a line on what you\'re building is enough.</p>' +
       '<div class="modal-actions" style="justify-content:center;">' +
       '  <button type="button" class="btn-ghost btn-sm" data-gate-cancel>Not now</button>' +
       '  <a class="btn-primary btn-sm" href="profile.html">Go to profile</a>' +

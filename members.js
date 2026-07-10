@@ -204,7 +204,7 @@
     fashion: ['fashion', 'model', 'models', 'modeling', 'modelling', 'designer', 'designers', 'stylist', 'stylists', 'couture'],
     finance: ['finance', 'financier', 'financiers', 'banker', 'bankers', 'banking', 'fund', 'funds', 'hedge', 'trader', 'traders'],
     hospitality: ['hospitality', 'hotelier', 'hoteliers', 'hotel', 'hotels', 'restaurateur', 'restaurateurs', 'restaurant', 'restaurants', 'chef', 'chefs'],
-    investor: ['investor', 'investors', 'vc', 'vcs', 'angel', 'angels', 'allocator', 'allocators', 'capital'],
+    investment: ['investment', 'investing', 'investor', 'investors', 'vc', 'vcs', 'angel', 'angels', 'allocator', 'allocators', 'capital'],
     music: ['music', 'musician', 'musicians', 'singer', 'singers', 'songwriter', 'songwriters', 'dj', 'djs', 'producer', 'producers', 'label', 'artist', 'artists'],
     sport: ['sport', 'sports', 'athlete', 'athletes', 'olympian', 'olympians', 'champion', 'champions', 'player', 'players', 'footballer', 'skier', 'sprinter'],
     wellness: ['wellness', 'longevity', 'health', 'nutrition', 'nutritionist', 'fitness', 'wellbeing', 'mindfulness']

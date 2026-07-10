@@ -335,7 +335,7 @@
     var ready = checks.ready;
     var lead = ready
       ? 'You can request intros now. A few more sections sharpen what you\'re building.'
-      : 'Add a few more sections — what you\'ve built and what you\'re building next. That\'s how members move on Maia.';
+      : 'Any 2 sections unlock intro requests — a photo and a line on what you\'re building is enough.';
     bodyEl.textContent = lead + ' Missing: ' + missing.slice(0, 3).join(', ') +
       (missing.length > 3 ? ' and ' + (missing.length - 3) + ' more' : '') + '.';
 

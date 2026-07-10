@@ -20,7 +20,7 @@
 
   var ALL_PILLARS = [
     'academia', 'art', 'beauty', 'entertainment', 'entrepreneurship', 'fashion',
-    'finance', 'hospitality', 'investor', 'music', 'sport', 'wellness'
+    'finance', 'hospitality', 'investment', 'music', 'sport', 'wellness'
   ];
 
   // ── DOM refs ────────────────────────────────────────────────

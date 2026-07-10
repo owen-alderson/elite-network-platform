@@ -31,7 +31,7 @@ const ADMIN_EMAILS = ["owen.alderson@gmail.com"];
 // null so a bad client can't write arbitrary pillar strings.
 const ALLOWED_PILLARS = [
   "academia", "art", "beauty", "entertainment", "entrepreneurship", "fashion",
-  "finance", "hospitality", "investor", "music", "sport", "wellness",
+  "finance", "hospitality", "investment", "music", "sport", "wellness",
 ];
 
 const cors = {

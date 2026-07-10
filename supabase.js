@@ -228,7 +228,9 @@ window.maia = (function () {
   // there's nothing for the target to evaluate. Threshold is the same scoring
   // surface used by the on-profile completeness banner (profile.js); keep
   // these in sync if you change one.
-  var PROFILE_INTRO_THRESHOLD = 4; // out of 7
+  // Lowered 4 → 2 on 2026-07-10 (Melanie: the old bar was 'a lot' and it was
+  // unclear on mobile what was required). Any 2 of the 7 sections unlock intros.
+  var PROFILE_INTRO_THRESHOLD = 2; // out of 7
   function profileChecks(m) {
     if (!m) return { score: 0, total: 7, ready: false };
     var checks = [

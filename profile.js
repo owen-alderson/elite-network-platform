@@ -27,7 +27,7 @@
   // Academia added 2026-07-07 (tester feedback — academic in education had no fit).
   var ALL_PILLARS = [
     'academia', 'art', 'beauty', 'entertainment', 'entrepreneurship', 'fashion',
-    'finance', 'hospitality', 'investor', 'music', 'sport', 'wellness'
+    'finance', 'hospitality', 'investment', 'music', 'sport', 'wellness'
   ];
 
   // Single source of truth for the loaded member record.
@@ -222,8 +222,9 @@
     });
     var note = document.createElement('p');
     note.style.cssText = 'font-size:13px;color:var(--text);margin:0;line-height:1.5;';
+    var unlockHint = done < 2 ? ' Any 2 sections unlock intro requests.' : '';
     note.textContent = 'Add ' + missing.slice(0, 3).join(', ') +
-      (missing.length > 3 ? ' and ' + (missing.length - 3) + ' more' : '') + '.';
+      (missing.length > 3 ? ' and ' + (missing.length - 3) + ' more' : '') + '.' + unlockHint;
     left.appendChild(note);
 
     var btn = document.createElement('button');
@@ -472,7 +473,11 @@
     // Headline is currently shown in the sidebar role/tagline. We add it as a
     // dedicated edit row above the bio.
     insertEditRow('headline', 'Headline', current.headline || '', 'input');
-    insertEditRow('current_work', 'What\'s next', current.current_work || '', 'textarea');
+    // "What's next" read as vague in tester feedback (Melanie 7/9) — keep the
+    // label but anchor it with a concrete hint + placeholder.
+    insertEditRow('current_work', 'What\'s next', current.current_work || '', 'textarea',
+      'What are you building, launching, or exploring — now or next? A line or two is plenty.',
+      'e.g. Raising for a wellness line · exploring a move into fashion · writing a book on longevity');
     insertEditRow('linkedin_url', 'LinkedIn URL', current.linkedin_url || '', 'input');
     insertEditRow('instagram_handle', 'Instagram handle', current.instagram_handle || '', 'input');
     insertEditRow('website_url', 'Website', current.website_url || '', 'input');
@@ -1255,7 +1260,7 @@
     cityInput.parentNode.insertBefore(input, cityInput.nextSibling);
   }
 
-  function insertEditRow(field, labelText, value, kind) {
+  function insertEditRow(field, labelText, value, kind, hintText, placeholder) {
     var anchor = document.querySelector('[data-edit-field="bio"]');
     if (!anchor) return;
     var row = document.createElement('div');
@@ -1264,11 +1269,18 @@
     label.className = 'profile-edit-label';
     label.textContent = labelText;
     row.appendChild(label);
+    if (hintText) {
+      var hint = document.createElement('p');
+      hint.style.cssText = 'font-size:11px;color:var(--muted);margin:0 0 8px;line-height:1.5;';
+      hint.textContent = hintText;
+      row.appendChild(hint);
+    }
     var input = (kind === 'textarea') ? document.createElement('textarea') : document.createElement('input');
     if (kind === 'input') input.type = 'text';
     if (kind === 'textarea') input.rows = 3;
     input.className = 'profile-edit-input';
     input.value = value;
+    if (placeholder) input.placeholder = placeholder;
     input.dataset.editField = field;
     row.appendChild(input);
     anchor.parentNode.insertBefore(row, anchor.nextSibling);
