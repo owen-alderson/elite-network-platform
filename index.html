@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <script>
     /* Pre-paint guard: if a Maia auth token is cached, hide the page so a
        signed-in member never flashes the logged-out homepage while auth.js
@@ -16,11 +16,6 @@
           var k = localStorage.key(i);
           if (k && k.indexOf(prefix) === 0) {
             document.documentElement.style.visibility = 'hidden';
-            /* Single reveal entry-point, shared with auth.js. auth.js calls
-               this the moment it decides (redirect or reveal), so the timer
-               below is only ever a last-resort net for the case where the
-               auth scripts fail to load/run at all — it never races the real
-               decision. */
             window.__maiaReveal = function () {
               if (window.__maiaRevealTimer) { clearTimeout(window.__maiaRevealTimer); window.__maiaRevealTimer = null; }
               document.documentElement.style.visibility = '';
@@ -33,264 +28,328 @@
     })();
   </script>
   <title>Maia — Private Members Network</title>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <link rel="stylesheet" href="style.css?v=20260708a" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#F2EDE3; --ink-soft:rgba(242,237,227,.52);
+  --paper:#0C0B09; --cream:#131109; --cream-deep:#0E0D0B;
+  --gold:#9C7E45; --gold-bright:#C9A35B;
+  --line:rgba(242,237,227,.10);
+  --dark:#070605; --dcream:#F2EDE3; --dcream-dim:rgba(242,237,227,.58);
+  --dline:rgba(242,237,227,.10); --dgold:#C9A35B;
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --sans:'Inter',system-ui,-apple-system,sans-serif;
+  --ease:cubic-bezier(.22,.61,.36,1);
+  --hero-ov1:rgba(12,11,9,.22); --hero-ov2:rgba(12,11,9,.30);
+  --hero-fb:linear-gradient(200deg,#1a1710,#111009);
+  --hero-frame:rgba(201,163,91,.3);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-weight:300;font-size:16px;line-height:1.7;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+a{color:inherit;text-decoration:none;}
+img{display:block;max-width:100%;}
+::selection{background:rgba(201,163,91,.22);}
+
+.label{font-family:var(--sans);font-size:11px;font-weight:500;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);}
+.serif{font-family:var(--serif);font-weight:400;line-height:1.04;}
+
+/* ---------- NAV ---------- */
+.nav{position:absolute;top:0;left:0;right:0;z-index:30;padding:32px 6vw;}
+.nav-inner{display:flex;justify-content:space-between;align-items:center;}
+.wordmark{font-family:var(--serif);font-size:26px;font-weight:500;letter-spacing:.28em;padding-left:.28em;color:var(--ink);}
+.nav-links{display:flex;gap:42px;align-items:center;}
+.nav-links a{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);transition:color .3s var(--ease);}
+.nav-links a:hover{color:var(--ink);}
+.nav-links a.nav-cta{color:var(--gold);}
+.hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:8px;}
+.hamburger span{width:24px;height:1.5px;background:var(--ink);transition:.3s var(--ease);}
+
+/* ---------- HERO ---------- */
+.hero{min-height:100vh;display:grid;grid-template-columns:1.12fr .88fr;align-items:start;gap:5vw;padding:200px 6vw 8vw;}
+.hero-copy{max-width:640px;display:flex;flex-direction:column;height:78vh;max-height:780px;}
+.hero .label{display:block;margin-bottom:34px;}
+.hero h1{font-family:var(--serif);font-size:clamp(3.2rem,6.4vw,6rem);font-weight:400;line-height:.98;letter-spacing:-.02em;margin-bottom:0;}
+.hero h1 em{font-style:italic;color:var(--gold);}
+.hero p{font-size:1.18rem;color:var(--ink-soft);max-width:46ch;line-height:1.75;margin-top:auto;margin-bottom:auto;padding:16px 0;}
+.hero-actions{display:flex;gap:34px;align-items:center;flex-wrap:wrap;}
+.btn-line{font-size:12px;letter-spacing:.16em;text-transform:uppercase;border-bottom:1px solid var(--ink);padding-bottom:6px;transition:.3s var(--ease);}
+.btn-line:hover{border-color:var(--gold);color:var(--gold);}
+.btn-plain{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);transition:.3s var(--ease);}
+.btn-plain:hover{opacity:.6;}
+.hero-figure{position:relative;height:78vh;max-height:780px;}
+.hero-figure .img{position:absolute;inset:0;
+  background:linear-gradient(200deg,var(--hero-ov1),var(--hero-ov2)),
+    url("fancydinner.jpeg");
+  background-size:cover;background-position:center;filter:sepia(.08) saturate(.85) brightness(.92);}
+.hero-figure::after{content:"";position:absolute;inset:0;z-index:-1;background:var(--hero-fb);}
+.hero-figure .frame{position:absolute;inset:14px;border:1px solid var(--hero-frame);pointer-events:none;}
+
+/* ---------- SECTION scaffold ---------- */
+.section{padding:11vw 6vw;}
+.sec-head{max-width:64ch;margin-bottom:6vw;}
+.sec-head .label{display:block;margin-bottom:26px;}
+.sec-head h2{font-family:var(--serif);font-size:clamp(2.4rem,5vw,4rem);font-weight:400;line-height:1.03;}
+.sec-head h2 em{font-style:italic;color:var(--gold);}
+.sec-head .lead{font-size:1.1rem;color:var(--ink-soft);max-width:58ch;margin-top:24px;line-height:1.75;}
+
+/* ---------- VALUE PROPS ---------- */
+.vp-grid{display:grid;grid-template-columns:repeat(4,1fr);}
+.vp-col{padding:38px 30px 10px 0;border-top:1px solid var(--line);}
+.vp-col + .vp-col{border-left:1px solid var(--line);padding-left:30px;}
+.vp-kicker{font-size:11px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:10px;margin-bottom:20px;}
+.vp-kicker .dot{width:6px;height:6px;background:var(--gold-bright);transform:rotate(45deg);flex:0 0 auto;}
+.vp-col h3{font-family:var(--serif);font-size:1.55rem;font-weight:500;line-height:1.1;margin-bottom:12px;}
+.vp-col p{font-size:14px;color:var(--ink-soft);line-height:1.65;}
+.vp-more{display:inline-block;margin-top:16px;font-size:10.5px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid transparent;padding-bottom:3px;transition:.3s var(--ease);}
+.vp-more:hover{border-color:var(--gold);color:var(--gold-bright);}
+
+/* ---------- PILLAR INDEX ---------- */
+.idx-wrap{background:var(--cream-deep);}
+.idx{display:grid;grid-template-columns:1fr 1fr;column-gap:72px;margin-top:1vw;}
+.idx-list{border-top:1px solid var(--line);}
+.idx-row{display:block;padding:19px 0;border-bottom:1px solid var(--line);transition:padding-left .4s var(--ease);}
+.idx-row:hover{padding-left:12px;}
+.idx-row .n{display:none;}
+.idx-row .name{font-family:var(--serif);font-size:1.4rem;font-weight:500;}
+.idx-row .name em{font-style:normal;color:var(--ink-soft);font-family:var(--sans);font-size:13px;font-weight:300;margin-left:2px;display:block;letter-spacing:.01em;margin-top:2px;}
+
+/* ---------- DARK SPACES BAND ---------- */
+.spaces{position:relative;background:var(--dark);min-height:90vh;display:flex;align-items:flex-end;overflow:hidden;}
+.spaces-img{position:absolute;inset:0;z-index:0;
+  background:linear-gradient(180deg,rgba(7,6,5,.4),rgba(7,6,5,.88)),
+    url("https://images.unsplash.com/photo-1534430480872-3498386e7856?auto=format&fit=crop&w=2000&q=80");
+  background-size:cover;background-position:center;filter:saturate(.8) brightness(.86);
+  transition:opacity .5s ease,transform 1.6s var(--ease);}
+.spaces:hover .spaces-img{transform:scale(1.035);}
+.spaces-inner{position:relative;z-index:2;padding:0 6vw 8vw;width:100%;max-width:1500px;}
+.spaces .label{color:var(--dgold);display:block;margin-bottom:26px;}
+.spaces h2{font-family:var(--serif);font-size:clamp(2.4rem,5.4vw,4.6rem);font-weight:300;line-height:1.02;color:var(--dcream);max-width:16ch;margin-bottom:12px;}
+.spaces p{color:var(--dcream-dim);max-width:52ch;font-size:1.05rem;margin-bottom:44px;}
+.city-row{display:flex;flex-wrap:wrap;gap:16px 42px;align-items:center;padding-top:32px;border-top:1px solid var(--dline);}
+.city-item{font-size:13px;letter-spacing:.06em;color:rgba(242,237,227,.28);transition:color .5s;display:inline-flex;align-items:center;gap:10px;}
+.city-item.active{color:var(--dgold);}
+.city-live .dot{width:6px;height:6px;border-radius:50%;background:var(--dgold);animation:pulse 2.4s infinite;}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(201,163,91,.5)}70%{box-shadow:0 0 0 9px rgba(201,163,91,0)}100%{box-shadow:0 0 0 0 rgba(201,163,91,0)}}
+
+/* ---------- CLOSING ---------- */
+.closing{padding:12vw 6vw;text-align:center;}
+.closing .label{display:inline-block;margin-bottom:26px;}
+.closing h2{font-family:var(--serif);font-size:clamp(2.4rem,5.4vw,4.2rem);font-weight:400;line-height:1.05;max-width:20ch;margin:0 auto 20px;}
+.closing h2 em{font-style:italic;color:var(--gold);}
+.rule{width:56px;height:1px;background:var(--gold);margin:36px auto;opacity:.5;}
+.closing-actions{display:flex;gap:34px;justify-content:center;flex-wrap:wrap;}
+
+/* ---------- FOOTER ---------- */
+.footer{padding:6vw 6vw 5vw;background:var(--cream-deep);display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:28px;border-top:1px solid var(--line);}
+.footer .wordmark{font-size:22px;}
+.footer .tagline{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);margin-top:10px;}
+.footer-links{display:flex;gap:34px;flex-wrap:wrap;}
+.footer-links a{font-size:12px;letter-spacing:.05em;color:var(--ink-soft);transition:color .3s;}
+.footer-links a:hover{color:var(--gold);}
+
+/* ---------- reveal ---------- */
+.reveal{opacity:0;transform:translateY(22px);transition:.9s var(--ease);}
+.reveal.in{opacity:1;transform:none;}
+@media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;}.spaces-img{transition:none;}}
+
+/* ---------- responsive ---------- */
+@media(max-width:1000px){.vp-grid{grid-template-columns:1fr 1fr;}.vp-col:nth-child(3){border-left:none;padding-left:0;}}
+@media(max-width:900px){
+  .hero{grid-template-columns:1fr;padding-top:120px;padding-bottom:80px;min-height:auto;gap:52px;}
+  .hero-copy{height:auto;max-height:none;}
+  .hero-figure{height:62vh;max-height:520px;order:2;}
+  .idx{grid-template-columns:1fr;column-gap:0;}
+  .idx-col:nth-child(2) .idx-list{border-top:none;}
+}
+@media(max-width:640px){
+  .nav-links{position:fixed;inset:0 0 auto 0;top:78px;flex-direction:column;align-items:flex-start;gap:0;background:var(--paper);border-bottom:1px solid var(--line);padding:8px 6vw 24px;transform:translateY(-130%);transition:transform .4s var(--ease);}
+  .nav-links.open{transform:translateY(0);}
+  .nav-links a{width:100%;padding:15px 0;border-bottom:1px solid var(--line);font-size:14px;}
+  .hamburger{display:flex;}
+  .vp-grid{grid-template-columns:1fr;}
+  .vp-col,.vp-col + .vp-col{border-left:none;padding-left:0;border-top:1px solid var(--line);}
+}
+</style>
 </head>
 <body>
 
-  <!-- NAV -->
-  <nav class="nav">
-    <div class="nav-inner">
-      <span class="wordmark">MAIA</span>
-      <div class="nav-links">
-        <a href="members.html">Members</a>
-        <a href="events.html">Events</a>
-        <a href="spaces.html">Spaces</a>
-        <a href="partners.html">Partners</a>
-        <a href="login.html" class="nav-signin">Sign in</a>
-        <a href="apply.html" class="nav-cta">Request Access</a>
-      </div>
-      <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
-        <span></span><span></span><span></span>
-      </button>
+<!-- ===== NAV (links redirect to real pages) ===== -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="wordmark">MAIA</a>
+    <div class="nav-links" id="navLinks">
+      <a href="members.html">Members</a>
+      <a href="spaces.html">Spaces</a>
+      <a href="events.html">Events</a>
+      <a href="partners.html">Partners</a>
+      <a href="login.html" class="nav-signin">Sign in</a>
+      <a href="apply.html" class="nav-cta">Request Access</a>
     </div>
-  </nav>
-
-  <div class="mobile-menu" id="mobile-menu">
-    <a href="members.html">Members</a>
-    <a href="events.html">Events</a>
-    <a href="spaces.html">Spaces</a>
-    <a href="partners.html">Partners</a>
-    <a href="login.html" class="mobile-signin">Sign in</a>
-    <a href="apply.html" class="mobile-cta">Request Access</a>
+    <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
   </div>
+</nav>
 
-  <!-- HERO -->
-  <section class="hero">
-    <div class="hero-inner">
-      <p class="hero-eyebrow">By invitation only</p>
-      <h1 class="hero-headline">Where the world's<br><em>most exceptional</em><br>people meet.</h1>
-      <p class="hero-sub">An invite-only network for proven talent in one field — and the adjacent ventures they're starting, or about to discover. Vetted in private. Anchored in real rooms.</p>
-      <a href="apply.html" class="btn-primary">Request an Invitation</a>
-      <a href="dashboard.html" class="btn-ghost" style="margin-left:12px;">View member demo →</a>
+<!-- ===== HERO ===== -->
+<header class="hero">
+  <div class="hero-copy">
+    <span class="label reveal">By invitation only</span>
+    <h1 class="reveal">Where the world's <em>most exceptional</em> people meet.</h1>
+    <p class="reveal">An invite-only network for proven talent in one field, and the adjacent ventures they're starting, or about to discover. Vetted in private. Anchored in real rooms.</p>
+    <div class="hero-actions reveal">
+      <a href="apply.html" class="btn-line">Request an invitation</a>
+      <a href="login.html" class="btn-plain">Sign in</a>
     </div>
-    <div class="hero-overlay"></div>
-  </section>
+  </div>
+  <div class="hero-figure reveal">
+    <div class="img"></div>
+    <div class="frame"></div>
+  </div>
+</header>
 
-  <!-- VALUE PROPS — what membership gives you -->
-  <section class="value-props">
-    <div class="section-inner">
-      <p class="section-label">What membership gives you</p>
-      <h2 class="section-heading">Most networks give you one.<br><em>Maia gives you all four.</em></h2>
-      <p class="vp-lead">The proven few, the rooms they meet in, the ventures they build, and the capital behind them — four things that compound only when one network holds them together.</p>
-      <div class="vp-grid">
-        <div class="vp-card">
-          <p class="vp-kicker">Talent</p>
-          <h3>Access to the proven few</h3>
-          <p>Invite-only, nominated, vetted to one global bar — the top of every field, in one place. The membership is the network.</p>
+<!-- ===== VALUE PROPS (Talent · Spaces · Support · Capital) ===== -->
+<section class="section">
+  <div class="sec-head reveal">
+    <span class="label">What membership gives you</span>
+    <h2 class="serif"><span style="white-space:nowrap">Most networks give you one.</span><br><em style="display:block;margin-top:.38em">Maia gives you all four.</em></h2>
+    <p class="lead">The proven few, the rooms they meet in, the ventures they build, and the capital behind them: four things that compound only when one network holds them together.</p>
+  </div>
+  <div class="vp-grid reveal">
+    <div class="vp-col">
+      <p class="vp-kicker"><span class="dot"></span>Talent</p>
+      <h3>Access to the proven few</h3>
+      <p>Invite-only, nominated, vetted to one global bar: the top of every field, in one place.</p>
+    </div>
+    <div class="vp-col">
+      <p class="vp-kicker"><span class="dot"></span>Spaces</p>
+      <h3>Rooms that open worldwide</h3>
+      <p>Private clubs and members' houses, city by city. Spring Place New York today, forty partnerships ahead.</p>
+    </div>
+    <div class="vp-col">
+      <p class="vp-kicker"><span class="dot"></span>Support</p>
+      <h3>Your next venture, built here</h3>
+      <p>Co-founders, operators, and first customers: found through warm introductions, never cold.</p>
+    </div>
+    <div class="vp-col">
+      <p class="vp-kicker"><span class="dot"></span>Capital</p>
+      <h3>A merchant banking layer</h3>
+      <p>In development: warm introductions to capital, and a network that intends to back its own.</p>
+      <a href="merchant-bank.html" class="vp-more">Explore the merchant banking layer &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PILLAR INDEX (all 12) ===== -->
+<section class="idx-wrap">
+  <div class="section">
+    <div class="sec-head reveal">
+      <span class="label">Who belongs</span>
+      <h2 class="serif">Elite in one field. <em>Building in another.</em></h2>
+    </div>
+    <div class="idx">
+      <div class="idx-col reveal">
+        <div class="idx-list">
+          <div class="idx-row"><span class="name">Fashion<em>Designers, house executives, the next models.</em></span></div>
+          <div class="idx-row"><span class="name">Beauty<em>Founders and figures inside the industry that crosses every other.</em></span></div>
+          <div class="idx-row"><span class="name">Music<em>Artists, producers, label founders.</em></span></div>
+          <div class="idx-row"><span class="name">Entertainment<em>Film, television, the people behind the rooms.</em></span></div>
+          <div class="idx-row"><span class="name">Art<em>Curators, gallerists, artists.</em></span></div>
+          <div class="idx-row"><span class="name">Academia<em>Professors, researchers, educators whose ideas cross fields.</em></span></div>
         </div>
-        <div class="vp-card">
-          <p class="vp-kicker">Spaces</p>
-          <h3>Rooms that open worldwide</h3>
-          <p>Private clubs and members' houses, city by city — Spring Place New York today, scaling toward forty partnerships worldwide.</p>
-        </div>
-        <div class="vp-card">
-          <p class="vp-kicker">Support</p>
-          <h3>Your next venture, built here</h3>
-          <p>The adjacent venture you're starting — or about to discover — finds its co-founders, operators, and first customers through warm introductions. Never cold, never broadcast.</p>
-        </div>
-        <div class="vp-card">
-          <p class="vp-kicker">Capital</p>
-          <h3>A merchant banking layer</h3>
-          <p>In development — warm introductions to capital, and a network that intends to invest in its own members. No private club in the world does. Maia means to.</p>
+      </div>
+      <div class="idx-col reveal">
+        <div class="idx-list">
+          <div class="idx-row"><span class="name">Sport<em>Champions and the operators who scale them.</em></span></div>
+          <div class="idx-row"><span class="name">Wellness<em>Practitioners, longevity founders, the new frontier.</em></span></div>
+          <div class="idx-row"><span class="name">Hospitality<em>Hoteliers, restaurateurs, the operators of the rooms.</em></span></div>
+          <div class="idx-row"><span class="name">Finance<em>Founders, fund managers, the capital behind the venture.</em></span></div>
+          <div class="idx-row"><span class="name">Entrepreneurship<em>Operators who've built before, now building again.</em></span></div>
+          <div class="idx-row"><span class="name">Investment<em>Family offices, angels, and allocators.</em></span></div>
         </div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- WHY MAIA -->
-  <section class="why-maia">
-    <div class="section-inner">
-      <p class="section-label">Why Maia</p>
-      <h2 class="section-heading">For the talent<br>moving fields.</h2>
-      <p class="why-lead">The athlete launching the beauty brand. The musician opening the restaurant. The model raising for a fashion line. Maia is built for proven talent in one field — for the adjacent ventures they're already starting, and for the ones they'll find through the room.</p>
-      <div class="why-grid">
-        <div class="why-card">
-          <p class="why-num">01</p>
-          <h3>Talents in motion</h3>
-          <p>Some members are already building in an industry adjacent to the one that made them. Others are exploring what that next thing might be. Maia is the room for both — the platform isn't a filter on who's already crossed; it's where the crossings happen.</p>
-        </div>
-        <div class="why-card">
-          <p class="why-num">02</p>
-          <h3>Anchored in real rooms</h3>
-          <p>Curated access to private clubs and members' houses — starting with Spring Place in New York and scaling toward 40 partnerships globally. Athens, London, Los Angeles, Madrid, Paris, and Vienna in active development. The crossings happen face to face.</p>
-        </div>
-        <div class="why-card">
-          <p class="why-num">03</p>
-          <h3>Vetted, then introduced</h3>
-          <p>Members are reviewed against the global bar in their original field — and the credibility of what they're building next. Introductions follow when trust and timing make sense.</p>
-        </div>
-      </div>
+<!-- ===== PRIVATE SPACES (dark cinematic band, rotating cities) ===== -->
+<section class="spaces">
+  <div class="spaces-img"></div>
+  <div class="spaces-inner">
+    <span class="label reveal">Physical access</span>
+    <h2 class="reveal">Private spaces in the cities that matter.</h2>
+    <p class="reveal">A curated network of private clubs and members' houses: one local partner per city, scaling toward forty partnerships globally. The pilot launches at Spring Place, New York.</p>
+    <div class="city-row reveal">
+      <span class="city-item city-live active" data-img="https://images.unsplash.com/photo-1534430480872-3498386e7856?auto=format&fit=crop&w=2000&q=80"><span class="dot"></span>New York · Live</span>
+      <span class="city-item" data-img="https://images.unsplash.com/photo-1555993539-1732b0258235?auto=format&fit=crop&w=2000&q=80">Athens</span>
+      <span class="city-item" data-img="https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=2000&q=80">London</span>
+      <span class="city-item" data-img="https://images.unsplash.com/photo-1444723121867-7a241cacace9?auto=format&fit=crop&w=2000&q=80">Los Angeles</span>
+      <span class="city-item" data-img="https://images.unsplash.com/photo-1539037116277-4db20889f2d4?auto=format&fit=crop&w=2000&q=80">Madrid</span>
+      <span class="city-item" data-img="https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=2000&q=80">Paris</span>
+      <span class="city-item" data-img="https://images.unsplash.com/photo-1516550893923-42d28e5677af?auto=format&fit=crop&w=2000&q=80">Vienna</span>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- PILLARS -->
-  <section class="pillars">
-    <div class="section-inner">
-      <p class="section-label">Who belongs</p>
-      <h2 class="section-heading">Elite in one field.<br>Building in another.</h2>
-      <div class="pillar-grid">
-        <div class="pillar-card">
-          <span class="pillar-icon">◈</span>
-          <h3>Fashion</h3>
-          <p>Designers, house executives, models building the next houses.</p>
-        </div>
-        <div class="pillar-card">
-          <span class="pillar-icon">◈</span>
-          <h3>Beauty</h3>
-          <p>Founders and figures inside the industry that crosses every other.</p>
-        </div>
-        <div class="pillar-card">
-          <span class="pillar-icon">◈</span>
-          <h3>Music</h3>
-          <p>Artists, producers, label founders — and where they take the brand next.</p>
-        </div>
-        <div class="pillar-card">
-          <span class="pillar-icon">◈</span>
-          <h3>Entertainment</h3>
-          <p>Film, television, programming, the people behind the rooms.</p>
-        </div>
-        <div class="pillar-card">
-          <span class="pillar-icon">◈</span>
-          <h3>Art</h3>
-          <p>Curators, gallerists, artists — and the cultural rooms they shape.</p>
-        </div>
-        <div class="pillar-card">
-          <span class="pillar-icon">◈</span>
-          <h3>Academia</h3>
-          <p>Professors, researchers, and educators whose ideas cross into every field members build in.</p>
-        </div>
-        <div class="pillar-card">
-          <span class="pillar-icon">◈</span>
-          <h3>Sport</h3>
-          <p>Olympic athletes, world champions, and the operators who scale them.</p>
-        </div>
-        <div class="pillar-card">
-          <span class="pillar-icon">◈</span>
-          <h3>Wellness</h3>
-          <p>Practitioners, longevity founders, the new frontier of how we live.</p>
-        </div>
-        <div class="pillar-card">
-          <span class="pillar-icon">◈</span>
-          <h3>Hospitality</h3>
-          <p>Hoteliers, restaurateurs, the operators of the rooms members live in.</p>
-        </div>
-        <div class="pillar-card">
-          <span class="pillar-icon">◈</span>
-          <h3>Finance</h3>
-          <p>Founders, fund managers, and the capital behind the next venture.</p>
-        </div>
-        <div class="pillar-card">
-          <span class="pillar-icon">◈</span>
-          <h3>Entrepreneurship</h3>
-          <p>Founders and operators who've built before — and are building again.</p>
-        </div>
-        <div class="pillar-card">
-          <span class="pillar-icon">◈</span>
-          <h3>Investment</h3>
-          <p>Family offices, angels, and allocators — the capital that backs what members build next.</p>
-        </div>
-      </div>
-    </div>
-  </section>
+<!-- ===== CLOSING ===== -->
+<section class="closing">
+  <span class="label reveal">Membership: earned, not bought</span>
+  <h2 class="reveal serif">The most important rooms in the world <em>should lead back to one network.</em></h2>
+  <div class="rule reveal"></div>
+  <div class="closing-actions reveal">
+    <a href="apply.html" class="btn-line">Request an invitation</a>
+    <a href="apply.html" class="btn-plain">Nominate a peer</a>
+  </div>
+</section>
 
-  <!-- SPACES -->
-  <section class="spaces-strip">
-    <div class="section-inner">
-      <p class="section-label">Physical access</p>
-      <h2 class="section-heading">Private spaces in<br>the cities that matter.</h2>
-      <p class="spaces-body">A curated network of private clubs and members' houses — one local partner per city, scaling toward <strong>40 partnerships globally</strong>. The pilot launches at <strong>Spring Place</strong> in New York. Athens, London, Los Angeles, Madrid, Paris, and Vienna are next.</p>
-      <div class="city-row">
-        <span class="city-row-active">New York · Live</span>
-        <span>Athens</span>
-        <span>London</span>
-        <span>Los Angeles</span>
-        <span>Madrid</span>
-        <span>Paris</span>
-        <span>Vienna</span>
-      </div>
-    </div>
-  </section>
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <div>
+    <span class="wordmark">MAIA</span>
+    <p class="tagline">Private membership · By invitation only</p>
+  </div>
+  <div class="footer-links">
+    <a href="privacy.html">Privacy</a>
+    <a href="terms.html">Terms</a>
+    <a href="mailto:hello@maiacircle.com">Contact</a>
+    <a href="merchant-bank.html">Merchant banking</a>
+    <a href="partners.html" style="color:var(--gold)">Partner with us</a>
+  </div>
+</footer>
 
-  <!-- CAPITAL -->
-  <section class="spaces-strip" style="border-top: 1px solid var(--border);">
-    <div class="section-inner">
-      <p class="section-label">The merchant banking layer — coming soon</p>
-      <h2 class="section-heading">A network that<br>backs its own.</h2>
-      <p class="spaces-body">Maia is building a merchant banking layer — warm introductions between members raising for their next venture and the investors, family offices, and operators inside the network. No private club invests in its own members. Maia will.</p>
-      <a href="merchant-bank.html" class="btn-ghost" style="margin-top: 8px; display: inline-block;">Explore the merchant banking layer →</a>
-    </div>
-  </section>
+<script>
+/* mobile menu: toggles the redirect links; no same-page scrolling anywhere */
+var burger=document.getElementById('hamburger'),links=document.getElementById('navLinks');
+if(burger&&links){burger.addEventListener('click',function(){var o=links.classList.toggle('open');burger.setAttribute('aria-expanded',o);});}
+/* scroll reveal */
+var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12,rootMargin:'0px 0px -6% 0px'});
+document.querySelectorAll('.reveal').forEach(function(el){io.observe(el);});
+/* city photo rotation */
+(function(){
+  var items=Array.prototype.slice.call(document.querySelectorAll('.city-item'));
+  var bg=document.querySelector('.spaces-img');
+  if(!items.length||!bg)return;
+  var idx=0;
+  function next(){
+    items[idx].classList.remove('active');
+    idx=(idx+1)%items.length;
+    bg.style.opacity='0';
+    setTimeout(function(){
+      bg.style.backgroundImage='linear-gradient(180deg,rgba(7,6,5,.4),rgba(7,6,5,.88)),url("'+items[idx].dataset.img+'")';
+      bg.style.opacity='1';
+      items[idx].classList.add('active');
+    },500);
+  }
+  setInterval(next,3500);
+})();
+</script>
 
-  <!-- HOW IT WORKS -->
-  <section class="how">
-    <div class="section-inner">
-      <p class="section-label">Membership</p>
-      <h2 class="section-heading">Earned, not bought.</h2>
-      <div class="steps">
-        <div class="step">
-          <span class="step-num">01</span>
-          <h3>Nomination</h3>
-          <p>Every application begins with a nomination from a current member. You cannot apply directly.</p>
-        </div>
-        <div class="step">
-          <span class="step-num">02</span>
-          <h3>Verification</h3>
-          <p>Our team reviews your achievements within your field — paired with what you're building or curious about next. The bar is set globally, not locally.</p>
-        </div>
-        <div class="step">
-          <span class="step-num">03</span>
-          <h3>Access</h3>
-          <p>Members join their pillar, build a verified profile, and gain access to spaces and events worldwide.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- APPLY -->
-  <section class="apply" id="apply">
-    <div class="section-inner apply-inner">
-      <h2 class="section-heading">Know someone<br>who belongs?</h2>
-      <p>Maia grows through trusted nominations. If you are a member, nominate a peer. If you have been nominated, request your invitation below.</p>
-      <div class="apply-actions">
-        <a href="apply.html" class="btn-primary">Request an Invitation</a>
-        <a href="apply.html" class="btn-ghost">Nominate a Peer</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- FOOTER -->
-  <footer class="footer">
-    <div class="footer-inner">
-      <span class="wordmark">MAIA</span>
-      <p>Private membership. By invitation only.</p>
-      <div class="footer-links">
-        <a href="privacy.html">Privacy</a>
-        <a href="terms.html">Terms</a>
-        <a href="mailto:hello@maiacircle.com">Contact</a>
-        <a href="merchant-bank.html">Merchant banking</a>
-        <a href="partners.html" style="color: var(--gold)">Partner with us</a>
-      </div>
-    </div>
-  </footer>
-
-
-  <script src="nav.js"></script>
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <script src="supabase.js?v=20260710a"></script>
-  <script src="auth.js?v=20260618a"></script>
+<!-- Auth: redirects a signed-in member straight to their dashboard; keeps the
+     logged-out landing page for everyone else. supabase.js must load first. -->
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="supabase.js?v=20260710a"></script>
+<script src="auth.js?v=20260618a"></script>
 </body>
 </html>
