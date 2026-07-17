@@ -488,8 +488,12 @@
   }
 
   function insertPrimaryPillarEditor(selected) {
-    var rows = document.querySelectorAll('.profile-edit-row');
-    var anchor = rows[rows.length - 1];
+    // Anchor to the bio so the pillar selector sits at the TOP of the edit
+    // form. It was previously appended after the last row (below the contact
+    // links), so members editing their profile never scrolled to it and
+    // thought their assigned pillar was fixed. It's the field they most often
+    // want to change — put it first.
+    var anchor = document.querySelector('[data-edit-field="bio"]');
     if (!anchor) return;
 
     var row = document.createElement('div');
@@ -502,7 +506,7 @@
 
     var hint = document.createElement('p');
     hint.style.cssText = 'font-size:11px;color:var(--muted);margin:0 0 8px;';
-    hint.textContent = 'Your main industry. Tags below can capture the rest.';
+    hint.textContent = 'Your main field — change it anytime to the one that fits you best. Tags can capture the rest.';
     row.appendChild(hint);
 
     var sel = document.createElement('select');
