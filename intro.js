@@ -240,7 +240,7 @@
 
     function makeRadio(value, labelHtml, checked) {
       var row = document.createElement('label');
-      row.style.cssText = 'display:flex;align-items:center;gap:10px;font-size:13px;line-height:1.4;color:var(--text);padding:6px 0;cursor:pointer;';
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;font-size:13px;line-height:1.4;color:var(--text);padding:6px 0;min-height:44px;cursor:pointer;';
       var input = document.createElement('input');
       input.type = 'radio';
       input.name = groupName;

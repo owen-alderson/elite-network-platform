@@ -46,6 +46,13 @@
   function setStatus(text, kind) {
     status.textContent = text;
     status.className = 'login-status' + (kind ? ' is-' + kind : '');
+    // On a phone the status line + submit button sit below the fold with the
+    // keyboard open, so a failed sign-in gave no visible feedback. Pull errors
+    // into view (mirrors what showCodeEntry already does for the code block).
+    if (kind === 'error' && text) {
+      try { status.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+      catch (e) { status.scrollIntoView(); }
+    }
   }
 
   // If the user just arrived from a dead magic link (supabase.js stashes the

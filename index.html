@@ -72,7 +72,7 @@ img{display:block;max-width:100%;}
 .hero{min-height:100vh;display:grid;grid-template-columns:1.12fr .88fr;align-items:start;gap:5vw;padding:200px 6vw 8vw;}
 .hero-copy{max-width:640px;display:flex;flex-direction:column;height:78vh;max-height:780px;}
 .hero .label{display:block;margin-bottom:34px;}
-.hero h1{font-family:var(--serif);font-size:clamp(3.2rem,6.4vw,6rem);font-weight:400;line-height:.98;letter-spacing:-.02em;margin-bottom:0;}
+.hero h1{font-family:var(--serif);font-size:clamp(2.5rem,6.4vw,6rem);font-weight:400;line-height:.98;letter-spacing:-.02em;margin-bottom:0;overflow-wrap:break-word;}
 .hero h1 em{font-style:italic;color:var(--gold);}
 .hero p{font-size:1.18rem;color:var(--ink-soft);max-width:46ch;line-height:1.75;margin-top:auto;margin-bottom:auto;padding:16px 0;}
 .hero-actions{display:flex;gap:34px;align-items:center;flex-wrap:wrap;}
@@ -164,14 +164,22 @@ img{display:block;max-width:100%;}
   .hero-figure{height:62vh;max-height:520px;order:2;}
   .idx{grid-template-columns:1fr;column-gap:0;}
   .idx-col:nth-child(2) .idx-list{border-top:none;}
-}
-@media(max-width:640px){
+  /* Collapse the 6-link nav into the hamburger well before it overflows.
+     Inline it only fit comfortably above ~900px; 641-900px was clipping
+     "Request Access" under body{overflow-x:hidden}. */
+  .hamburger{display:flex;min-width:44px;min-height:44px;justify-content:center;}
   .nav-links{position:fixed;inset:0 0 auto 0;top:78px;flex-direction:column;align-items:flex-start;gap:0;background:var(--paper);border-bottom:1px solid var(--line);padding:8px 6vw 24px;transform:translateY(-130%);transition:transform .4s var(--ease);}
   .nav-links.open{transform:translateY(0);}
   .nav-links a{width:100%;padding:15px 0;border-bottom:1px solid var(--line);font-size:14px;}
-  .hamburger{display:flex;}
+}
+@media(max-width:640px){
   .vp-grid{grid-template-columns:1fr;}
   .vp-col,.vp-col + .vp-col{border-left:none;padding-left:0;border-top:1px solid var(--line);}
+  /* 44px-ish tap targets for the text-link CTAs on phones (extend the hit
+     area without moving btn-line's underline, which sits at padding-bottom). */
+  .btn-line{padding-top:14px;}
+  .btn-plain{padding:14px 0;}
+  .vp-more{padding-top:12px;padding-bottom:8px;}
 }
 </style>
 </head>

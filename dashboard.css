@@ -1162,3 +1162,16 @@
 .connections-search-input:focus { outline: none; border-color: var(--gold-dim); }
 .connections-search-input::placeholder { color: var(--muted); opacity: 0.6; }
 .connections-show-all { margin-top: 14px; }
+
+/* Mobile tap-target floor for JS-injected action buttons. These are real
+   controls (open the intro form / open a DM thread) but use custom classes,
+   so the site-wide .btn-* 44px floor (style.css) never reaches them. */
+@media (max-width: 640px) {
+  .sug-intro-btn,
+  .connection-msg-btn {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}

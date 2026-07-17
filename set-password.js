@@ -23,6 +23,13 @@
   function setStatus(text, kind) {
     status.textContent = text;
     status.className = 'login-status' + (kind ? ' is-' + kind : '');
+    // Keyboard-open on a phone pushes this status line below the submit button
+    // and behind the keyboard; scroll validation errors into view so a too-short
+    // or mismatched password isn't a silent no-op.
+    if (kind === 'error' && text) {
+      try { status.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+      catch (e) { status.scrollIntoView(); }
+    }
   }
 
   // Gate: must be authenticated. Don't use requireAuth() — it would loop us
