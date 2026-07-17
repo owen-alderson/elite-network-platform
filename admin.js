@@ -319,7 +319,7 @@
     var foot = el('footer', 'app-card-actions');
     var notes = document.createElement('textarea');
     notes.className = 'app-notes';
-    notes.placeholder = 'Note for the applicant — sent with Reject / Needs-info (ignored on Approve)…';
+    notes.placeholder = 'Note for the applicant, sent with Reject / Needs-info (ignored on Approve)…';
     notes.value = app.reviewer_notes || '';
     foot.appendChild(notes);
 
@@ -375,7 +375,7 @@
       if (status === 'rejected' && !confirm('Reject this application?')) return;
       if (status === 'approved' && !confirm('Approve this application? This sends an invite email and creates a member row.')) return;
       if (status === 'needs_more_info' && !notesEl.value.trim()) {
-        alert('Add a note saying what information is missing — it is emailed to the applicant.');
+        alert('Add a note saying what information is missing, it is emailed to the applicant.');
         return;
       }
       btn.disabled = true;
@@ -794,7 +794,7 @@
     if (imgHint) {
       imgHint.textContent = ev.image_url
         ? 'Current image will be kept unless you upload a new one.'
-        : 'No custom image — using the partner space photo as the default.';
+        : 'No custom image, using the partner space photo as the default.';
     }
     setEventExpectationsInForm(ev.expectations);
 
@@ -1192,10 +1192,10 @@
   }
 
   function friendlyOnboardError(code) {
-    if (code === 'already_member') return 'Someone with that email is already a member — use “Send sign-in invite” on their card instead.';
+    if (code === 'already_member') return 'Someone with that email is already a member, use “Send sign-in invite” on their card instead.';
     if (code === 'invalid_email') return 'That email doesn’t look valid.';
     if (code === 'name_required') return 'Enter their full name.';
-    if (code === 'forbidden' || code === 'unauthenticated') return 'You’re not authorised to do that — sign in as the admin.';
+    if (code === 'forbidden' || code === 'unauthenticated') return 'You’re not authorised to do that, sign in as the admin.';
     if (code === 'resend_not_configured') return 'Email isn’t configured on the server.';
     return 'Could not onboard: ' + code;
   }
@@ -1235,7 +1235,7 @@
     onboardEmailEl.value = '';
     if (onboardPillarEl) onboardPillarEl.value = '';
     if (onboardHeadlineEl) onboardHeadlineEl.value = '';
-    setOnboardMsg('✓ ' + fullName + ' onboarded — welcome email sent to ' + email + '.', 'ok');
+    setOnboardMsg('✓ ' + fullName + ' onboarded, welcome email sent to ' + email + '.', 'ok');
     await refreshMembers();
   }
 

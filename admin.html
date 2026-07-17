@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin — Maia</title>
+  <title>Admin · Maia</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -88,7 +88,7 @@
       <header class="admin-header">
         <p class="admin-eyebrow">INTRO QUEUE</p>
         <h1 class="admin-title">Intros</h1>
-        <p class="admin-subtitle">Read-mostly oversight. Members pick their own broker (a mutual connection) when they request an intro — or send it direct. Admin can decline anything inappropriate.</p>
+        <p class="admin-subtitle">Read-mostly oversight. Members pick their own broker (a mutual connection) when they request an intro, or send it direct. Admin can decline anything inappropriate.</p>
 
         <div class="admin-stats">
           <div class="admin-stat"><strong id="intro-stat-direct">—</strong><span>Direct (pending)</span></div>
@@ -124,7 +124,7 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Title</label>
-            <input class="form-input" type="text" id="evt-title" placeholder="e.g. Spring Place — Members Evening" />
+            <input class="form-input" type="text" id="evt-title" placeholder="e.g. Spring Place, Members Evening" />
           </div>
         </div>
         <div class="form-row">
@@ -139,7 +139,7 @@
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Partner space <span class="form-label-opt">(optional — fills location + image)</span></label>
+            <label class="form-label">Partner space <span class="form-label-opt">(optional, fills location + image)</span></label>
             <select class="form-input" id="evt-partner-space">
               <option value="">— none —</option>
             </select>
@@ -150,7 +150,7 @@
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Location <span class="form-label-opt">(free-text — overrides the partner-space label)</span></label>
+          <label class="form-label">Location <span class="form-label-opt">(free-text, overrides the partner-space label)</span></label>
           <input class="form-input" type="text" id="evt-location" placeholder="e.g. Spring Place, Tribeca, New York" />
         </div>
         <div class="form-group">
@@ -158,13 +158,13 @@
           <textarea class="form-input form-textarea" id="evt-description" rows="4" placeholder="What is this event, what's the format, who is it for."></textarea>
         </div>
         <div class="form-group">
-          <label class="form-label">Event image <span class="form-label-opt">(optional — falls back to the partner space's photo)</span></label>
+          <label class="form-label">Event image <span class="form-label-opt">(optional, falls back to the partner space's photo)</span></label>
           <input class="form-input" type="file" id="evt-image" accept="image/png,image/jpeg,image/jpg,image/webp" />
           <p class="form-hint" id="evt-image-current" style="margin-top:6px;"></p>
         </div>
 
         <div class="form-group">
-          <label class="form-label">What to expect <span class="form-label-opt">(optional — up to 4 cards. Leave blank to hide the section.)</span></label>
+          <label class="form-label">What to expect <span class="form-label-opt">(optional, up to 4 cards. Leave blank to hide the section.)</span></label>
           <p class="form-hint" style="margin: 0 0 10px;">Each card is a short title plus a sentence or two. Used as the "what to expect" strip on the event page.</p>
           <div id="evt-expectations-rows"></div>
         </div>
@@ -212,7 +212,7 @@
            welcome in one step via the onboard-member edge function. -->
       <section class="admin-event-form admin-onboard-form">
         <h2 class="admin-form-heading">Onboard a member</h2>
-        <p class="form-hint admin-onboard-intro">For someone you met directly — a call, a warm intro — who didn't apply. Creates their account and emails a one-click sign-in link. They complete their own profile after.</p>
+        <p class="form-hint admin-onboard-intro">For someone you met directly, a call, a warm intro, who didn't apply. Creates their account and emails a one-click sign-in link. They complete their own profile after.</p>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Full name</label>
@@ -225,7 +225,7 @@
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Primary pillar <span class="form-label-opt">(optional — they can set it themselves)</span></label>
+            <label class="form-label">Primary pillar <span class="form-label-opt">(optional, they can set it themselves)</span></label>
             <select class="form-input" id="onboard-pillar">
               <option value="">— unset —</option>
             </select>
@@ -320,7 +320,7 @@
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="supabase.js?v=20260710a"></script>
   <script src="auth.js"></script>
-  <script src="admin.js?v=20260710a"></script>
+  <script src="admin.js?v=20260717b"></script>
   <script src="nav.js"></script>
 </body>
 </html>

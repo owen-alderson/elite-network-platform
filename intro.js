@@ -125,7 +125,7 @@
       '<p class="flow-eyebrow" style="margin-bottom:12px;">Complete your profile</p>' +
       '<h3 class="modal-title">Add a few details first.</h3>' +
       '<p class="modal-body">Members are more likely to accept an intro from someone they can evaluate. ' +
-      'You\'ve filled <strong style="color:var(--gold);">' + status.score + ' of ' + status.total + '</strong> profile sections — <strong style="color:var(--gold);">any 2</strong> unlock intro requests. ' +
+      'You\'ve filled <strong style="color:var(--gold);">' + status.score + ' of ' + status.total + '</strong> profile sections, <strong style="color:var(--gold);">any 2</strong> unlock intro requests. ' +
       'A photo and a line on what you\'re building is enough.</p>' +
       '<div class="modal-actions" style="justify-content:center;">' +
       '  <button type="button" class="btn-ghost btn-sm" data-gate-cancel>Not now</button>' +
@@ -310,7 +310,7 @@
 
     if (!targetId) { alert('No member selected.'); return; }
     if (!note || note.length < 20) {
-      alert('Please write at least a couple of sentences — specific beats flattering.');
+      alert('Please write at least a couple of sentences, specific beats flattering.');
       return;
     }
 
@@ -348,7 +348,7 @@
       } else if (msg.indexOf('5 pending direct') !== -1) {
         alert('You have 5 pending direct intro requests already. Wait for responses or cancel some from your dashboard.');
       } else if (msg.indexOf('not a mutual connection') !== -1) {
-        alert('That introducer isn\'t a mutual connection any more — pick a different one or send directly.');
+        alert('That introducer isn\'t a mutual connection any more, pick a different one or send directly.');
       } else {
         alert('Could not send the intro request: ' + msg);
       }

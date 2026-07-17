@@ -60,7 +60,7 @@
     } catch (e) { /* private mode */ }
     if (!code) return;
     if (code === 'otp_expired') {
-      setStatus('That sign-in link has expired or was already used. Enter your email below and we’ll send you a fresh one — the new email also contains a 6-digit code you can type in directly.', 'error');
+      setStatus('That sign-in link has expired or was already used. Enter your email below and we’ll send you a fresh one, the new email also contains a 6-digit code you can type in directly.', 'error');
     } else {
       setStatus('That sign-in link didn’t work. Enter your email below and we’ll send you a fresh one.', 'error');
     }
@@ -87,7 +87,7 @@
       // Generic message — doesn't leak whether the email exists or whether
       // the password is wrong vs. unset. First-time members will see this
       // if they accidentally typed something in the password field.
-      setStatus("Wrong email or password — or you haven't set one yet. Leave password blank to get a magic link.", 'error');
+      setStatus("Wrong email or password, or you haven't set one yet. Leave password blank to get a magic link.", 'error');
       submit.disabled = false;
       submit.textContent = 'Sign in';
       return;
@@ -115,7 +115,7 @@
       // account exists (the limit applies either way).
       var msg = res.error.message || '';
       if (res.error.status === 429 || /rate ?limit|too many/i.test(msg)) {
-        setStatus('We’ve sent you several emails recently, so this one was held back. Wait a couple of minutes and try again — or use the 6-digit code from the last email we sent you.', 'error');
+        setStatus('We’ve sent you several emails recently, so this one was held back. Wait a couple of minutes and try again, or use the 6-digit code from the last email we sent you.', 'error');
         showCodeEntry(email);
         submit.disabled = false;
         submit.textContent = 'Sign in';
@@ -124,7 +124,7 @@
     }
 
     // Always show the same generic message — anti-enumeration.
-    setStatus('If you are a member, a sign-in link is on its way to your inbox. You can click the link — or type the 6-digit code from the email below.', 'success');
+    setStatus('If you are a member, a sign-in link is on its way to your inbox. You can click the link, or type the 6-digit code from the email below.', 'success');
     submit.textContent = 'Sent';
     showCodeEntry(email);
     // Leave submit disabled.
@@ -175,7 +175,7 @@
 
     if (res.error) {
       console.warn('Code verification error:', res.error.message);
-      setStatus('That code didn’t work — it may have expired. Request a fresh sign-in email and use the new code.', 'error');
+      setStatus('That code didn’t work, it may have expired. Request a fresh sign-in email and use the new code.', 'error');
       codeSubmit.disabled = false;
       codeSubmit.textContent = 'Verify code';
       return;

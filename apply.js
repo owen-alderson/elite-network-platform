@@ -269,7 +269,7 @@
     if (!email) { alert('Please enter your email address.'); return; }
     if (!pillar) { alert('Please select a pillar.'); return; }
     if (signature.length < 100) {
-      alert('On step 4, the headlining accomplishment needs at least 100 characters. Be specific — names, numbers, dates.');
+      alert('On step 4, the headlining accomplishment needs at least 100 characters. Be specific, names, numbers, dates.');
       return;
     }
     if (signature.length > 4000) {
@@ -329,11 +329,11 @@
       console.error(editContext ? 'Application revision failed:' : 'Application insert failed:', res.error);
       clearSubmitting(btn);
       if (editContext) {
-        alert('Could not save your changes — this edit link may have expired. Email hello@maiacircle.com if it keeps happening.');
+        alert('Could not save your changes, this edit link may have expired. Email hello@maiacircle.com if it keeps happening.');
       } else if (isDuplicateError(res.error)) {
         alert('We already have an application from this email under review. You\'ll hear from us by email when there\'s an update.');
       } else {
-        alert('Submission failed. Please try again — if it keeps happening, email hello@maiacircle.com.');
+        alert('Submission failed. Please try again, if it keeps happening, email hello@maiacircle.com.');
       }
       return;
     }
@@ -354,7 +354,7 @@
     if (!nomFirst || !nomLast) { alert('Please enter your nominee\'s name.'); return; }
     if (!nomEmail) { alert('Please enter your nominee\'s email.'); return; }
     if (!nomCurrent) { alert('Please add a one-line description of what they\'re doing right now.'); return; }
-    if (!why || why.length < 30) { alert('Your endorsement needs at least 30 characters — be specific about what makes them exceptional.'); return; }
+    if (!why || why.length < 30) { alert('Your endorsement needs at least 30 characters, be specific about what makes them exceptional.'); return; }
 
     // Auth gate (client-side) — server-side trigger enforces this too, but
     // bouncing an unauthenticated visitor here gives a cleaner UX than a
@@ -416,7 +416,7 @@
         // applications_validate_nominator trigger fired — treat as auth issue
         alert('Your member session has expired. Please sign in again to nominate.');
       } else {
-        alert('Submission failed. Please try again — if it keeps happening, email hello@maiacircle.com.');
+        alert('Submission failed. Please try again, if it keeps happening, email hello@maiacircle.com.');
       }
       return;
     }

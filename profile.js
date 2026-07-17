@@ -476,7 +476,7 @@
     // "What's next" read as vague in tester feedback (Melanie 7/9) — keep the
     // label but anchor it with a concrete hint + placeholder.
     insertEditRow('current_work', 'What\'s next', current.current_work || '', 'textarea',
-      'What are you building, launching, or exploring — now or next? A line or two is plenty.',
+      'What are you building, launching, or exploring, now or next? A line or two is plenty.',
       'e.g. Raising for a wellness line · exploring a move into fashion · writing a book on longevity');
     insertEditRow('linkedin_url', 'LinkedIn URL', current.linkedin_url || '', 'input');
     insertEditRow('instagram_handle', 'Instagram handle', current.instagram_handle || '', 'input');
@@ -506,7 +506,7 @@
 
     var hint = document.createElement('p');
     hint.style.cssText = 'font-size:11px;color:var(--muted);margin:0 0 8px;';
-    hint.textContent = 'Your main field — change it anytime to the one that fits you best. Tags can capture the rest.';
+    hint.textContent = 'Your main field, change it anytime to the one that fits you best. Tags can capture the rest.';
     row.appendChild(hint);
 
     var sel = document.createElement('select');
@@ -959,7 +959,7 @@
       } else {
         var resolvedTravel = await resolveTypedLocation(typedTravel);
         if (!resolvedTravel) {
-          alert('"' + typedTravel + '" didn\'t match any city we could find. Start typing the name and pick a real place from the dropdown — or clear the field if you\'re back home.');
+          alert('"' + typedTravel + '" didn\'t match any city we could find. Start typing the name and pick a real place from the dropdown, or clear the field if you\'re back home.');
           travelInput.focus();
           if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save'; }
           return;
@@ -1121,7 +1121,7 @@
       } catch (e) {
         if (inflight !== token) return;
         console.warn('photon error:', e);
-        dropdown.innerHTML = '<div class="profile-location-empty">Could not load suggestions — check your connection and try again.</div>';
+        dropdown.innerHTML = '<div class="profile-location-empty">Could not load suggestions, check your connection and try again.</div>';
       }
     }
 
@@ -1174,7 +1174,7 @@
     hint.textContent = 'Traveling? Set the city you\'re in now so members nearby can find you. Clear it when you\'re home.';
     item.appendChild(hint);
 
-    item.appendChild(buildLocationInput(city, country, 'travel_location', 'Same as home — or set a city'));
+    item.appendChild(buildLocationInput(city, country, 'travel_location', 'Same as home, or set a city'));
 
     if (anchor.nextSibling) anchor.parentNode.insertBefore(item, anchor.nextSibling);
     else anchor.parentNode.appendChild(item);
@@ -1374,7 +1374,7 @@
     var btn = document.getElementById('profile-password-btn');
     var user = await window.maia.getUser();
     if (!user || !user.email) {
-      alert('Could not read your account email — try signing in again.');
+      alert('Could not read your account email, try signing in again.');
       return;
     }
     if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
@@ -1385,11 +1385,11 @@
     if (res && res.error) {
       console.warn('Password-reset request error:', res.error.message);
       if (btn) { btn.disabled = false; btn.textContent = 'Change Password'; }
-      alert('Could not send the reset link — please try again in a moment.');
+      alert('Could not send the reset link, please try again in a moment.');
       return;
     }
     if (btn) {
-      btn.textContent = 'Reset link sent — check your inbox';
+      btn.textContent = 'Reset link sent, check your inbox';
       btn.style.opacity = '0.7';
       btn.style.cursor = 'default';
     }
@@ -1405,7 +1405,7 @@
     if (el) el.textContent = text == null ? '' : String(text);
   }
   function setTitle(name) {
-    document.title = name + ' — Maia';
+    document.title = name + ', Maia';
   }
   function initial(s) {
     return (s || '?').trim().charAt(0).toUpperCase();

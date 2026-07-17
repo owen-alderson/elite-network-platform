@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Home — Maia</title>
+  <title>Home · Maia</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="stylesheet" href="style.css?v=20260708a" />
   <link rel="stylesheet" href="dashboard.css?v=20260708b" />
@@ -132,7 +132,7 @@
           <h2 class="dash-section-title">Intro requests for you</h2>
           <span class="dash-intro-count" id="received-count">0</span>
         </div>
-        <p class="dash-section-sub">Members have asked to be introduced — either directly or vouched for by a mutual connection. Accept to open a private conversation, or decline.</p>
+        <p class="dash-section-sub">Members have asked to be introduced, either directly or vouched for by a mutual connection. Accept to open a private conversation, or decline.</p>
         <div class="intro-broker-list" id="received-list"></div>
       </section>
 
@@ -142,7 +142,7 @@
           <h2 class="dash-section-title">Intros for you to vouch for</h2>
           <span class="dash-intro-count" id="broker-count">0</span>
         </div>
-        <p class="dash-section-sub">A peer picked you to vouch for an intro. Review their note, then forward it on Maia — the target will see it with your vouch and decide from their side.</p>
+        <p class="dash-section-sub">A peer picked you to vouch for an intro. Review their note, then forward it on Maia, the target will see it with your vouch and decide from their side.</p>
         <div class="intro-broker-list" id="broker-list"></div>
       </section>
 
@@ -163,7 +163,7 @@
         <p class="dash-section-sub">Members you've been introduced to. Each connection is a forwarded intro on either side.</p>
         <div class="connections-controls" id="connections-controls" hidden>
           <input type="text" id="connections-search" class="connections-search-input"
-                 placeholder="Search your connections — name, field, city…" autocomplete="off" />
+                 placeholder="Search your connections, name, field, city…" autocomplete="off" />
         </div>
         <div class="connections-grid" id="connections-list"></div>
         <button type="button" class="btn-ghost btn-sm connections-show-all" id="connections-show-all" hidden>Show all</button>
@@ -184,7 +184,7 @@
           <h2 class="dash-section-title">Suggested connections</h2>
           <a href="members.html" class="dash-see-all">See all →</a>
         </div>
-        <p class="dash-section-sub">Members in fields adjacent to yours — weighted toward the crossings most likely to matter.</p>
+        <p class="dash-section-sub">Members in fields adjacent to yours, weighted toward the crossings most likely to matter.</p>
 
         <div class="suggestion-list"></div>
       </section>
@@ -243,9 +243,9 @@
       <button class="modal-close" onclick="closeModal()">✕</button>
       <p class="flow-eyebrow" style="margin-bottom:12px;">Request Introduction</p>
       <h3 class="modal-title" id="modal-name"></h3>
-      <p class="modal-body">Write a brief note about why this introduction matters — what's next for you, and why this person specifically. You'll choose below whether to send directly or have a mutual connection introduce you. Genuine and specific beats polished.</p>
+      <p class="modal-body">Write a brief note about why this introduction matters, what's next for you, and why this person specifically. You'll choose below whether to send directly or have a mutual connection introduce you. Genuine and specific beats polished.</p>
       <p style="font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:8px;">Your note</p>
-      <textarea class="form-input form-textarea intro-textarea" rows="5" placeholder="e.g. I'm spinning a wellness line off my modeling name — your work scaling Goop's category strategy is the closest precedent. Would value 20 minutes over coffee at Spring Place."></textarea>
+      <textarea class="form-input form-textarea intro-textarea" rows="5" placeholder="e.g. I'm spinning a wellness line off my modeling name, your work scaling Goop's category strategy is the closest precedent. Would value 20 minutes over coffee at Spring Place."></textarea>
       <p style="font-size:11px; color:#444; margin-top:6px; line-height:1.5;">2–4 sentences. Specific beats flattering.</p>
       <div class="modal-actions">
         <button class="btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
@@ -267,8 +267,8 @@
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="supabase.js?v=20260710a"></script>
   <script src="auth.js?v=20260626a"></script>
-  <script src="intro.js?v=20260710a"></script>
-  <script src="dashboard.js?v=20260710a"></script>
+  <script src="intro.js?v=20260717b"></script>
+  <script src="dashboard.js?v=20260717b"></script>
   <script>
     function toggleInbox() {
       const panel   = document.getElementById('inbox-panel');

@@ -61,8 +61,8 @@
       });
       if (res.error) {
         console.warn('skip updateUser error:', res.error.message);
-        setStatus("Couldn't skip — try again, or set a password above.", 'error');
-        skip.textContent = "Skip for now — I'll use a sign-in link";
+        setStatus("Couldn't skip, try again, or set a password above.", 'error');
+        skip.textContent = "Skip for now, I'll use a sign-in link";
         return;
       }
       window.location.replace('dashboard.html');
@@ -95,7 +95,7 @@
 
     if (res.error) {
       console.warn('updateUser error:', res.error.message);
-      setStatus(res.error.message || "Couldn't set password — try again.", 'error');
+      setStatus(res.error.message || "Couldn't set password, try again.", 'error');
       submit.disabled = false;
       submit.textContent = 'Set password & continue';
       return;

@@ -12,7 +12,7 @@
 
 (function () {
   if (!window.maia) {
-    console.error('auth.js loaded before supabase.js — include supabase.js first');
+    console.error('auth.js loaded before supabase.js, include supabase.js first');
     return;
   }
 

@@ -57,7 +57,7 @@
     if (!res.data || !res.data.length) {
       listEl.innerHTML = '<p class="events-empty">' +
         (currentWhen === 'past'
-          ? 'No past events yet — Maia is just getting started.'
+          ? 'No past events yet, Maia is just getting started.'
           : 'No upcoming events scheduled yet. Check back soon.') +
         '</p>';
       return;

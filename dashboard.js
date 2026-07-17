@@ -98,7 +98,7 @@
       setText('.dash-greeting-head', 'Welcome to Maia, ' + firstName + '.');
       setHTML(
         '.dash-greeting-sub',
-        'Take two minutes to complete your profile — what you\'ve built, and what you\'re building next. ' +
+        'Take two minutes to complete your profile, what you\'ve built, and what you\'re building next. ' +
         '<a href="profile.html" style="color:var(--gold);border-bottom:1px solid var(--gold-dim);">Set it up →</a>'
       );
     } else {
@@ -195,14 +195,14 @@
         if (overlap.length) {
           var wpts = Math.min(overlap.length, 2);
           score += wpts;
-          reasons.push({ w: wpts + 0.5, t: 'Building around ' + overlap.slice(0, 2).join(' + ') + ' — close to what you\'re working on' });
+          reasons.push({ w: wpts + 0.5, t: 'Building around ' + overlap.slice(0, 2).join(' + ') + ', close to what you\'re working on' });
         }
       }
 
       // Cross-pollination base: a different field is the point of Maia.
       if (myPillar && m.primary_pillar && m.primary_pillar !== myPillar) {
         score += 2;
-        reasons.push({ w: 1, t: capitalize(m.primary_pillar) + ' × ' + capitalize(myPillar) + ' — the crossing Maia exists for' });
+        reasons.push({ w: 1, t: capitalize(m.primary_pillar) + ' × ' + capitalize(myPillar) + ', the crossing Maia exists for' });
       }
 
       // Newest-member micro-boost keeps the list fresh as a tiebreaker.
@@ -212,7 +212,7 @@
       return {
         m: m,
         score: score,
-        reason: reasons.length ? reasons[0].t : 'New to the network — take a look'
+        reason: reasons.length ? reasons[0].t : 'New to the network, take a look'
       };
     });
 
@@ -335,7 +335,7 @@
     var ready = checks.ready;
     var lead = ready
       ? 'You can request intros now. A few more sections sharpen what you\'re building.'
-      : 'Any 2 sections unlock intro requests — a photo and a line on what you\'re building is enough.';
+      : 'Any 2 sections unlock intro requests, a photo and a line on what you\'re building is enough.';
     bodyEl.textContent = lead + ' Missing: ' + missing.slice(0, 3).join(', ') +
       (missing.length > 3 ? ' and ' + (missing.length - 3) + ' more' : '') + '.';
 

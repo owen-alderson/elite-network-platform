@@ -17,7 +17,7 @@ window.maia = (function () {
   var SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_-uC-5RkQSuaNJAaKHqpw8g_5oAiuTFY';
 
   if (!window.supabase || typeof window.supabase.createClient !== 'function') {
-    console.error('supabase-js library not loaded — include the unpkg script tag before supabase.js');
+    console.error('supabase-js library not loaded, include the unpkg script tag before supabase.js');
     return {};
   }
 

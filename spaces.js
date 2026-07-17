@@ -68,7 +68,7 @@
 
     var name = document.createElement('h3');
     name.className = 'space-name';
-    name.textContent = s.name + (s.status === 'prospective' ? ' — TBC' : '');
+    name.textContent = s.name + (s.status === 'prospective' ? ' (TBC)' : '');
     body.appendChild(name);
 
     if (s.is_founding_partner) {
