@@ -183,6 +183,39 @@ create trigger members_protect_columns
 before update on public.members
 for each row execute function public.members_protect_columns();
 
+-- M2: email is PII that must not be harvestable member-to-member. Supabase's
+-- default grants give authenticated/anon TABLE-level SELECT (all columns), which
+-- a column-level revoke can't override — so replace it with column-level SELECT
+-- on every column EXCEPT email. Admin reads email only via admin_member_emails().
+revoke select on public.members from authenticated, anon;
+grant select (
+  id, full_name, headline, bio, primary_pillar, secondary_pillars,
+  location_city, location_country, linkedin_url, instagram_handle, website_url,
+  avatar_url, achievements, current_work, status, nominated_by, joined_at,
+  created_at, updated_at, last_seen_at, tags, travel_city, travel_country
+) on public.members to authenticated, anon;
+
+-- Admin-only email access. Caller-checked via the request JWT rather than
+-- public.is_admin(): under SECURITY DEFINER current_user is the definer
+-- (postgres), so is_admin()'s current_user branch would pass for every caller.
+create or replace function public.admin_member_emails()
+returns table(id uuid, email text)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  if coalesce(auth.jwt() ->> 'role', '') = 'service_role'
+     or coalesce(lower(auth.jwt() ->> 'email'), '') = 'owen.alderson@gmail.com' then
+    return query select m.id, m.email from public.members m;
+  end if;
+  return; -- non-admin: no rows
+end;
+$$;
+revoke all on function public.admin_member_emails() from public;
+grant execute on function public.admin_member_emails() to authenticated;
+
 ------------------------------------------------------------------------
 -- applications
 -- Public submission allowed (anon role can INSERT). Admin-only review.
@@ -418,6 +451,31 @@ create trigger applications_validate_nomination_pair
 before insert on public.applications
 for each row execute function public.applications_validate_nomination_pair();
 
+-- Edge-function webhook auth (M3, 2026-07-23) ------------------------------
+-- The trigger-fired edge functions (send-application-confirmation,
+-- send-application-status, send-intro-notification) run verify_jwt:false
+-- because pg_net cannot send a user JWT. They authenticate callers via a shared
+-- secret stored in Supabase Vault under the name 'edge_webhook_secret' (created
+-- once at runtime via vault.create_secret; not represented in this file).
+-- edge_fn_headers() builds the pg_net request headers including that secret;
+-- verify_webhook_secret() is the boolean check the edge functions call.
+create or replace function public.edge_fn_headers()
+returns jsonb language sql stable security definer set search_path = '' as $$
+  select jsonb_build_object(
+    'Content-Type', 'application/json',
+    'x-webhook-secret', (select decrypted_secret from vault.decrypted_secrets where name = 'edge_webhook_secret')
+  );
+$$;
+revoke all on function public.edge_fn_headers() from public, anon, authenticated;
+
+create or replace function public.verify_webhook_secret(candidate text)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select candidate is not null
+     and candidate = (select decrypted_secret from vault.decrypted_secrets where name = 'edge_webhook_secret');
+$$;
+revoke all on function public.verify_webhook_secret(text) from public, anon, authenticated;
+grant execute on function public.verify_webhook_secret(text) to service_role;
+
 -- Email triggers (call edge functions via pg_net):
 --   on INSERT  → send-application-confirmation
 --   on UPDATE  → send-application-status when status flips to
@@ -431,7 +489,7 @@ as $$
 begin
   perform net.http_post(
     url := 'https://emlresxklixzcsammste.supabase.co/functions/v1/send-application-confirmation',
-    headers := jsonb_build_object('Content-Type', 'application/json'),
+    headers := public.edge_fn_headers(),
     body := jsonb_build_object('application_id', new.id)
   );
   return new;
@@ -453,7 +511,7 @@ begin
      and new.status in ('rejected', 'needs_more_info') then
     perform net.http_post(
       url := 'https://emlresxklixzcsammste.supabase.co/functions/v1/send-application-status',
-      headers := jsonb_build_object('Content-Type', 'application/json'),
+      headers := public.edge_fn_headers(),
       body := jsonb_build_object('application_id', new.id)
     );
   end if;
@@ -869,7 +927,7 @@ begin
   if new.route = 'direct' then
     perform net.http_post(
       url := fn_url,
-      headers := jsonb_build_object('Content-Type', 'application/json'),
+      headers := public.edge_fn_headers(),
       body := jsonb_build_object('intro_id', new.id, 'event', 'direct_received')
     );
   elsif new.route = 'broker' and new.broker_id is not null then
@@ -879,7 +937,7 @@ begin
     -- INSERT time. The UPDATE path is preserved for admin reassignment.
     perform net.http_post(
       url := fn_url,
-      headers := jsonb_build_object('Content-Type', 'application/json'),
+      headers := public.edge_fn_headers(),
       body := jsonb_build_object('intro_id', new.id, 'event', 'broker_assigned')
     );
   end if;
@@ -903,7 +961,7 @@ begin
   if (old.broker_id is null and new.broker_id is not null and new.status = 'pending') then
     perform net.http_post(
       url := fn_url,
-      headers := jsonb_build_object('Content-Type', 'application/json'),
+      headers := public.edge_fn_headers(),
       body := jsonb_build_object('intro_id', new.id, 'event', 'broker_assigned')
     );
   end if;
@@ -911,7 +969,7 @@ begin
   if (old.status is distinct from new.status and new.status = 'forwarded') then
     perform net.http_post(
       url := fn_url,
-      headers := jsonb_build_object('Content-Type', 'application/json'),
+      headers := public.edge_fn_headers(),
       body := jsonb_build_object('intro_id', new.id, 'event', 'forwarded')
     );
   end if;
@@ -919,7 +977,7 @@ begin
   if (old.status is distinct from new.status and new.status = 'accepted' and new.route = 'direct') then
     perform net.http_post(
       url := fn_url,
-      headers := jsonb_build_object('Content-Type', 'application/json'),
+      headers := public.edge_fn_headers(),
       body := jsonb_build_object('intro_id', new.id, 'event', 'direct_accepted')
     );
   end if;
@@ -929,7 +987,7 @@ begin
   if (old.status is distinct from new.status and new.status = 'accepted' and new.route = 'broker') then
     perform net.http_post(
       url := fn_url,
-      headers := jsonb_build_object('Content-Type', 'application/json'),
+      headers := public.edge_fn_headers(),
       body := jsonb_build_object('intro_id', new.id, 'event', 'broker_accepted')
     );
   end if;
@@ -1155,6 +1213,32 @@ create policy "messages_update_recipient_read" on public.messages
 
 create policy "messages_delete_admin" on public.messages
   for delete to authenticated using (public.is_admin());
+
+-- Defence in depth: the recipient update policy above allows setting read_at,
+-- but without this a recipient could also rewrite the counterparty's body,
+-- sender_id, or created_at (message forgery). Lock every column except read_at
+-- for non-admins.
+create or replace function public.messages_protect_columns()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if not public.is_admin() then
+    new.id := old.id;
+    new.conversation_id := old.conversation_id;
+    new.sender_id := old.sender_id;
+    new.body := old.body;
+    new.created_at := old.created_at;
+    -- only read_at may change
+  end if;
+  return new;
+end;
+$$;
+
+create trigger messages_protect_columns
+before update on public.messages
+for each row execute function public.messages_protect_columns();
 
 -- Touch conversation.last_message_at when a new message is inserted.
 create or replace function public.messages_touch_conversation()

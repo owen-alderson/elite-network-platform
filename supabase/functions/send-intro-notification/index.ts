@@ -28,7 +28,7 @@ const SITE_URL = "https://maiacircle.com";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-webhook-secret",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -50,6 +50,17 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   if (req.method !== "POST") return json({ error: "method not allowed" }, 405);
 
+  // M3 auth gate: verify_jwt:false (DB trigger can't send a JWT), so require the
+  // shared secret the trigger sends (verify_webhook_secret is service_role-only).
+  const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+  {
+    const provided = req.headers.get("x-webhook-secret") || "";
+    const { data: ok, error: sErr } = await admin.rpc("verify_webhook_secret", { candidate: provided });
+    if (sErr || ok !== true) return json({ error: "unauthorized" }, 401);
+  }
+
   let body: { intro_id?: string; event?: Event };
   try { body = await req.json(); } catch { return json({ error: "invalid json" }, 400); }
   const introId = body.intro_id;
@@ -61,10 +72,6 @@ Deno.serve(async (req) => {
     console.warn("send-intro-notification: RESEND_API_KEY not set; skipping send.");
     return json({ sent: false, reason: "resend_not_configured" }, 200);
   }
-
-  const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
 
   const { data: intro, error: introErr } = await admin
     .from("intro_requests")

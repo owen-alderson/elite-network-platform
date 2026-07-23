@@ -1,12 +1,18 @@
 # Edge function deploy flags.
 #
-# verify_jwt = false here because the postgres trigger
-# applications_send_confirmation calls this function via pg_net.http_post
-# with no Authorization header — under the default verify_jwt = true the
-# function 401s and confirmation_sent_at never populates. Matches the
-# other two trigger-fired functions (send-intro-notification,
-# send-application-status). M3 in the security backlog tracks moving to
-# a shared-secret model before broader-than-pilot rollout.
+# verify_jwt = false on the three trigger-fired functions because the postgres
+# triggers call them via pg_net.http_post with no Authorization header — under
+# the default verify_jwt = true they would 401 and the *_sent_at columns would
+# never populate. They are NOT unauthenticated: M3 (2026-07-23) gates each on
+# the x-webhook-secret shared secret the triggers now send (Vault-stored,
+# verified via public.verify_webhook_secret). send-application-confirmation
+# additionally accepts an admin JWT for its direct admin.html invocation.
 
 [functions.send-application-confirmation]
+verify_jwt = false
+
+[functions.send-application-status]
+verify_jwt = false
+
+[functions.send-intro-notification]
 verify_jwt = false

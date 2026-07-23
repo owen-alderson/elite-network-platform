@@ -39,8 +39,10 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const FROM_EMAIL = Deno.env.get("MAIA_FROM_EMAIL") || "Maia <onboarding@resend.dev>";
+const ADMIN_EMAILS = ["owen.alderson@gmail.com"];
 
 // Public site URL — used to build the nominee invite link. Mirrors the
 // constant in invite-member/index.ts.
@@ -48,7 +50,7 @@ const SITE_URL = "https://maiacircle.com";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-webhook-secret",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -59,18 +61,46 @@ function json(body: unknown, status = 200) {
   });
 }
 
+// M3 authorization: the DB trigger (shared secret) OR an admin (JWT). This
+// function is invoked BOTH by the trigger and directly from admin.html
+// (nominee_invite), so it must accept either.
+async function isAuthorized(req: Request, svc: any): Promise<boolean> {
+  const provided = req.headers.get("x-webhook-secret") || "";
+  if (provided) {
+    const { data: ok } = await svc.rpc("verify_webhook_secret", { candidate: provided });
+    if (ok === true) return true;
+  }
+  const authHeader = req.headers.get("Authorization") || "";
+  const token = authHeader.replace(/^Bearer\s+/i, "");
+  if (token && token !== ANON_KEY) {
+    try {
+      const userClient = createClient(SUPABASE_URL, ANON_KEY, {
+        global: { headers: { Authorization: `Bearer ${token}` } },
+        auth: { autoRefreshToken: false, persistSession: false },
+      });
+      const { data } = await userClient.auth.getUser();
+      const email = (data?.user?.email || "").toLowerCase();
+      if (email && ADMIN_EMAILS.includes(email)) return true;
+    } catch (_e) { /* fall through to unauthorized */ }
+  }
+  return false;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   if (req.method !== "POST") return json({ error: "method not allowed" }, 405);
+
+  const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  // M3 auth gate.
+  if (!(await isAuthorized(req, admin))) return json({ error: "unauthorized" }, 401);
 
   let body: { application_id?: string; action?: string };
   try { body = await req.json(); } catch { return json({ error: "invalid json" }, 400); }
   const applicationId = body.application_id;
   if (!applicationId) return json({ error: "application_id required" }, 400);
-
-  const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
 
   const { data: app, error: appErr } = await admin
     .from("applications")

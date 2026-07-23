@@ -24,7 +24,7 @@ const SITE_URL = "https://maiacircle.com";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-webhook-secret",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -39,14 +39,22 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   if (req.method !== "POST") return json({ error: "method not allowed" }, 405);
 
+  const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  // M3 auth gate: verify_jwt:false (DB trigger can't send a JWT), so require the
+  // shared secret the trigger sends (verify_webhook_secret is service_role-only).
+  {
+    const provided = req.headers.get("x-webhook-secret") || "";
+    const { data: ok, error: sErr } = await admin.rpc("verify_webhook_secret", { candidate: provided });
+    if (sErr || ok !== true) return json({ error: "unauthorized" }, 401);
+  }
+
   let body: { application_id?: string };
   try { body = await req.json(); } catch { return json({ error: "invalid json" }, 400); }
   const applicationId = body.application_id;
   if (!applicationId) return json({ error: "application_id required" }, 400);
-
-  const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
 
   const { data: app, error: appErr } = await admin
     .from("applications")
