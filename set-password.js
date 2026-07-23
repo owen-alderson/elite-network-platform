@@ -12,6 +12,13 @@
 // Requires supabase.js + auth.js loaded first.
 
 (function () {
+  // Capture the URL hash NOW, synchronously at module load — BEFORE supabase.js's
+  // async token bootstrap strips it via history.replaceState. A recovery link
+  // arrives as #access_token=...&type=recovery; by the time gate() awaits
+  // getSession() the fragment is already gone, so the later re-read always
+  // missed 'type=recovery' (the guard was dead code). This preserves it.
+  var arrivedViaRecovery = (window.location.hash || '').indexOf('type=recovery') !== -1;
+
   var form = document.getElementById('set-password-form');
   var newInput = document.getElementById('new-password');
   var confirmInput = document.getElementById('confirm-password');
@@ -46,7 +53,7 @@
     // If we got here from a recovery click, the URL hash will include
     // type=recovery. Adjust copy so the user knows this is a reset, and hide
     // "Skip for now" — a recovery visit must end in a new password.
-    if (window.location.hash && window.location.hash.indexOf('type=recovery') !== -1) {
+    if (arrivedViaRecovery) {
       title.textContent = 'Set a new password';
       subtitle.textContent = "Pick something memorable. We'll sign you in with this from now on.";
       var skipWrap = document.getElementById('set-password-skip-wrap');

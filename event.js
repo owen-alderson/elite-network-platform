@@ -266,7 +266,12 @@
     btn.textContent = iAmGoing ? 'Cancel RSVP' : 'Reserve my place';
     btn.dataset.going = iAmGoing ? 'true' : 'false';
 
-    btn.addEventListener('click', async function () {
+    // onclick (single-slot), NOT addEventListener: setupRsvpButton re-runs on
+    // every loadAttendees(), and the handler itself calls loadAttendees(), so
+    // addEventListener would stack a new handler each cycle → one click fires
+    // N duplicate insert/delete attempts ("Could not update RSVP"). Assigning
+    // onclick replaces the prior handler.
+    btn.onclick = async function () {
       btn.disabled = true;
       var prev = btn.textContent;
       btn.textContent = 'Saving…';
@@ -295,7 +300,7 @@
       }
 
       await loadAttendees();
-    });
+    };
 
     // Spots remaining (sidebar)
     var spotsNum = document.querySelector('.rsvp-spots-num');
