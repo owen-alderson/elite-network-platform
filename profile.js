@@ -270,13 +270,23 @@
     var list = document.createElement('div');
     list.style.cssText = 'display:flex; flex-wrap:wrap; gap:14px; margin-top:8px;';
     links.forEach(function (l) {
-      var a = document.createElement('a');
-      a.href = l.href;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      a.style.cssText = 'color:var(--gold); border-bottom:1px solid var(--gold-dim); font-size:13px;';
-      a.textContent = l.label;
-      list.appendChild(a);
+      var safe = window.maia.safeExternalUrl(l.href);
+      if (safe) {
+        var a = document.createElement('a');
+        a.href = safe;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.style.cssText = 'color:var(--gold); border-bottom:1px solid var(--gold-dim); font-size:13px;';
+        a.textContent = l.label;
+        list.appendChild(a);
+      } else {
+        // Non-http(s) URL (e.g. a javascript: payload): render the label as
+        // inert text — never a clickable/executable link. See safeExternalUrl.
+        var span = document.createElement('span');
+        span.style.cssText = 'color:var(--muted); font-size:13px;';
+        span.textContent = l.label;
+        list.appendChild(span);
+      }
     });
     wrap.appendChild(list);
     main.appendChild(wrap);
@@ -901,6 +911,26 @@
       var v = (input.value || '').trim();
       payload[field] = v === '' ? null : v;
     });
+
+    // Security + hygiene: coerce the two free-text URL fields to a safe http(s)
+    // URL. safeExternalUrl prepends https:// when the scheme is missing and
+    // rejects javascript:/data:/etc. A rejected value blocks the save with a
+    // clear message instead of a cryptic DB CHECK error, and stops the bad
+    // write client-side too. Mirrors the members.website_url / linkedin_url
+    // CHECK constraints.
+    var urlFields = ['linkedin_url', 'website_url'];
+    for (var ui = 0; ui < urlFields.length; ui++) {
+      var uf = urlFields[ui];
+      if (payload[uf]) {
+        var safeUf = window.maia.safeExternalUrl(payload[uf]);
+        if (!safeUf) {
+          alert('Your ' + (uf === 'linkedin_url' ? 'LinkedIn' : 'Website') + ' link must be a valid web address starting with http:// or https://.');
+          if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save'; }
+          return;
+        }
+        payload[uf] = safeUf;
+      }
+    }
 
     // Location — handled separately because the autocomplete writes both
     // location_city and location_country from a single input. If the user

@@ -113,9 +113,11 @@ create table public.members (
   secondary_pillars  text[] not null default '{}',
   location_city      text,
   location_country   text,
-  linkedin_url       text,
+  linkedin_url       text constraint members_linkedin_url_http
+                       check (linkedin_url is null or linkedin_url ~* '^https?://'),
   instagram_handle   text,
-  website_url        text,
+  website_url        text constraint members_website_url_http
+                       check (website_url is null or website_url ~* '^https?://'),
   avatar_url         text,
   achievements       jsonb not null default '[]',
   current_work       text,
@@ -203,8 +205,10 @@ create table public.applications (
   -- Free-form tags, capped at 5. Supplements the single primary pillar.
   applicant_tags           text[] not null default '{}'
                              check (cardinality(applicant_tags) <= 5),
-  applicant_linkedin_url   text,
-  applicant_website_url    text,
+  applicant_linkedin_url   text constraint applications_applicant_linkedin_url_http
+                             check (applicant_linkedin_url is null or applicant_linkedin_url ~* '^https?://'),
+  applicant_website_url    text constraint applications_applicant_website_url_http
+                             check (applicant_website_url is null or applicant_website_url ~* '^https?://'),
   applicant_location       text,
   applicant_current_work   text,
   nominator_member_id      uuid references public.members(id),
@@ -621,6 +625,74 @@ $$;
 create trigger intro_requests_protect_columns
 before update on public.intro_requests
 for each row execute function public.intro_requests_protect_columns();
+
+-- Authorization for STATUS transitions. protect_columns leaves status mutable
+-- (it must be, for accept/decline/forward), and the UPDATE policy admits the
+-- requester and broker — so without this a requester could self-accept (or a
+-- broker force-accept) their own request, firing the SECURITY DEFINER
+-- open_conversation trigger and creating a conversation that bypasses the
+-- are_connected() consent gate (forced unsolicited DM). This authorizes each
+-- transition by actor: only the target accepts (broker route only after
+-- forwarding), only the broker forwards, any party may decline, and 'expired'
+-- is system-only (the nightly cron runs with no auth.uid()).
+create or replace function public.intro_requests_enforce_transitions()
+returns trigger
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+declare
+  uid uuid := (select auth.uid());
+begin
+  if public.is_admin() then
+    return new;
+  end if;
+
+  if new.status is not distinct from old.status then
+    return new;
+  end if;
+
+  if new.status = 'accepted' then
+    if uid is null or uid is distinct from old.target_id then
+      raise exception 'Only the intro target may accept an intro request';
+    end if;
+    if old.route = 'broker' and old.forwarded_at is null then
+      raise exception 'A brokered intro must be forwarded before it can be accepted';
+    end if;
+    return new;
+  end if;
+
+  if new.status = 'forwarded' then
+    if old.route <> 'broker' or uid is null or uid is distinct from old.broker_id then
+      raise exception 'Only the assigned broker may forward an intro request';
+    end if;
+    return new;
+  end if;
+
+  if new.status = 'declined' then
+    if uid is null
+       or (uid is distinct from old.requester_id
+           and uid is distinct from old.target_id
+           and uid is distinct from old.broker_id) then
+      raise exception 'Only a party to the intro request may decline it';
+    end if;
+    return new;
+  end if;
+
+  if new.status = 'expired' then
+    if uid is not null then
+      raise exception 'Members cannot expire intro requests';
+    end if;
+    return new;
+  end if;
+
+  raise exception 'Not permitted to change intro request status to %', new.status;
+end;
+$$;
+
+create trigger intro_requests_enforce_transitions
+before update on public.intro_requests
+for each row execute function public.intro_requests_enforce_transitions();
 
 -- Connection helpers (used by routing trigger + conversations RLS +
 -- admin broker picker).

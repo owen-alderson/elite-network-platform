@@ -266,13 +266,23 @@
 
     if (app.applicant_linkedin_url) {
       body.appendChild(text('p', 'app-section-label', 'LinkedIn'));
-      var link = document.createElement('a');
-      link.href = app.applicant_linkedin_url;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      link.className = 'app-link';
-      link.textContent = app.applicant_linkedin_url;
-      body.appendChild(link);
+      var safeLi = window.maia.safeExternalUrl(app.applicant_linkedin_url);
+      if (safeLi) {
+        var link = document.createElement('a');
+        link.href = safeLi;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.className = 'app-link';
+        link.textContent = app.applicant_linkedin_url;
+        body.appendChild(link);
+      } else {
+        // Applicant (possibly unauthenticated) supplied a non-http(s) URL, e.g.
+        // a javascript: XSS payload aimed at the admin's session. Show it as
+        // inert text so the reviewer can see the submission but never click it.
+        var bad = text('p', 'app-card-line', app.applicant_linkedin_url);
+        bad.style.color = 'var(--muted)';
+        body.appendChild(bad);
+      }
     }
 
     if (Array.isArray(app.applicant_achievements) && app.applicant_achievements.length) {

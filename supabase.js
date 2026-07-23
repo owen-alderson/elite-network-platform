@@ -223,6 +223,27 @@ window.maia = (function () {
     return url;
   }
 
+  // Security: return a URL string ONLY if it resolves to an http(s) URL,
+  // otherwise null. Guards every place a member/applicant-supplied URL becomes
+  // an <a href> (profile links, admin application LinkedIn) — a stored
+  // `javascript:`/`data:`/`vbscript:` value would otherwise execute in a
+  // viewer's (or the admin's) authenticated origin on click. Any input that
+  // parses to a dangerous scheme is rejected on the first parse; the https://
+  // prepend only runs when the input has no scheme at all, and can only ever
+  // yield an http(s) URL — so there is no bypass.
+  function safeExternalUrl(raw) {
+    if (!raw || typeof raw !== 'string') return null;
+    var s = raw.trim();
+    if (!s) return null;
+    var u = null;
+    try { u = new URL(s); }
+    catch (e) {
+      try { u = new URL('https://' + s); } catch (e2) { return null; }
+    }
+    if (u && (u.protocol === 'http:' || u.protocol === 'https:')) return u.href;
+    return null;
+  }
+
   // Profile-completeness check. Used to gate intro-request actions: testers
   // with empty profiles shouldn't be reaching out to other members because
   // there's nothing for the target to evaluate. Threshold is the same scoring
@@ -273,6 +294,7 @@ window.maia = (function () {
     isAdmin: isAdmin,
     onAuthStateChange: onAuthStateChange,
     fillAvatar: fillAvatar,
+    safeExternalUrl: safeExternalUrl,
     parseAvatarFocus: parseAvatarFocus,
     withAvatarFocus: withAvatarFocus,
     uploadAvatar: uploadAvatar,
