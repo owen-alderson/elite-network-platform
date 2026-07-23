@@ -59,7 +59,7 @@
   async function load(targetId, fallbackEmail) {
     var res = await supabase
       .from('members')
-      .select('id,email,full_name,headline,bio,primary_pillar,secondary_pillars,tags,location_city,location_country,travel_city,travel_country,linkedin_url,instagram_handle,website_url,avatar_url,achievements,current_work,joined_at,nominated_by,status')
+      .select('id,full_name,headline,bio,primary_pillar,secondary_pillars,tags,location_city,location_country,travel_city,travel_country,linkedin_url,instagram_handle,website_url,avatar_url,achievements,current_work,joined_at,nominated_by,status')
       .eq('id', targetId)
       .maybeSingle();
 
@@ -1031,7 +1031,7 @@
       .from('members')
       .update(payload)
       .eq('id', sessionUserId)
-      .select()
+      .select('id')
       .single();
 
     if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save'; }

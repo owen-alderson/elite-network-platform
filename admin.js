@@ -995,7 +995,7 @@
 
     var q = supabase
       .from('members')
-      .select('id, full_name, email, headline, primary_pillar, tags, location_city, location_country, status, joined_at, nominated_by, last_seen_at, avatar_url, bio, current_work, linkedin_url, instagram_handle, website_url, achievements')
+      .select('id, full_name, headline, primary_pillar, tags, location_city, location_country, status, joined_at, nominated_by, last_seen_at, avatar_url, bio, current_work, linkedin_url, instagram_handle, website_url, achievements')
       .order('joined_at', { ascending: false });
     if (currentMemberFilter !== 'all') q = q.eq('status', currentMemberFilter);
 
@@ -1010,7 +1010,20 @@
       memberListEl.appendChild(emptyMsg('No members in this view.'));
       return;
     }
-    res.data.forEach(function (m) { memberListEl.appendChild(buildMemberCard(m)); });
+
+    // Emails are no longer readable via the members table (revoked to stop
+    // member-to-member harvesting). Fetch them for admin via the gated RPC and
+    // merge by id. A non-admin caller gets zero rows from the RPC.
+    var emailById = {};
+    var emailsRes = await supabase.rpc('admin_member_emails');
+    if (!emailsRes.error && Array.isArray(emailsRes.data)) {
+      emailsRes.data.forEach(function (r) { emailById[r.id] = r.email; });
+    }
+
+    res.data.forEach(function (m) {
+      m.email = emailById[m.id] || null;
+      memberListEl.appendChild(buildMemberCard(m));
+    });
   }
 
   function buildMemberCard(m) {
